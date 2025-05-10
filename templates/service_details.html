@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Service Details | Sunmax Renewables{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>Service Details</h2>
+        <p>View service information and manage invoices</p>
+    </div>
+
+    <div class="action-bar">
+        <a href="/services" class="secondary-btn">
+            <i class="fas fa-arrow-left"></i> Back to Services
+        </a>
+        <div class="action-buttons">
+            <a href="/services/{{ service.id }}/edit" class="primary-btn">
+                <i class="fas fa-edit"></i> Edit Service
+            </a>
+            {% if not service.invoice_id %}
+            <button class="invoice-btn" onclick="generateInvoice('{{ service.id }}')">
+                <i class="fas fa-file-invoice"></i> Generate Invoice
+            </button>
+            {% else %}
+            <a href="/invoices/{{ service.invoice_id }}" class="view-invoice-btn">
+                <i class="fas fa-file-invoice-dollar"></i> View Invoice
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="service-details-container">
+        <div class="detail-card">
+            <div class="detail-header">
+                <h3>Service Information</h3>
+                <span class="service-number">{{ service.service_number }}</span>
+            </div>
+            <div class="detail-content">
+                <div class="detail-row">
+                    <div class="detail-label">Service Date:</div>
+                    <div class="detail-value">{{ service.date.strftime('%d-%m-%Y') }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Service Name:</div>
+                    <div class="detail-value">{{ service.service_name }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Description:</div>
+                    <div class="detail-value">{{ service.description or 'No description provided' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-header">
+                <h3>Customer Information</h3>
+            </div>
+            <div class="detail-content">
+                <div class="detail-row">
+                    <div class="detail-label">Name:</div>
+                    <div class="detail-value">{{ service.customer_name }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Phone:</div>
+                    <div class="detail-value">{{ service.customer_phone or 'Not provided' }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value">{{ service.customer_email or 'Not provided' }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">GST Number:</div>
+                    <div class="detail-value">{{ service.customer_gst or 'Not provided' }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Address:</div>
+                    <div class="detail-value">{{ service.customer_address or 'Not provided' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-header">
+                <h3>Service Details</h3>
+            </div>
+            <div class="detail-content">
+                <div class="detail-row">
+                    <div class="detail-label">Hours Worked:</div>
+                    <div class="detail-value">{{ service.hours_worked }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Number of Workers:</div>
+                    <div class="detail-value">{{ service.number_of_workers }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Rate Per Worker:</div>
+                    <div class="detail-value">₹{{ service.rate_per_worker|round(2) }}/hour</div>
+                </div>
+                <div class="detail-row total-row">
+                    <div class="detail-label">Total Amount:</div>
+                    <div class="detail-value">₹{{ service.total_amount|round(2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-header">
+                <h3>Payment Information</h3>
+            </div>
+            <div class="detail-content">
+                <div class="detail-row">
+                    <div class="detail-label">Payment Method:</div>
+                    <div class="detail-value">{{ service.payment_method or 'Not specified' }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Payment Status:</div>
+                    <div class="detail-value">
+                        <span class="status-badge {{ service.payment_status|lower|replace(' ', '-') }}">
+                            {{ service.payment_status }}
+                        </span>
+                    </div>
+                </div>
+                {% if service.payment_status != 'Unpaid' %}
+                <div class="detail-row">
+                    <div class="detail-label">Amount Paid:</div>
+                    <div class="detail-value">₹{{ service.amount_paid|round(2) }}</div>
+                </div>
+                {% if service.payment_status == 'Partially Paid' %}
+                <div class="detail-row">
+                    <div class="detail-label">Balance Due:</div>
+                    <div class="detail-value">₹{{ (service.total_amount - service.amount_paid)|round(2) }}</div>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if service.invoice_id %}
+        <div class="detail-card">
+            <div class="detail-header">
+                <h3>Invoice Information</h3>
+            </div>
+            <div class="detail-content">
+                <div class="detail-row">
+                    <div class="detail-label">Invoice ID:</div>
+                    <div class="detail-value">{{ service.invoice_id }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">PDF Path:</div>
+                    <div class="detail-value">{{ service.pdf_path or 'Not available' }}</div>
+                </div>
+                <div class="detail-actions">
+                    <a href="/invoices/{{ service.invoice_id }}" class="view-invoice-btn">
+                        <i class="fas fa-file-invoice-dollar"></i> View Invoice
+                    </a>
+                    {% if service.pdf_path %}
+                    <a href="/{{ service.pdf_path }}" target="_blank" class="download-btn">
+                        <i class="fas fa-download"></i> Download PDF
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Generate invoice
+    function generateInvoice(serviceId) {
+        fetch(`/services/${serviceId}/generate-invoice`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                
+                // Reload page after a short delay
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showNotification(data.message || 'Error generating invoice', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while generating the invoice', 'error');
+        });
+    }
+
+    // Helper function to show notifications
+    function showNotification(message, type = 'success') {
+        // Create notification container if it doesn't exist
+        if (!document.querySelector('.notification-container')) {
+            const container = document.createElement('div');
+            container.className = 'notification-container';
+            document.body.appendChild(container);
+        }
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        const icon = document.createElement('i');
+        icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+        
+        const text = document.createElement('span');
+        text.textContent = message;
+        
+        notification.appendChild(icon);
+        notification.appendChild(text);
+        
+        document.querySelector('.notification-container').appendChild(notification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                notification.remove();
+            }, 500);
+        }, 3000);
+    }
+</script>
+{% endblock %}

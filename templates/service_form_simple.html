@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit Service" if edit_mode else "New Service" }} | Sunmax Renewables{% endblock %}
+
+{% block head %}
+<style>
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>{{ "Edit Service" if edit_mode else "New Service" }}</h2>
+        <p>{{ "Update service details" if edit_mode else "Create a new service record" }}</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="form-container">
+        <form method="POST" action="{{ '/service/' + service.id|string + '/edit' if edit_mode else '/service/new' }}">
+            <div class="form-section">
+                <h3>Service Details</h3>
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" value="{{ service.date if edit_mode else today }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="employee_name">Employee Name:</label>
+                    <input type="text" id="employee_name" name="employee_name" value="{{ service.employee_name if edit_mode else '' }}" required placeholder="Name of employee who performed the service">
+                </div>
+                <div class="form-group">
+                    <label for="service_name">Service Name:</label>
+                    <input type="text" id="service_name" name="service_name" value="{{ service.service_name if edit_mode else '' }}" required placeholder="Name of the service">
+                </div>
+                <div class="form-group">
+                    <label for="description">Work Description:</label>
+                    <textarea id="description" name="description" rows="3" placeholder="Detailed description of the work performed">{{ service.description if edit_mode else '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Pricing Information</h3>
+                <div class="form-group">
+                    <label for="price">Service Price (₹):</label>
+                    <input type="number" id="price" name="price" value="{{ service.price if edit_mode else '' }}" step="0.01" min="0" required placeholder="Service price">
+                </div>
+                <!-- Hidden fields with default values -->
+                <input type="hidden" id="gst_rate" name="gst_rate" value="18.0">
+                <input type="hidden" id="payment_method" name="payment_method" value="">
+                <input type="hidden" id="payment_status" name="payment_status" value="Unpaid">
+            </div>
+
+            <div class="form-actions">
+                <a href="/services" class="cancel-btn">Cancel</a>
+                <button type="submit" class="submit-btn">{{ "Update Service" if edit_mode else "Create Service" }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    // Calculate total amount with GST
+    function calculateTotal() {
+        const price = parseFloat(document.getElementById('price').value) || 0;
+        const gstRate = 18.0; // Fixed GST rate
+
+        const gstAmount = price * (gstRate / 100);
+        const totalAmount = price + gstAmount;
+
+        // Display the calculated total (if we had a field for it)
+        console.log(`Price: ₹${price.toFixed(2)}, GST (${gstRate}%): ₹${gstAmount.toFixed(2)}, Total: ₹${totalAmount.toFixed(2)}`);
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener for price input
+        document.getElementById('price').addEventListener('input', calculateTotal);
+
+        // Calculate initial total
+        calculateTotal();
+    });
+</script>
+{% endblock %}

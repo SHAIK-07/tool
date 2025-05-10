@@ -1,0 +1,289 @@
+/* Cart Popup Styles */
+.cart-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    max-height: 500px;
+    background-color: var(--card-bg, white);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px var(--shadow-color, rgba(0, 0, 0, 0.2));
+    z-index: 1001; /* Higher than the toggle button */
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none; /* Ensure it doesn't capture clicks when hidden */
+    border: 1px solid var(--border-color, #eee);
+}
+
+/* When the popup is shown */
+.cart-popup.show,
+.cart-popup[style*="display: flex"] {
+    display: flex !important; /* Force display with !important */
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important; /* Allow interaction when visible */
+    visibility: visible !important;
+}
+
+.cart-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: var(--btn-primary-bg, #003366);
+    color: var(--btn-primary-text, white);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.cart-popup-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+}
+
+.cart-popup-header h3 i {
+    margin-right: 8px;
+}
+
+.cart-popup-header .cart-count {
+    background-color: var(--accent-primary, #ff6b6b);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    margin-left: 8px;
+}
+
+.cart-popup-close {
+    background: none;
+    border: none;
+    color: var(--btn-primary-text, white);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.cart-popup-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.cart-popup-body {
+    padding: 15px;
+    overflow-y: auto;
+    max-height: 300px;
+    background-color: var(--card-bg, white);
+    color: var(--text-primary, #333);
+}
+
+.cart-popup-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary, #666);
+}
+
+.cart-popup-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color, #eee);
+}
+
+.cart-popup-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item-details {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-primary, #333);
+}
+
+.cart-item-price {
+    color: var(--text-secondary, #666);
+    font-size: 0.9rem;
+}
+
+.cart-item-quantity {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.cart-quantity-btn {
+    width: 24px;
+    height: 24px;
+    background-color: var(--btn-secondary-bg, #f0f0f0);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+    color: var(--btn-secondary-text, #333);
+}
+
+.cart-quantity-btn:hover {
+    background-color: var(--accent-tertiary, #e0e0e0);
+}
+
+.cart-item-remove {
+    color: var(--danger-color, #ff6b6b);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 10px;
+    font-size: 1rem;
+}
+
+.cart-popup-footer {
+    padding: 15px;
+    border-top: 1px solid var(--border-color, #eee);
+    background-color: var(--bg-secondary, #f9f9f9);
+}
+
+.cart-popup-total {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: var(--text-primary, #333);
+}
+
+.cart-popup-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.view-cart-btn, .checkout-btn {
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.view-cart-btn {
+    background-color: var(--btn-secondary-bg, #f0f0f0);
+    color: var(--btn-secondary-text, #333);
+    flex: 1;
+    margin-right: 10px;
+}
+
+.view-cart-btn:hover {
+    background-color: var(--accent-tertiary, #e0e0e0);
+}
+
+.checkout-btn {
+    background-color: var(--success-color, #28a745);
+    color: white;
+    flex: 1;
+}
+
+.checkout-btn:hover {
+    background-color: var(--success-color, #218838);
+    opacity: 0.9;
+}
+
+.cart-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--btn-primary-bg, #003366);
+    color: var(--btn-primary-text, white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px var(--shadow-color, rgba(0, 0, 0, 0.2));
+    z-index: 999;
+    border: none;
+    transition: transform 0.2s, background-color 0.2s;
+    /* Ensure the button is always visible and clickable */
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.cart-toggle-btn:hover {
+    background-color: var(--accent-secondary, #00509e);
+    transform: scale(1.05);
+}
+
+.cart-toggle-btn i {
+    font-size: 1.5rem;
+}
+
+.cart-toggle-count {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: var(--accent-primary, #ff6b6b);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 2px solid var(--card-bg, white);
+    z-index: 1000;
+}
+
+/* Dark mode specific overrides */
+[data-theme="dark"] .cart-popup {
+    background-color: var(--card-bg, #2a2a2a);
+    border-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .cart-popup-header {
+    background-color: var(--btn-primary-bg, #003366);
+}
+
+[data-theme="dark"] .cart-popup-body {
+    background-color: var(--card-bg, #2a2a2a);
+}
+
+[data-theme="dark"] .cart-popup-footer {
+    background-color: var(--bg-secondary, #222);
+    border-top-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .cart-popup-item {
+    border-bottom-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .cart-toggle-count {
+    border-color: var(--bg-primary, #1a1a1a);
+}

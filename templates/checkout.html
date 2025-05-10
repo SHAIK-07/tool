@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    /* Item Type Badge Styling */
+    .item-type-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .item-type-product {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .item-type-service {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="page-header">
+        <h2>Checkout</h2>
+        <p>Complete your purchase by providing the required information</p>
+    </div>
+
+    <div class="checkout-form-container">
+        <form id="checkout-form" action="/api/checkout" method="post">
+            <div class="form-section">
+                <h3>Buyer Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="buyer_name">Buyer Name / Company Name:</label>
+                        <input type="text" id="buyer_name" name="buyer_name" required placeholder="Enter buyer name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="buyer_gst">Buyer GST Number (optional):</label>
+                        <input type="text" id="buyer_gst" name="buyer_gst" placeholder="Enter GST number if available">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="buyer_address">Buyer Address:</label>
+                        <textarea id="buyer_address" name="buyer_address" required placeholder="Enter complete address"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="buyer_phone">Buyer Phone:</label>
+                        <input type="text" id="buyer_phone" name="buyer_phone" required placeholder="Enter phone number">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="buyer_email">Buyer Email (optional):</label>
+                        <input type="email" id="buyer_email" name="buyer_email" placeholder="Enter email address if available">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="payment_method">Payment Method:</label>
+                        <select id="payment_method" name="payment_method" required>
+                            <option value="">Select payment method</option>
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="upi">UPI</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="debit_card">Debit Card</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="invoice_date">Invoice Date:</label>
+                        <input type="date" id="invoice_date" name="invoice_date" required>
+                        <script>
+                            // Set default value to today's date
+                            document.getElementById('invoice_date').valueAsDate = new Date();
+                        </script>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="payment_status">Payment Status:</label>
+                        <select id="payment_status" name="payment_status" required onchange="toggleAmountPaid()">
+                            <option value="Fully Paid">Fully Paid</option>
+                            <option value="Partially Paid">Partially Paid</option>
+                            <option value="Unpaid">Unpaid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" id="amount_paid_group">
+                        <label for="amount_paid">Amount Paid:</label>
+                        <input type="number" id="amount_paid" name="amount_paid" step="0.01" min="0">
+                        <small class="form-text">Leave empty for full payment</small>
+                    </div>
+
+                    <div class="form-group">
+                        <!-- Empty div for layout balance -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Order Summary</h3>
+                <div class="order-summary">
+                    <div class="cart-items-summary">
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Discount</th>
+                                    <th>Taxable Amount</th>
+                                    <th>GST</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="checkout-items">
+                                <!-- Cart items will be inserted here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="checkout-subtotal">₹0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Discount:</span>
+                            <span id="checkout-discount">₹0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Taxable Amount:</span>
+                            <span id="checkout-taxable">₹0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>GST:</span>
+                            <span id="checkout-gst">₹0.00</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span>Grand Total:</span>
+                            <span id="checkout-total">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Seller Information</h3>
+                <div class="seller-info">
+                    <div class="seller-flex-container">
+                        <div class="seller-logo">
+                            <img src="/static/images/logo.png" alt="Sunmax Renewables Logo" class="seller-logo-img">
+                        </div>
+                        <div class="seller-details">
+                            <p><strong>Sunmax Renewables</strong></p>
+                            <p>GST Number: 37FUWPS9742A1ZT</p>
+                            <p>26/3/482, Ground floor of Sneha Nagar Sachivalayam</p>
+                            <p>B.V.Nagar, NGO Colony, Nellore</p>
+                            <p>Andhra Pradesh 524004</p>
+                            <p>Phone: 9381488225, 7013023946</p>
+                            <p>Email: contactsunmax@gmail.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="back-to-cart-btn" onclick="window.location.href='/cart'">Back to Cart</button>
+                <button type="submit" class="complete-order-btn">Complete Order</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load cart items from localStorage
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        // Populate checkout summary
+        populateCheckoutSummary(cart);
+
+        // Initialize payment fields
+        toggleAmountPaid();
+
+        // Handle form submission
+        document.getElementById('checkout-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Get form data
+            const formData = new FormData(this);
+
+            // Add cart items to form data
+            formData.append('cart_items', JSON.stringify(cart));
+
+            // Submit form via AJAX
+            fetch('/api/checkout', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear cart - the reservation is now permanent as the order is completed
+                    localStorage.removeItem('cart');
+
+                    // Redirect to invoice page
+                    window.location.href = `/invoice/${data.invoice_id}`;
+                } else {
+                    // Show error and release the reserved stock
+                    alert('Error: ' + data.message);
+
+                    // Release all reserved stock as the order failed
+                    releaseAllReservedStock(cart);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+
+                // Release all reserved stock as the order failed
+                releaseAllReservedStock(cart);
+            });
+
+            // Function to release all reserved stock
+            function releaseAllReservedStock(cartItems) {
+                if (!cartItems || cartItems.length === 0) return;
+
+                // Release each product's stock (not services)
+                cartItems.forEach(item => {
+                    // Only release stock for products, not services
+                    if (!item.item_type || item.item_type === 'product') {
+                        fetch('/api/release-stock', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                item_code: item.id,
+                                quantity: item.quantity
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Stock release response:", data);
+                        })
+                        .catch(error => {
+                            console.error("Error releasing stock:", error);
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    // Function to toggle amount paid field based on payment status
+    function toggleAmountPaid() {
+        const paymentStatus = document.getElementById('payment_status').value;
+        const amountPaidGroup = document.getElementById('amount_paid_group');
+        const amountPaidInput = document.getElementById('amount_paid');
+        const totalElement = document.getElementById('checkout-total');
+
+        if (paymentStatus === 'Fully Paid') {
+            // For fully paid, set amount to total and disable field
+            const totalText = totalElement.textContent;
+            const totalAmount = parseFloat(totalText.replace('₹', ''));
+            amountPaidInput.value = totalAmount.toFixed(2);
+            amountPaidInput.disabled = true;
+        }
+        else if (paymentStatus === 'Unpaid') {
+            // For unpaid, set amount to 0 and disable field
+            amountPaidInput.value = '0.00';
+            amountPaidInput.disabled = true;
+        }
+        else {
+            // For partially paid, enable field and clear value
+            amountPaidInput.disabled = false;
+            amountPaidInput.value = '';
+            amountPaidInput.focus();
+        }
+    }
+
+    function populateCheckoutSummary(cart) {
+        const checkoutItems = document.getElementById('checkout-items');
+        const subtotalElement = document.getElementById('checkout-subtotal');
+        const discountElement = document.getElementById('checkout-discount');
+        const taxableElement = document.getElementById('checkout-taxable');
+        const gstElement = document.getElementById('checkout-gst');
+        const totalElement = document.getElementById('checkout-total');
+
+        // Clear existing items
+        checkoutItems.innerHTML = '';
+
+        if (cart.length === 0) {
+            // Redirect to cart if empty
+            window.location.href = '/cart';
+            return;
+        }
+
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalGst = 0;
+
+        // Add rows for each item
+        cart.forEach(item => {
+            // Ensure discount exists and is a number
+            if (item.discount === undefined) {
+                item.discount = 0;
+            }
+
+            const itemSubtotal = item.price * item.quantity;
+            const discountAmount = itemSubtotal * (item.discount / 100);
+            const discountedSubtotal = itemSubtotal - discountAmount;
+            const itemGst = discountedSubtotal * (item.gst_rate / 100);
+            const itemTotal = discountedSubtotal + itemGst;
+
+            subtotal += itemSubtotal;
+            totalDiscount += discountAmount;
+            totalGst += itemGst;
+
+            const row = document.createElement('tr');
+            const itemType = item.item_type || 'product';
+            row.innerHTML = `
+                <td>${item.item_name}</td>
+                <td><span class="item-type-badge item-type-${itemType}">${itemType.charAt(0).toUpperCase() + itemType.slice(1)}</span></td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td>${item.quantity}</td>
+                <td>${item.discount || 0}%</td>
+                <td>₹${discountedSubtotal.toFixed(2)}</td>
+                <td>${item.gst_rate}% (₹${itemGst.toFixed(2)})</td>
+                <td>₹${itemTotal.toFixed(2)}</td>
+            `;
+            checkoutItems.appendChild(row);
+        });
+
+        const taxableAmount = subtotal - totalDiscount;
+        const total = taxableAmount + totalGst;
+
+        // Update totals
+        subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+        discountElement.textContent = `₹${totalDiscount.toFixed(2)}`;
+        taxableElement.textContent = `₹${taxableAmount.toFixed(2)}`;
+        gstElement.textContent = `₹${totalGst.toFixed(2)}`;
+        totalElement.textContent = `₹${total.toFixed(2)}`;
+    }
+</script>
+{% endblock %}

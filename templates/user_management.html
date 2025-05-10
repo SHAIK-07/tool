@@ -1,0 +1,1210 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Add user role as a data attribute to the body for JavaScript access -->
+<script>
+    document.body.setAttribute('data-user-role', '{{ user.role }}');
+
+    // Check if user is top_user, if not, redirect to home
+    window.addEventListener('DOMContentLoaded', function() {
+        const userRole = document.body.getAttribute('data-user-role');
+        if (userRole !== 'top_user') {
+            alert('Access denied. Only top users can access user management.');
+            window.location.href = '/';
+        }
+    });
+</script>
+<div class="users-container">
+    {% if success_message %}
+    <div class="success-message">
+        <i class="fas fa-check-circle"></i>
+        <div class="message-content">
+            <p>{{ success_message }}</p>
+            <button class="copy-password-btn" onclick="copyPasswordFromMessage()">
+                <i class="fas fa-copy"></i> Copy Password
+            </button>
+        </div>
+        <span class="close-message" onclick="closeSuccessMessage()">&times;</span>
+    </div>
+    {% endif %}
+
+    <div class="page-header">
+        <h2><i class="fas fa-users-cog"></i> User Management</h2>
+        <p>Create and manage user accounts</p>
+    </div>
+
+    <script>
+        function resetPasswordDirect(userId, userName) {
+            console.log('Resetting password for user ID:', userId, 'Name:', userName);
+
+            // Show loading indicator
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'loading-indicator';
+            loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resetting password...';
+            document.body.appendChild(loadingIndicator);
+
+            // Make a POST request to reset the password
+            fetch(`/api/users/reset-password/${userId}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.text();  // Get the raw text first
+            })
+            .then(text => {
+                console.log('Raw response text:', text);
+
+                try {
+                    // Try to parse the JSON
+                    const data = JSON.parse(text);
+                    console.log('Parsed response data:', data);
+
+                    // Remove loading indicator
+                    document.body.removeChild(loadingIndicator);
+
+                    if (data.success && data.generated_password) {
+                        // Show the password in the modal
+                        document.getElementById('result-user-name').textContent = userName;
+                        document.getElementById('generated-password').textContent = data.generated_password;
+
+                        // Make sure the modal is visible
+                        const modal = document.getElementById('password-result-modal');
+                        modal.style.display = 'flex';
+                        modal.classList.remove('hidden');
+
+                        console.log('Password modal should be visible now');
+                    } else {
+                        alert('Password reset failed: ' + (data.message || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                    alert('Error parsing server response. Please check the console for details.');
+
+                    // Remove loading indicator
+                    document.body.removeChild(loadingIndicator);
+                }
+            })
+            .catch(error => {
+                console.error('Error resetting password:', error);
+                alert('Error resetting password: ' + error.message);
+
+                // Remove loading indicator
+                document.body.removeChild(loadingIndicator);
+            });
+        }
+
+        function confirmDelete(userId, userName) {
+            // Show the delete confirmation modal
+            document.getElementById('delete-confirm-user-id').value = userId;
+            document.getElementById('delete-confirm-user-name').textContent = userName;
+
+            // Show the modal
+            const modal = document.getElementById('delete-confirmation-modal');
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+        }
+
+        function closeDeleteConfirmationModal() {
+            document.getElementById('delete-confirmation-modal').classList.add('hidden');
+        }
+
+        function deleteUserDirect() {
+            const userId = document.getElementById('delete-confirm-user-id').value;
+            const userName = document.getElementById('delete-confirm-user-name').textContent;
+
+            console.log('Deleting user ID:', userId, 'Name:', userName);
+
+            // Show loading indicator
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'loading-indicator';
+            loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting user...';
+            document.body.appendChild(loadingIndicator);
+
+            // Close the confirmation modal
+            closeDeleteConfirmationModal();
+
+            // Make a POST request to delete the user
+            fetch(`/api/users/delete/${userId}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.text();  // Get the raw text first
+            })
+            .then(text => {
+                console.log('Raw response text:', text);
+
+                try {
+                    // Try to parse the JSON
+                    const data = JSON.parse(text);
+                    console.log('Parsed response data:', data);
+
+                    // Remove loading indicator
+                    document.body.removeChild(loadingIndicator);
+
+                    if (data.success) {
+                        // Show success message
+                        const successMessage = document.createElement('div');
+                        successMessage.className = 'success-notification';
+                        successMessage.innerHTML = `
+                            <i class="fas fa-check-circle"></i>
+                            <span>User ${userName} deleted successfully!</span>
+                        `;
+                        document.body.appendChild(successMessage);
+
+                        // Remove success message after 3 seconds
+                        setTimeout(() => {
+                            successMessage.classList.add('fade-out');
+                            setTimeout(() => {
+                                document.body.removeChild(successMessage);
+                            }, 500);
+                        }, 3000);
+
+                        // Reload page to update user list
+                        window.location.reload();
+                    } else {
+                        alert('Delete failed: ' + (data.message || 'Unknown error'));
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                    alert('Error parsing server response. Please check the console for details.');
+
+                    // Remove loading indicator
+                    document.body.removeChild(loadingIndicator);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting user:', error);
+                alert('Error deleting user: ' + error.message);
+
+                // Remove loading indicator
+                document.body.removeChild(loadingIndicator);
+            });
+        }
+
+        function callDirectApi(endpoint, userId) {
+            console.log('callDirectApi called with endpoint:', endpoint, 'userId:', userId);
+
+            // Get user name from the table
+            let userName = 'User';
+            const userRows = document.querySelectorAll('table.user-table tbody tr');
+            for (const row of userRows) {
+                const idElement = row.querySelector('small');
+                if (idElement && idElement.textContent.includes(`ID: ${userId}`)) {
+                    const nameElement = row.querySelector('.user-name');
+                    if (nameElement) {
+                        userName = nameElement.textContent.trim().split('(ID:')[0].trim();
+                    }
+                    break;
+                }
+            }
+
+            const url = endpoint + userId;
+            console.log('Making fetch request to URL:', url);
+
+            fetch(url, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response received:', response);
+
+                // Clone the response so we can log the body without consuming it
+                const clonedResponse = response.clone();
+                clonedResponse.text().then(text => {
+                    console.log('Response body:', text);
+
+                    // Try to parse the response body manually
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Manually parsed response data:', data);
+
+                        // If it's a password reset, show the password
+                        if (endpoint.includes('reset-password') && data.generated_password) {
+                            console.log('Manually showing password reset result modal');
+                            console.log('Generated password:', data.generated_password);
+
+                            // Update the modal content with the user name we found earlier
+                            document.getElementById('result-user-name').textContent = userName;
+                            document.getElementById('generated-password').textContent = data.generated_password;
+
+                            // Show the modal
+                            document.getElementById('password-result-modal').classList.remove('hidden');
+                        }
+                    } catch (e) {
+                        console.error('Error parsing response body:', e);
+                    }
+                });
+
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Parsed response data:', data);
+
+                if (data.success) {
+                    // If it's a password reset, show the password first
+                    if (endpoint.includes('reset-password')) {
+                        console.log('Password reset response:', data);
+
+                        if (data.generated_password) {
+                            console.log('Showing password reset result modal');
+                            console.log('Generated password:', data.generated_password);
+
+                            // Update the modal content with the user name we found earlier
+                            document.getElementById('result-user-name').textContent = userName;
+                            document.getElementById('generated-password').textContent = data.generated_password;
+
+                            // Show the modal
+                            document.getElementById('password-result-modal').classList.remove('hidden');
+
+                            // Don't reload the page or show other notifications
+                            return;
+                        } else {
+                            console.error('No generated_password in response:', data);
+                            alert('Password reset was successful, but the generated password was not returned. Please check the server logs.');
+                        }
+                    }
+
+                    // For other operations, show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'success-notification';
+                    successMessage.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <span>${data.message || 'Operation completed successfully!'}</span>
+                    `;
+                    document.body.appendChild(successMessage);
+
+                    // Remove success message after 3 seconds
+                    setTimeout(() => {
+                        successMessage.classList.add('fade-out');
+                        setTimeout(() => {
+                            document.body.removeChild(successMessage);
+                        }, 500);
+                    }, 3000);
+
+                    // Reload page to update user list
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error calling API:', error);
+
+                // Show error message
+                let errorMessage = 'Unknown error occurred';
+                if (error.message) {
+                    errorMessage = error.message;
+                } else if (error.detail) {
+                    errorMessage = error.detail;
+                }
+
+                alert(`Operation failed: ${errorMessage}`);
+            });
+        }
+    </script>
+
+    <div class="users-content">
+        <div class="users-actions">
+            <div class="users-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ users|length }}</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon top-user-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ users|selectattr('role', 'equalto', 'top_user')|list|length }}</div>
+                        <div class="stat-label">Top Users</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon admin-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</div>
+                        <div class="stat-label">Admins</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon employee-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ users|selectattr('role', 'equalto', 'employee')|list|length }}</div>
+                        <div class="stat-label">Employees</div>
+                    </div>
+                </div>
+            </div>
+            <a href="/user-management/add-new-user" class="add-user-btn">
+                <i class="fas fa-user-plus"></i> Add New User
+            </a>
+        </div>
+
+        <div class="users-table-container">
+            <div class="table-header">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="userSearchInput" placeholder="Search users..." onkeyup="searchUsers()">
+                </div>
+            </div>
+            <table class="users-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="user-name">
+                                <div class="user-avatar
+                                    {% if user.role == 'top_user' %}top-user-avatar
+                                    {% elif user.role == 'admin' %}admin-avatar
+                                    {% else %}employee-avatar{% endif %}">
+                                    <i class="fas
+                                        {% if user.role == 'top_user' %}fa-crown
+                                        {% elif user.role == 'admin' %}fa-user-shield
+                                        {% else %}fa-user{% endif %}"></i>
+                                </div>
+                                {{ user.name }}
+                                <div style="margin-top: 5px;">
+                                    <small style="color: #999; display: block;">ID: {{ user.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone|default('N/A', true) }}</td>
+                        <td>
+                            <span class="role-badge
+                                {% if user.role == 'top_user' %}top-user-role
+                                {% elif user.role == 'admin' %}admin-role
+                                {% else %}employee-role{% endif %}">
+                                {{ user.role|title }}
+                            </span>
+                        </td>
+                        <td>{{ user.last_login|default('Never', true) }}</td>
+                        <td class="actions-cell">
+                            <button class="action-btn reset-btn" onclick="resetPasswordDirect({{ user.id }}, '{{ user.name|escape }}')" title="Reset Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button class="action-btn delete-btn" onclick="confirmDelete({{ user.id }}, '{{ user.name|escape }}')" title="Delete User">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="add-user-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Add New User</h3>
+            <span class="close" onclick="closeAddUserModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="add-user-form">
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Name:</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter email address">
+                </div>
+                <div class="form-group">
+                    <label for="phone"><i class="fas fa-phone"></i> Phone:</label>
+                    <input type="text" id="phone" name="phone" placeholder="Enter phone number (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="role"><i class="fas fa-user-tag"></i> Role:</label>
+                    <select id="role" name="role">
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                        {% if user.email == 'contactsunmax@gmail.com' %}
+                        <option value="top_user">Top User</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="password-hint">
+                        <i class="fas fa-info-circle"></i> A system-generated password will be created for this user.
+                        <div>The user will be prompted to change this password on first login.</div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeAddUserModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn submit-btn" onclick="addUser()">
+                <i class="fas fa-plus"></i> Add User
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="edit-user-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit"></i> Edit User</h3>
+            <span class="close" onclick="closeEditUserModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id" name="user_id">
+                <div class="form-group">
+                    <label for="edit-name"><i class="fas fa-user"></i> Name:</label>
+                    <input type="text" id="edit-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-email"><i class="fas fa-envelope"></i> Email:</label>
+                    <input type="email" id="edit-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-phone"><i class="fas fa-phone"></i> Phone:</label>
+                    <input type="text" id="edit-phone" name="phone">
+                </div>
+                <div class="form-group">
+                    <label for="edit-role"><i class="fas fa-user-tag"></i> Role:</label>
+                    <select id="edit-role" name="role">
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                        {% if user.email == 'contactsunmax@gmail.com' %}
+                        <option value="top_user">Top User</option>
+                        {% endif %}
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeEditUserModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn submit-btn" onclick="updateUser()">
+                <i class="fas fa-save"></i> Update User
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div id="delete-user-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header delete-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h3>
+            <span class="close" onclick="closeDeleteUserModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="delete-warning">
+                <i class="fas fa-trash-alt delete-icon"></i>
+                <div class="delete-message">
+                    <p>Are you sure you want to delete user <strong><span id="delete-user-name"></span></strong>?</p>
+                    <p class="warning-text"><i class="fas fa-exclamation-circle"></i> This action cannot be undone.</p>
+                </div>
+            </div>
+            <input type="hidden" id="delete-user-id">
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeDeleteUserModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn delete-confirm-btn" onclick="deleteUser()">
+                <i class="fas fa-trash"></i> Delete User
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div id="reset-password-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-key"></i> Reset Password</h3>
+            <span class="close" onclick="closeResetPasswordModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="reset-warning">
+                <i class="fas fa-key reset-icon"></i>
+                <div class="reset-message">
+                    <p>Are you sure you want to reset the password for <strong><span id="reset-user-name"></span></strong>?</p>
+                    <p>A new system-generated password will be created, and the user will need to change it on their next login.</p>
+                </div>
+            </div>
+            <input type="hidden" id="reset-user-id">
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeResetPasswordModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn reset-confirm-btn" onclick="resetPassword()">
+                <i class="fas fa-key"></i> Reset Password
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Password Reset Result Modal -->
+<div id="password-result-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-check-circle"></i> Password Reset Successful</h3>
+            <span class="close" onclick="closePasswordResultModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="password-result">
+                <p>The password for <strong><span id="result-user-name"></span></strong> has been reset to:</p>
+                <div class="generated-password-container">
+                    <code id="generated-password" class="generated-password"></code>
+                    <button class="copy-btn" onclick="copyPassword()" title="Copy to clipboard">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p class="password-instructions">
+                    <i class="fas fa-info-circle"></i> Please provide this password to the user.
+                    They will be required to change it on their first login.
+                </p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn primary-btn" onclick="copyPassword(); closePasswordResultModal()">
+                <i class="fas fa-copy"></i> Copy Password & Close
+            </button>
+            <button class="modal-btn cancel-btn" onclick="closePasswordResultModal()">
+                <i class="fas fa-times"></i> Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Confirmation Modal -->
+<div id="delete-confirmation-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Confirm Delete User</h3>
+            <span class="close" onclick="closeDeleteConfirmationModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="delete-warning" style="text-align: center;">
+                <i class="fas fa-user-times" style="font-size: 48px; color: #dc3545; margin-bottom: 20px;"></i>
+                <p>Are you sure you want to delete user <strong><span id="delete-confirm-user-name"></span></strong>?</p>
+                <p style="color: #dc3545; font-weight: bold;">This action cannot be undone!</p>
+                <input type="hidden" id="delete-confirm-user-id">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeDeleteConfirmationModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn delete-confirm-btn" style="background-color: #dc3545;" onclick="deleteUserDirect()">
+                <i class="fas fa-trash"></i> Delete User
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- User Management CSS -->
+<link rel="stylesheet" href="/static/css/style.css">
+
+<style>
+    .loading-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    /* Make sure the modal is visible */
+    #password-result-modal {
+        z-index: 10000;
+    }
+
+    #password-result-modal.hidden {
+        display: none;
+    }
+
+    #password-result-modal:not(.hidden) {
+        display: flex;
+    }
+</style>
+
+<script>
+    function showAddUserModal() {
+        console.log('showAddUserModal called');
+        document.getElementById('add-user-modal').classList.remove('hidden');
+    }
+
+    function closeAddUserModal() {
+        console.log('closeAddUserModal called');
+        document.getElementById('add-user-modal').classList.add('hidden');
+        document.getElementById('add-user-form').reset();
+    }
+
+    function showEditUserModal(userId) {
+        console.log('Fetching user data for ID:', userId);
+        // Fetch user data and populate form
+        console.log('Making fetch request to:', `/api/users/${userId}`);
+        fetch(`/api/users/${userId}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
+                // Clone the response so we can log the body without consuming it
+                const clonedResponse = response.clone();
+                clonedResponse.text().then(text => {
+                    console.log('Response body:', text);
+                });
+
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(user => {
+                document.getElementById('edit-user-id').value = user.id;
+                document.getElementById('edit-name').value = user.name;
+                document.getElementById('edit-email').value = user.email;
+                document.getElementById('edit-phone').value = user.phone || '';
+                document.getElementById('edit-role').value = user.role;
+                document.getElementById('edit-user-modal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error fetching user:', error);
+                console.error('Error details:', JSON.stringify(error, null, 2));
+                alert('Failed to load user data');
+            });
+    }
+
+    function closeEditUserModal() {
+        document.getElementById('edit-user-modal').classList.add('hidden');
+    }
+
+    function showDeleteUserModal(userId, userName) {
+        document.getElementById('delete-user-id').value = userId;
+        document.getElementById('delete-user-name').textContent = userName;
+        document.getElementById('delete-user-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteUserModal() {
+        document.getElementById('delete-user-modal').classList.add('hidden');
+    }
+
+    function showResetPasswordModal(userId, userName) {
+        document.getElementById('reset-user-id').value = userId;
+        document.getElementById('reset-user-name').textContent = userName;
+        document.getElementById('reset-password-modal').classList.remove('hidden');
+    }
+
+    function closeResetPasswordModal() {
+        document.getElementById('reset-password-modal').classList.add('hidden');
+    }
+
+    function closePasswordResultModal() {
+        document.getElementById('password-result-modal').classList.add('hidden');
+    }
+
+    function copyPassword() {
+        const passwordElement = document.getElementById('generated-password');
+        const password = passwordElement.textContent;
+
+        navigator.clipboard.writeText(password).then(() => {
+            // Show a temporary "Copied!" message
+            const copyBtn = document.querySelector('.copy-btn');
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+            copyBtn.classList.add('copied');
+
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHTML;
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+
+    function copyPasswordFromMessage() {
+        const messageContent = document.querySelector('.success-message .message-content p').textContent;
+        const passwordMatch = messageContent.match(/password: (.*?)$/);
+
+        if (passwordMatch && passwordMatch[1]) {
+            const password = passwordMatch[1];
+
+            navigator.clipboard.writeText(password).then(() => {
+                // Show a temporary "Copied!" message
+                const copyBtn = document.querySelector('.copy-password-btn');
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
+    }
+
+    function closeSuccessMessage() {
+        document.querySelector('.success-message').style.display = 'none';
+    }
+
+
+
+    function resetPassword() {
+        try {
+            const userId = document.getElementById('reset-user-id').value;
+            const userName = document.getElementById('reset-user-name').textContent;
+
+            console.log('Resetting password for user ID:', userId);
+            console.log('User name:', userName);
+
+        // Show loading state
+        const resetBtn = document.querySelector('#reset-password-modal .reset-confirm-btn');
+        const originalText = resetBtn.innerHTML;
+        resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resetting...';
+        resetBtn.disabled = true;
+
+        console.log('Making fetch request to:', `/api/users/reset-password/${userId}`);
+        fetch(`/api/users/reset-password/${userId}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+
+            // Clone the response so we can log the body without consuming it
+            const clonedResponse = response.clone();
+            clonedResponse.text().then(text => {
+                console.log('Response body:', text);
+            });
+
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Password reset successfully:', data);
+            closeResetPasswordModal();
+
+            // Show the generated password in the result modal
+            document.getElementById('result-user-name').textContent = userName;
+            document.getElementById('generated-password').textContent = data.generated_password;
+            document.getElementById('password-result-modal').classList.remove('hidden');
+
+            // Reset button state
+            resetBtn.innerHTML = originalText;
+            resetBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error resetting password:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+
+            // Reset button state
+            resetBtn.innerHTML = originalText;
+            resetBtn.disabled = false;
+
+            // Show error message
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            }
+
+            alert(`Failed to reset password: ${errorMessage}`);
+        });
+        } catch (error) {
+            console.error('Error in resetPassword function:', error);
+            alert('An error occurred while resetting the password. Please check the console for details.');
+        }
+    }
+
+    function addUser() {
+        const form = document.getElementById('add-user-form');
+
+        // Validate form
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        // Get form values directly
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const role = document.getElementById('role').value;
+
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('phone', phone);
+        formData.append('role', role);
+
+        console.log('Adding user with data:', {
+            name: name,
+            email: email,
+            phone: phone,
+            role: role
+        });
+
+        // Show loading state
+        const submitBtn = document.querySelector('#add-user-modal .submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        submitBtn.disabled = true;
+
+        // Log the form data for debugging
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        fetch('/api/users/create', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            // Clone the response so we can log the body without consuming it
+            const clonedResponse = response.clone();
+            clonedResponse.text().then(text => {
+                console.log('Response body:', text);
+            });
+
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User added successfully:', data);
+            closeAddUserModal();
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-notification';
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>User ${data.user.name} added successfully!</span>
+            `;
+            document.body.appendChild(successMessage);
+
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(successMessage);
+                }, 500);
+            }, 3000);
+
+            // Reload page to show new user
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error adding user:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+
+            // Show error message
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            }
+
+            alert(`Failed to add user: ${errorMessage}`);
+        });
+    }
+
+    function updateUser() {
+        try {
+            const form = document.getElementById('edit-user-form');
+            console.log('Edit form:', form);
+
+            // Validate form
+            if (!form.checkValidity()) {
+                console.log('Form is invalid');
+                form.reportValidity();
+                return;
+            }
+            console.log('Form is valid');
+
+            // Get form values directly
+            const userId = document.getElementById('edit-user-id').value;
+            const name = document.getElementById('edit-name').value;
+            const email = document.getElementById('edit-email').value;
+            const phone = document.getElementById('edit-phone').value;
+            const role = document.getElementById('edit-role').value;
+            console.log('Form values:', { userId, name, email, phone, role });
+
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('phone', phone);
+        formData.append('role', role);
+
+        console.log('Updating user with ID:', userId, 'Data:', {
+            name: name,
+            email: email,
+            phone: phone,
+            role: role
+        });
+
+        // Log the form data for debugging
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        // Show loading state
+        const submitBtn = document.querySelector('#edit-user-modal .submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        submitBtn.disabled = true;
+
+        console.log('Making fetch request to:', `/api/users/update/${userId}`);
+        fetch(`/api/users/update/${userId}`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            // Clone the response so we can log the body without consuming it
+            const clonedResponse = response.clone();
+            clonedResponse.text().then(text => {
+                console.log('Response body:', text);
+            });
+
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User updated successfully:', data);
+            closeEditUserModal();
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-notification';
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>User ${data.user.name} updated successfully!</span>
+            `;
+            document.body.appendChild(successMessage);
+
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(successMessage);
+                }, 500);
+            }, 3000);
+
+            // Reload page to show updated user
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating user:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+
+            // Show error message
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            }
+
+            alert(`Failed to update user: ${errorMessage}`);
+        });
+        } catch (error) {
+            console.error('Error in updateUser function:', error);
+            alert('An error occurred while updating the user. Please check the console for details.');
+        }
+    }
+
+    function deleteUser() {
+        try {
+            const userId = document.getElementById('delete-user-id').value;
+            const userName = document.getElementById('delete-user-name').textContent;
+
+            console.log('Deleting user with ID:', userId);
+            console.log('User name:', userName);
+
+        // Show loading state
+        const deleteBtn = document.querySelector('#delete-user-modal .delete-confirm-btn');
+        const originalText = deleteBtn.innerHTML;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+        deleteBtn.disabled = true;
+
+        console.log('Making fetch request to:', `/api/users/delete/${userId}`);
+        fetch(`/api/users/delete/${userId}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            // Clone the response so we can log the body without consuming it
+            const clonedResponse = response.clone();
+            clonedResponse.text().then(text => {
+                console.log('Response body:', text);
+            });
+
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User deleted successfully:', data);
+            closeDeleteUserModal();
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-notification';
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>User ${userName} deleted successfully!</span>
+            `;
+            document.body.appendChild(successMessage);
+
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(successMessage);
+                }, 500);
+            }, 3000);
+
+            // Reload page to update user list
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error deleting user:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+
+            // Reset button state
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+
+            // Show error message
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            }
+
+            alert(`Failed to delete user: ${errorMessage}`);
+        });
+        } catch (error) {
+            console.error('Error in deleteUser function:', error);
+            alert('An error occurred while deleting the user. Please check the console for details.');
+        }
+    }
+
+    // Search functionality
+    function searchUsers() {
+        const input = document.getElementById('userSearchInput');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('usersTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            let found = false;
+            const cells = rows[i].getElementsByTagName('td');
+
+            for (let j = 0; j < cells.length - 1; j++) {
+                const cellText = cells[j].textContent || cells[j].innerText;
+                if (cellText.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+
+            rows[i].style.display = found ? '' : 'none';
+        }
+    }
+</script>
+
+{% endblock %}
+
+
+
+
+
+

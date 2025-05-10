@@ -1,0 +1,1095 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="users-container">
+    <div class="page-header">
+        <h2><i class="fas fa-users"></i> User Management</h2>
+        <p>Create and manage employee accounts</p>
+    </div>
+
+    <div class="users-content">
+        <div class="users-actions">
+            <div class="users-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ users|length }}</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon admin-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</div>
+                        <div class="stat-label">Admins</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon employee-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ users|selectattr('role', 'equalto', 'employee')|list|length }}</div>
+                        <div class="stat-label">Employees</div>
+                    </div>
+                </div>
+            </div>
+            <button class="add-user-btn" onclick="showAddUserModal()">
+                <i class="fas fa-user-plus"></i> Add New User
+            </button>
+        </div>
+
+        <div class="users-table-container">
+            <div class="table-header">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="userSearchInput" placeholder="Search users..." onkeyup="searchUsers()">
+                </div>
+            </div>
+            <table class="users-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="user-name">
+                                <div class="user-avatar {% if user.role == 'admin' %}admin-avatar{% else %}employee-avatar{% endif %}">
+                                    <i class="fas {% if user.role == 'admin' %}fa-user-shield{% else %}fa-user{% endif %}"></i>
+                                </div>
+                                {{ user.name }}
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone|default('N/A', true) }}</td>
+                        <td>
+                            <span class="role-badge {% if user.role == 'admin' %}admin-role{% else %}employee-role{% endif %}">
+                                {{ user.role|title }}
+                            </span>
+                        </td>
+                        <td>{{ user.last_login|default('Never', true) }}</td>
+                        <td class="actions-cell">
+                            <button class="action-btn edit-btn" onclick="showEditUserModal({{ user.id }})" title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete-btn" onclick="showDeleteUserModal({{ user.id }}, '{{ user.name }}')" title="Delete User">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="add-user-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Add New User</h3>
+            <span class="close" onclick="closeAddUserModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="add-user-form">
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Name:</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter email address">
+                </div>
+                <div class="form-group">
+                    <label for="phone"><i class="fas fa-phone"></i> Phone:</label>
+                    <input type="text" id="phone" name="phone" placeholder="Enter phone number (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="role"><i class="fas fa-user-tag"></i> Role:</label>
+                    <select id="role" name="role">
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-key"></i> Initial Password:</label>
+                    <input type="password" id="password" name="password" required minlength="6" placeholder="Minimum 6 characters">
+                    <div class="password-hint"><i class="fas fa-info-circle"></i> User will be prompted to change this on first login</div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeAddUserModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn submit-btn" onclick="addUser()">
+                <i class="fas fa-plus"></i> Add User
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="edit-user-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit"></i> Edit User</h3>
+            <span class="close" onclick="closeEditUserModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id" name="user_id">
+                <div class="form-group">
+                    <label for="edit-name"><i class="fas fa-user"></i> Name:</label>
+                    <input type="text" id="edit-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-email"><i class="fas fa-envelope"></i> Email:</label>
+                    <input type="email" id="edit-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-phone"><i class="fas fa-phone"></i> Phone:</label>
+                    <input type="text" id="edit-phone" name="phone">
+                </div>
+                <div class="form-group">
+                    <label for="edit-role"><i class="fas fa-user-tag"></i> Role:</label>
+                    <select id="edit-role" name="role">
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeEditUserModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn submit-btn" onclick="updateUser()">
+                <i class="fas fa-save"></i> Update User
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div id="delete-user-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header delete-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h3>
+            <span class="close" onclick="closeDeleteUserModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="delete-warning">
+                <i class="fas fa-trash-alt delete-icon"></i>
+                <div class="delete-message">
+                    <p>Are you sure you want to delete user <strong><span id="delete-user-name"></span></strong>?</p>
+                    <p class="warning-text"><i class="fas fa-exclamation-circle"></i> This action cannot be undone.</p>
+                </div>
+            </div>
+            <input type="hidden" id="delete-user-id">
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeDeleteUserModal()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button class="modal-btn delete-confirm-btn" onclick="deleteUser()">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .users-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        color: #003366;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+
+    .page-header h2 i {
+        margin-right: 0.5rem;
+    }
+
+    .page-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .users-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .users-stats {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        display: flex;
+        align-items: center;
+        background-color: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        min-width: 180px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #e0f2ff;
+        color: #0066cc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .admin-icon {
+        background-color: #e0f2ff;
+        color: #0066cc;
+    }
+
+    .employee-icon {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .add-user-btn {
+        background-color: #003366;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: flex;
+        align-items: center;
+    }
+
+    .add-user-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .add-user-btn:hover {
+        background-color: #00509e;
+    }
+
+    .users-table-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .table-header {
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-bottom: 1px solid #eee;
+    }
+
+    .search-container {
+        position: relative;
+        max-width: 400px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+
+    #userSearchInput {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    #userSearchInput:focus {
+        outline: none;
+        border-color: #003366;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .users-table th {
+        background-color: #f5f7fa;
+        color: #333;
+        font-weight: 600;
+        text-align: left;
+        padding: 1rem;
+        border-bottom: 2px solid #eee;
+    }
+
+    .users-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        color: #333;
+    }
+
+    .users-table tr:hover {
+        background-color: #f9f9f9;
+    }
+
+    .user-name {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .admin-avatar {
+        background-color: #e0f2ff;
+        color: #0066cc;
+    }
+
+    .employee-avatar {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .admin-role {
+        background-color: #e0f2ff;
+        color: #0066cc;
+    }
+
+    .employee-role {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .actions-cell {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .edit-btn {
+        background-color: #e0f2ff;
+        color: #0066cc;
+    }
+
+    .edit-btn:hover {
+        background-color: #cce7ff;
+    }
+
+    .delete-btn {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+
+    .delete-btn:hover {
+        background-color: #ffcdd2;
+    }
+
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal.hidden {
+        display: none;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: #003366;
+        font-size: 1.3rem;
+    }
+
+    .modal-header h3 i {
+        margin-right: 0.5rem;
+    }
+
+    .delete-header h3 {
+        color: #c62828;
+    }
+
+    .close {
+        font-size: 1.5rem;
+        color: #999;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .close:hover {
+        color: #333;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .form-group label i {
+        margin-right: 0.5rem;
+        color: #003366;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: #003366;
+        outline: none;
+    }
+
+    .password-hint {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .modal-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+    }
+
+    .modal-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .cancel-btn {
+        background-color: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+
+    .cancel-btn:hover {
+        background-color: #e0e0e0;
+    }
+
+    .submit-btn {
+        background-color: #003366;
+        color: white;
+    }
+
+    .submit-btn:hover {
+        background-color: #00509e;
+    }
+
+    .delete-confirm-btn {
+        background-color: #c62828;
+        color: white;
+    }
+
+    .delete-confirm-btn:hover {
+        background-color: #b71c1c;
+    }
+
+    .delete-warning {
+        display: flex;
+        align-items: center;
+        background-color: #ffebee;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+    }
+
+    .delete-icon {
+        font-size: 2.5rem;
+        color: #c62828;
+        margin-right: 1.5rem;
+    }
+
+    .delete-message p {
+        margin: 0.5rem 0;
+    }
+
+    .delete-message strong {
+        color: #c62828;
+    }
+
+    .warning-text {
+        color: #c62828;
+        font-weight: 500;
+    }
+
+    .warning-text i {
+        margin-right: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .users-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .users-stats {
+            flex-direction: column;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .user-avatar {
+            display: none;
+        }
+    }
+
+
+
+    /* Notification Styles */
+    .success-notification {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        z-index: 2000;
+        animation: slideDown 0.5s ease;
+    }
+
+    .success-notification i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .success-notification.fade-out {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translate(-50%, -20px);
+            opacity: 0;
+        }
+        to {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<script>
+    // User management JavaScript will be added here
+    function showAddUserModal() {
+        document.getElementById('add-user-modal').classList.remove('hidden');
+    }
+
+    function closeAddUserModal() {
+        document.getElementById('add-user-modal').classList.add('hidden');
+        document.getElementById('add-user-form').reset();
+    }
+
+    function showEditUserModal(userId) {
+        console.log('Fetching user data for ID:', userId);
+        // Fetch user data and populate form
+        fetch(`/api/users/${userId}`, {
+            method: 'GET',
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(user => {
+                document.getElementById('edit-user-id').value = user.id;
+                document.getElementById('edit-name').value = user.name;
+                document.getElementById('edit-email').value = user.email;
+                document.getElementById('edit-phone').value = user.phone || '';
+                document.getElementById('edit-role').value = user.role;
+                document.getElementById('edit-user-modal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error fetching user:', error);
+                alert('Failed to load user data');
+            });
+    }
+
+    function closeEditUserModal() {
+        document.getElementById('edit-user-modal').classList.add('hidden');
+    }
+
+    function showDeleteUserModal(userId, userName) {
+        document.getElementById('delete-user-id').value = userId;
+        document.getElementById('delete-user-name').textContent = userName;
+        document.getElementById('delete-user-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteUserModal() {
+        document.getElementById('delete-user-modal').classList.add('hidden');
+    }
+
+    function addUser() {
+        const form = document.getElementById('add-user-form');
+
+        // Validate form
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        // Get form values directly
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const role = document.getElementById('role').value;
+        const password = document.getElementById('password').value;
+
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('phone', phone);
+        formData.append('role', role);
+        formData.append('password', password);
+
+        console.log('Adding user with data:', {
+            name: name,
+            email: email,
+            phone: phone,
+            role: role,
+            password: '********'
+        });
+
+        // Show loading state
+        const submitBtn = document.querySelector('#add-user-modal .submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+        submitBtn.disabled = true;
+
+        // Log the form data for debugging
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + (pair[0] === 'password' ? '********' : pair[1]));
+        }
+
+        fetch('/api/users/create', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            // Clone the response so we can log the body without consuming it
+            const clonedResponse = response.clone();
+            clonedResponse.text().then(text => {
+                console.log('Response body:', text);
+            });
+
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User added successfully:', data);
+            closeAddUserModal();
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-notification';
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>User ${data.user.name} added successfully!</span>
+            `;
+            document.body.appendChild(successMessage);
+
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(successMessage);
+                }, 500);
+            }, 3000);
+
+            // Reload page to show new user
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error adding user:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+
+            // Show error message
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            }
+
+            alert(`Failed to add user: ${errorMessage}`);
+        });
+    }
+
+    function updateUser() {
+        const form = document.getElementById('edit-user-form');
+
+        // Validate form
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        // Get form values directly
+        const userId = document.getElementById('edit-user-id').value;
+        const name = document.getElementById('edit-name').value;
+        const email = document.getElementById('edit-email').value;
+        const phone = document.getElementById('edit-phone').value;
+        const role = document.getElementById('edit-role').value;
+
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('phone', phone);
+        formData.append('role', role);
+
+        console.log('Updating user with ID:', userId, 'Data:', {
+            name: name,
+            email: email,
+            phone: phone,
+            role: role
+        });
+
+        // Log the form data for debugging
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        // Show loading state
+        const submitBtn = document.querySelector('#edit-user-modal .submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        submitBtn.disabled = true;
+
+        fetch(`/api/users/update/${userId}`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            // Clone the response so we can log the body without consuming it
+            const clonedResponse = response.clone();
+            clonedResponse.text().then(text => {
+                console.log('Response body:', text);
+            });
+
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User updated successfully:', data);
+            closeEditUserModal();
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-notification';
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>User ${data.user.name} updated successfully!</span>
+            `;
+            document.body.appendChild(successMessage);
+
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(successMessage);
+                }, 500);
+            }, 3000);
+
+            // Reload page to show updated user
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error updating user:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+
+            // Show error message
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            }
+
+            alert(`Failed to update user: ${errorMessage}`);
+        });
+    }
+
+    function deleteUser() {
+        const userId = document.getElementById('delete-user-id').value;
+        const userName = document.getElementById('delete-user-name').textContent;
+
+        console.log('Deleting user with ID:', userId);
+        console.log('User name:', userName);
+
+        // Show loading state
+        const deleteBtn = document.querySelector('#delete-user-modal .delete-confirm-btn');
+        const originalText = deleteBtn.innerHTML;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+        deleteBtn.disabled = true;
+
+        fetch(`/api/users/delete/${userId}`, {
+            method: 'POST',
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+
+            // Clone the response so we can log the body without consuming it
+            const clonedResponse = response.clone();
+            clonedResponse.text().then(text => {
+                console.log('Response body:', text);
+            });
+
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User deleted successfully:', data);
+            closeDeleteUserModal();
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-notification';
+            successMessage.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>User ${userName} deleted successfully!</span>
+            `;
+            document.body.appendChild(successMessage);
+
+            // Remove success message after 3 seconds
+            setTimeout(() => {
+                successMessage.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(successMessage);
+                }, 500);
+            }, 3000);
+
+            // Reload page to update user list
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error deleting user:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
+
+            // Reset button state
+            deleteBtn.innerHTML = originalText;
+            deleteBtn.disabled = false;
+
+            // Show error message
+            let errorMessage = 'Unknown error occurred';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            }
+
+            alert(`Failed to delete user: ${errorMessage}`);
+        });
+    }
+
+    // Search functionality
+    function searchUsers() {
+        const input = document.getElementById('userSearchInput');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('usersTable');
+        const rows = table.getElementsByTagName('tr');
+
+        // Loop through all table rows, and hide those who don't match the search query
+        for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header row
+            let found = false;
+            const cells = rows[i].getElementsByTagName('td');
+
+            // Search through each cell in the row
+            for (let j = 0; j < cells.length - 1; j++) { // Skip the actions cell
+                const cell = cells[j];
+                if (cell) {
+                    const textValue = cell.textContent || cell.innerText;
+                    if (textValue.toUpperCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            // Show/hide the row based on search match
+            if (found) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+</script>
+{% endblock %}

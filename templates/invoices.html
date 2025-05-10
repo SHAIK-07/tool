@@ -1,0 +1,1210 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    /* Invoice Type Badge Styling */
+    .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .badge-product {
+        background-color: rgba(21, 101, 192, 0.2);
+        color: #1565c0;
+        border: 1px solid #1565c0;
+    }
+
+    .badge-service {
+        background-color: rgba(123, 31, 162, 0.2);
+        color: #7b1fa2;
+        border: 1px solid #7b1fa2;
+    }
+
+    .badge-combination {
+        background-color: rgba(255, 143, 0, 0.2);
+        color: #ff8f00;
+        border: 1px solid #ff8f00;
+    }
+
+    /* Dark theme badge adjustments */
+    [data-theme="dark"] .badge-product {
+        color: #90caf9;
+        border-color: #90caf9;
+    }
+
+    [data-theme="dark"] .badge-service {
+        color: #ce93d8;
+        border-color: #ce93d8;
+    }
+
+    [data-theme="dark"] .badge-combination {
+        color: #ffe082;
+        border-color: #ffe082;
+    }
+
+    /* Custom Date Range Styling */
+    #custom-date-range {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 12px;
+        background-color: var(--bg-secondary);
+        border-radius: 5px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        width: 100%;
+        flex-wrap: wrap;
+        border: 1px solid var(--border-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .date-filter-active {
+        background-color: var(--accent-tertiary) !important;
+        border: 1px solid var(--accent-primary) !important;
+        color: var(--text-primary) !important;
+        font-weight: bold !important;
+    }
+
+    #custom-date-range input[type="date"] {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        flex: 1;
+        min-width: 150px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Ensure date inputs are visible in dark mode */
+    [data-theme="dark"] #custom-date-range {
+        background-color: #222;
+        border-color: #555;
+    }
+
+    [data-theme="dark"] #custom-date-range input[type="date"] {
+        color: white;
+        background-color: #333;
+        border-color: #555;
+    }
+
+    #apply-date-range {
+        padding: 8px 15px;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    #apply-date-range:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    @media (max-width: 576px) {
+        #custom-date-range {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        #custom-date-range input[type="date"] {
+            width: 100%;
+        }
+    }
+
+    /* Count Badge Styling */
+    .count-badge {
+        display: inline-block;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        font-size: 14px;
+        font-weight: normal;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 10px;
+        vertical-align: middle;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .filter-active .count-badge {
+        background-color: var(--accent-primary);
+    }
+
+    .filter-active {
+        color: var(--accent-primary);
+    }
+
+    /* New layout styles */
+    .invoice-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .search-row {
+        width: 100%;
+    }
+
+    .search-row .search-box {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .search-row .search-box input {
+        width: 100%;
+        padding: 12px 15px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Ensure search input is visible in dark mode */
+    [data-theme="dark"] .search-row .search-box input {
+        color: white;
+        background-color: #333;
+    }
+
+    /* Fix placeholder text color in dark mode */
+    [data-theme="dark"] .search-row .search-box input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search-row .search-box button {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        padding: 0 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .search-row .search-box button:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .filter-row {
+        width: 100%;
+    }
+
+    .filter-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .filter-options select {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        min-width: 180px;
+        font-size: 14px;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Ensure select options are visible in dark mode */
+    [data-theme="dark"] .filter-options select {
+        color: white;
+        background-color: #333;
+        border-color: #555;
+    }
+
+    [data-theme="dark"] .filter-options select option {
+        background-color: #333;
+        color: white;
+    }
+
+    .filter-options .export-btn {
+        padding: 8px 15px;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .filter-options .export-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    @media (max-width: 768px) {
+        .filter-options {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-options select,
+        .filter-options button {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="invoices-container">
+    <div class="page-header">
+        <h2>Invoice Management</h2>
+        <p>View and manage your invoices</p>
+    </div>
+
+    <div class="invoice-filters">
+        <!-- Search bar on its own line -->
+        <div class="search-row">
+            <div class="search-box">
+                <input type="text" id="invoice-search" placeholder="Search by invoice number or customer name...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+
+        <!-- Filters on a separate line -->
+        <div class="filter-row">
+            <div class="filter-options">
+                <select id="date-filter">
+                    <option value="all">All Dates</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <select id="payment-status-filter">
+                    <option value="all" {% if current_payment_status == 'all' %}selected{% endif %}>All Payment Statuses</option>
+                    <option value="Fully Paid" {% if current_payment_status == 'Fully Paid' %}selected{% endif %}>Fully Paid</option>
+                    <option value="Partially Paid" {% if current_payment_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                    <option value="Unpaid" {% if current_payment_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                </select>
+                <select id="invoice-type-filter">
+                    <option value="all" {% if current_invoice_type == 'all' %}selected{% endif %}>All Types</option>
+                    <option value="product" {% if current_invoice_type == 'product' %}selected{% endif %}>Product</option>
+                    <option value="service" {% if current_invoice_type == 'service' %}selected{% endif %}>Service</option>
+                    <option value="combination" {% if current_invoice_type == 'combination' %}selected{% endif %}>Combination</option>
+                </select>
+                <button id="export-excel-btn" class="export-btn" title="Export to Excel for GST Filing">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </div>
+
+            <!-- Custom date range container moved outside the filter options -->
+            <div id="custom-date-range" style="display: none;">
+                <input type="date" id="start-date" placeholder="Start Date">
+                <input type="date" id="end-date" placeholder="End Date">
+                <button id="apply-date-range" class="btn primary-btn-sm">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="current-invoices">
+        <h3>Invoice Records <span id="invoice-count" class="count-badge">{{ invoices|length }}</span></h3>
+
+        {% if invoices %}
+        <div class="invoice-table-container">
+            <table class="inventory-table invoice-table">
+                <thead>
+                    <tr>
+                        <th>Invoice Number</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Customer Name</th>
+                        <th>Payment Status</th>
+                        <th>Amount Paid (₹)</th>
+                        <th>Total Amount (₹)</th>
+                        <th>Balance Due (₹)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr id="row-{{ invoice.invoice_number }}" data-invoice-number="{{ invoice.invoice_number }}">
+                        <td>{{ invoice.invoice_number }}</td>
+                        <td>{{ invoice.date.strftime('%d-%m-%Y') if invoice.date.strftime else invoice.date }}</td>
+                        <td>
+                            <span class="badge {% if invoice.invoice_type == 'service' %}badge-service{% elif invoice.invoice_type == 'combination' %}badge-combination{% else %}badge-product{% endif %}">
+                                {{ invoice.invoice_type|capitalize if invoice.invoice_type else 'Product' }}
+                            </span>
+                        </td>
+                        <td>{{ invoice.customer_name }}</td>
+                        <td class="{% if invoice.payment_status == 'Fully Paid' %}text-success{% elif invoice.payment_status == 'Partially Paid' %}text-warning{% else %}text-danger{% endif %}">
+                            {{ invoice.payment_status }}
+                        </td>
+                        <td>₹{{ invoice.amount_paid }}</td>
+                        <td>₹{{ invoice.total_amount }}</td>
+                        <td class="{% if invoice.total_amount > invoice.amount_paid %}text-danger{% else %}text-success{% endif %}">
+                            ₹{{ (invoice.total_amount - invoice.amount_paid)|round(2) }}
+                        </td>
+                        <td class="invoice-actions">
+                            <div class="action-buttons">
+                                <a href="/invoice/{{ invoice.invoice_number }}" class="view-btn" title="View Invoice">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button onclick="viewPdf('{{ invoice.invoice_number }}')" class="pdf-btn" title="View PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </button>
+                                <button onclick="downloadInvoice('{{ invoice.invoice_number }}')" class="download-btn" title="Download PDF">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button onclick="confirmDelete('{{ invoice.invoice_number }}')" class="delete-btn" title="Delete Invoice">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-invoices">
+            <p>No invoices found.</p>
+            <a href="/" class="btn primary-btn">Continue Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Deletion</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete this invoice? This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button id="cancelDelete" class="btn secondary-btn">Cancel</button>
+            <button id="confirmDelete" class="btn primary-btn" style="background-color: #dc3545; border-color: #dc3545;">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add this modal for editing invoices -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit Invoice</h2>
+        <form id="edit-invoice-form">
+            <input type="hidden" id="edit-invoice-id">
+            <div class="form-group">
+                <label for="edit-date">Date:</label>
+                <input type="date" id="edit-date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-customer-name">Customer Name:</label>
+                <input type="text" id="edit-customer-name" name="customer_name" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-payment-method">Payment Method:</label>
+                <select id="edit-payment-method" name="payment_method">
+                    <option value="">Select payment method</option>
+                    <option value="cash">Cash</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="upi">UPI</option>
+                    <option value="credit_card">Credit Card</option>
+                    <option value="debit_card">Debit Card</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit-payment-status">Payment Status:</label>
+                <select id="edit-payment-status" name="payment_status" required>
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Partially Paid">Partially Paid</option>
+                    <option value="Fully Paid">Fully Paid</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit-amount-paid">Amount Paid (₹):</label>
+                <input type="number" id="edit-amount-paid" name="amount_paid" step="0.01" min="0">
+            </div>
+            <div class="form-actions">
+                <button type="button" id="cancelEdit" class="cancel-btn">Cancel</button>
+                <button type="button" id="saveEdit" class="save-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: var(--card-bg);
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 500px;
+        box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    .close {
+        color: var(--text-secondary);
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .cancel-btn, .save-btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .cancel-btn {
+        background-color: var(--btn-secondary-bg);
+        color: var(--btn-secondary-text);
+        border: 1px solid var(--border-color);
+    }
+
+    .save-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+    }
+
+    /* Action button styles */
+    .invoice-actions {
+        white-space: nowrap;
+        text-align: center;
+        min-width: 150px;
+        padding: 8px 5px !important;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .view-btn, .pdf-btn, .download-btn, .edit-btn, .delete-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-btn {
+        background-color: #4285F4;
+    }
+
+    .pdf-btn {
+        background-color: #DB4437;
+    }
+
+    .download-btn {
+        background-color: #0F9D58;
+    }
+
+    .edit-btn {
+        background-color: #F4B400;
+        color: #212529;
+    }
+
+    .delete-btn {
+        background-color: #DB4437;
+    }
+
+    .view-btn:hover, .pdf-btn:hover, .download-btn:hover, .edit-btn:hover, .delete-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+</style>
+
+<script>
+    function viewPdf(invoiceNumber) {
+        window.open(`/api/invoices/view/${invoiceNumber}`, '_blank');
+    }
+
+    function downloadInvoice(invoiceNumber) {
+        window.open(`/api/invoices/download/${invoiceNumber}`, '_blank');
+    }
+
+    // Delete invoice functionality
+    let invoiceToDelete = '';
+    const modal = document.getElementById('deleteModal');
+    const closeBtn = document.querySelector('.close');
+    const cancelBtn = document.getElementById('cancelDelete');
+    const confirmBtn = document.getElementById('confirmDelete');
+
+    function confirmDelete(invoiceNumber) {
+        // Set the invoice number to delete
+        invoiceToDelete = invoiceNumber;
+
+        // Show the modal
+        modal.style.display = 'flex';
+
+        console.log('Opening delete confirmation for invoice:', invoiceNumber);
+    }
+
+    function closeModal() {
+        // Simply hide the modal
+        modal.style.display = 'none';
+        console.log('Modal closed');
+    }
+
+    function deleteInvoice() {
+        if (!invoiceToDelete) {
+            console.error('No invoice to delete');
+            showNotification('Error: No invoice selected for deletion', 'error');
+            return;
+        }
+
+        console.log('Deleting invoice:', invoiceToDelete);
+
+        // Close the modal
+        modal.style.display = 'none';
+
+        // Show a notification that we're deleting
+        showNotification('Deleting invoice...', 'info');
+
+        // Store the invoice number locally in case it gets reset
+        const currentInvoice = invoiceToDelete;
+
+        fetch(`/api/invoices/delete/${currentInvoice}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('Delete response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Delete response data:', data);
+
+            if (data.status === 'success') {
+                // Remove the row from the table
+                const row = document.getElementById(`row-${currentInvoice}`);
+                if (row) {
+                    row.remove();
+                    console.log('Row removed from table');
+                } else {
+                    console.warn('Row not found in table:', currentInvoice);
+                }
+
+                // Show notification
+                showNotification('Invoice deleted successfully', 'success');
+
+                // If no invoices left, refresh the page to show the "No invoices found" message
+                if (document.querySelectorAll('.invoice-table tbody tr').length === 0) {
+                    console.log('No invoices left, reloading page');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            } else {
+                console.error('Error in delete response:', data);
+                showNotification('Error deleting invoice: ' + (data.error || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error in fetch operation:', error);
+            showNotification('Error deleting invoice: ' + error.message, 'error');
+        });
+    }
+
+    // Show notification function
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        // Position in the top middle
+        notification.style.top = '20px';
+        notification.style.left = '50%';
+        notification.style.transform = 'translateX(-50%)';
+
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        // Hide and remove notification after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    // Initialize event listeners when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Event listeners for modal buttons
+        closeBtn.addEventListener('click', function() {
+            closeModal();
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            closeModal();
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            deleteInvoice();
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    });
+
+    // Search functionality
+    document.getElementById('invoice-search').addEventListener('keyup', function() {
+        applyFilters();
+    });
+
+    // Date filter functionality
+    document.getElementById('date-filter').addEventListener('change', function() {
+        const dateFilter = document.getElementById('date-filter');
+        const customDateRange = document.getElementById('custom-date-range');
+
+        if (dateFilter.value === 'custom') {
+            customDateRange.style.display = 'flex';
+        } else {
+            customDateRange.style.display = 'none';
+            dateFilter.classList.remove('date-filter-active');
+
+            // Reset the custom option text
+            const customOption = dateFilter.querySelector('option[value="custom"]');
+            customOption.textContent = 'Custom Range';
+
+            applyFilters();
+        }
+    });
+
+    // Payment status filter functionality
+    document.getElementById('payment-status-filter').addEventListener('change', function() {
+        applyUrlFilters();
+    });
+
+    // Invoice type filter functionality
+    document.getElementById('invoice-type-filter').addEventListener('change', function() {
+        applyUrlFilters();
+    });
+
+    // Function to apply URL filters
+    function applyUrlFilters() {
+        const paymentStatus = document.getElementById('payment-status-filter').value;
+        const invoiceType = document.getElementById('invoice-type-filter').value;
+
+        let url = '/invoices';
+        let params = [];
+
+        if (paymentStatus !== 'all') {
+            params.push(`payment_status=${encodeURIComponent(paymentStatus)}`);
+        }
+
+        if (invoiceType !== 'all') {
+            params.push(`invoice_type=${encodeURIComponent(invoiceType)}`);
+        }
+
+        if (params.length > 0) {
+            url += '?' + params.join('&');
+        }
+
+        window.location.href = url;
+    }
+
+    // Function to apply all filters (date and search)
+    function applyFilters() {
+        const dateFilterValue = document.getElementById('date-filter').value;
+        const searchValue = document.getElementById('invoice-search').value.toLowerCase();
+        const rows = document.querySelectorAll('.invoice-table tbody tr');
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        // Get custom date range values if selected
+        let startDate = null;
+        let endDate = null;
+
+        if (dateFilterValue === 'custom') {
+            const startDateInput = document.getElementById('start-date').value;
+            const endDateInput = document.getElementById('end-date').value;
+
+            if (startDateInput) {
+                startDate = new Date(startDateInput);
+                startDate.setHours(0, 0, 0, 0);
+            }
+
+            if (endDateInput) {
+                endDate = new Date(endDateInput);
+                endDate.setHours(23, 59, 59, 999); // End of the day
+            }
+        }
+
+        rows.forEach(row => {
+            const dateStr = row.cells[1].textContent;
+            const dateParts = dateStr.split('-');
+            const invoiceDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+
+            const invoiceNumber = row.cells[0].textContent.toLowerCase();
+            const customerName = row.cells[3].textContent.toLowerCase(); // Updated index to match customer name column
+
+            // Check if row matches search criteria
+            const matchesSearch = invoiceNumber.includes(searchValue) ||
+                                 customerName.includes(searchValue);
+
+            // Check if row matches date filter
+            let matchesDate = false;
+            if (dateFilterValue === 'all') {
+                matchesDate = true;
+            } else if (dateFilterValue === 'today' && invoiceDate.getTime() === today.getTime()) {
+                matchesDate = true;
+            } else if (dateFilterValue === 'week' && invoiceDate >= weekStart) {
+                matchesDate = true;
+            } else if (dateFilterValue === 'month' && invoiceDate >= monthStart) {
+                matchesDate = true;
+            } else if (dateFilterValue === 'custom' && startDate && endDate) {
+                // Check if invoice date is within the custom range
+                matchesDate = invoiceDate >= startDate && invoiceDate <= endDate;
+            }
+
+            // Show row only if it matches both filters
+            if (matchesSearch && matchesDate) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update the invoice count badge
+        updateInvoiceCount();
+    }
+
+    // Function to export invoices to Excel
+    function exportToExcel() {
+        // Get the current payment status filter
+        const paymentStatusFilter = document.getElementById('payment-status-filter');
+        const paymentStatus = paymentStatusFilter.value;
+
+        // Construct the URL with the payment status parameter
+        let url = '/api/invoices/export-excel';
+        if (paymentStatus !== 'all') {
+            url += `?payment_status=${encodeURIComponent(paymentStatus)}`;
+        }
+
+        // Show loading notification
+        showNotification('Generating Excel file...', 'info');
+
+        // Open the URL in a new tab/window
+        window.open(url, '_blank');
+    }
+
+    // Apply custom date range filter
+    document.getElementById('apply-date-range').addEventListener('click', function() {
+        applyFilters();
+        highlightCustomDateFilter();
+    });
+
+
+
+    // Function to update the invoice count badge
+    function updateInvoiceCount() {
+        const rows = document.querySelectorAll('.invoice-table tbody tr');
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+        const countBadge = document.getElementById('invoice-count');
+        const totalCount = rows.length;
+        const visibleCount = visibleRows.length;
+
+        // Update the count badge
+        countBadge.textContent = visibleCount === totalCount ? totalCount : `${visibleCount}/${totalCount}`;
+
+        // Add visual indicator if filtering is active
+        const currentInvoices = document.querySelector('.current-invoices h3');
+        if (visibleCount < totalCount) {
+            currentInvoices.classList.add('filter-active');
+        } else {
+            currentInvoices.classList.remove('filter-active');
+        }
+    }
+
+    // Function to highlight the custom date filter when active
+    function highlightCustomDateFilter() {
+        const dateFilter = document.getElementById('date-filter');
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+
+        if (dateFilter.value === 'custom' && startDate && endDate) {
+            dateFilter.classList.add('date-filter-active');
+
+            // Format dates for display
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const formattedStart = start.toLocaleDateString();
+            const formattedEnd = end.toLocaleDateString();
+
+            // Update the custom option text to show the selected range
+            const customOption = dateFilter.querySelector('option[value="custom"]');
+            customOption.textContent = `Custom: ${formattedStart} - ${formattedEnd}`;
+        } else {
+            dateFilter.classList.remove('date-filter-active');
+            const customOption = dateFilter.querySelector('option[value="custom"]');
+            customOption.textContent = 'Custom Range';
+        }
+    }
+
+    // Add keyboard event listeners to date inputs
+    document.getElementById('start-date').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            applyFilters();
+        }
+    });
+
+    document.getElementById('end-date').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            applyFilters();
+        }
+    });
+
+    // Initialize page when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hide all modals on page load
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modalElement => {
+            modalElement.style.display = 'none';
+        });
+
+        // Set default dates for custom range
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        document.getElementById('end-date').valueAsDate = today;
+        document.getElementById('start-date').valueAsDate = thirtyDaysAgo;
+
+        // Apply initial filters if needed
+        applyFilters();
+
+        // Check if custom date filter is selected
+        if (document.getElementById('date-filter').value === 'custom') {
+            highlightCustomDateFilter();
+        }
+
+        // Initialize the invoice count
+        updateInvoiceCount();
+
+        // Add color styling to the payment status filter dropdown
+        const paymentStatusFilter = document.getElementById('payment-status-filter');
+        const selectedOption = paymentStatusFilter.options[paymentStatusFilter.selectedIndex];
+
+        if (selectedOption.value === 'Fully Paid') {
+            paymentStatusFilter.style.color = '#28a745';
+            paymentStatusFilter.style.fontWeight = 'bold';
+        } else if (selectedOption.value === 'Partially Paid') {
+            paymentStatusFilter.style.color = '#ffc107';
+            paymentStatusFilter.style.fontWeight = 'bold';
+        } else if (selectedOption.value === 'Unpaid') {
+            paymentStatusFilter.style.color = '#dc3545';
+            paymentStatusFilter.style.fontWeight = 'bold';
+        } else {
+            paymentStatusFilter.style.color = '';
+            paymentStatusFilter.style.fontWeight = '';
+        }
+
+        // Add event listener to export button
+        const exportBtn = document.getElementById('export-excel-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportToExcel);
+        }
+    });
+
+    // Toggle edit mode for an invoice row
+    function toggleInvoiceEdit(invoiceId) {
+        const row = document.getElementById(`row-${invoiceId}`);
+
+        // Get all view and edit content elements in the row
+        const viewContents = row.querySelectorAll('.view-content');
+        const editContents = row.querySelectorAll('.edit-content');
+
+        // Toggle visibility
+        viewContents.forEach(el => {
+            el.style.display = el.style.display === 'none' ? '' : 'none';
+        });
+
+        editContents.forEach(el => {
+            el.style.display = el.style.display === 'none' ? '' : 'none';
+        });
+
+        // Focus on first input if entering edit mode
+        if (editContents[0].style.display !== 'none') {
+            const firstInput = row.querySelector('.edit-input');
+            if (firstInput) firstInput.focus();
+        }
+    }
+
+    // Save invoice edit
+    function saveInvoiceEdit(invoiceId) {
+        const row = document.getElementById(`row-${invoiceId}`);
+
+        // Get edited values
+        const dateInput = document.getElementById(`date-${invoiceId}`);
+        const customerNameInput = document.getElementById(`customer-name-${invoiceId}`);
+        const paymentMethodInput = document.getElementById(`payment-method-${invoiceId}`);
+        const paymentStatusInput = document.getElementById(`payment-status-${invoiceId}`);
+        const totalAmountInput = document.getElementById(`total-amount-${invoiceId}`);
+
+        // Validate required fields
+        if (!dateInput.value || !customerNameInput.value || !paymentStatusInput.value) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Create the update data object
+        const updateData = {
+            date: dateInput.value,
+            customer_name: customerNameInput.value.trim(),
+            payment_method: paymentMethodInput.value,
+            payment_status: paymentStatusInput.value,
+            total_amount: parseFloat(totalAmountInput.value)
+        };
+
+        // Show loading indicator
+        showNotification('Updating invoice...', 'info');
+
+        // Send AJAX request to update the invoice
+        fetch(`/invoice/${invoiceId}/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Invoice updated successfully', 'success');
+
+                // Format date for display
+                const dateObj = new Date(updateData.date);
+                const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}`;
+
+                // Update each view content with the new values
+                const cells = row.querySelectorAll('td');
+                cells[1].querySelector('.view-content').textContent = formattedDate;
+                cells[2].querySelector('.view-content').textContent = updateData.customer_name;
+                cells[3].querySelector('.view-content').textContent = updateData.payment_method;
+                cells[4].querySelector('.view-content').textContent = updateData.payment_status;
+                cells[5].querySelector('.view-content').textContent = `₹${updateData.total_amount}`;
+
+                // Exit edit mode
+                toggleInvoiceEdit(invoiceId);
+            } else {
+                showNotification('Error updating invoice: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error updating invoice', 'error');
+        });
+    }
+
+    // Cancel invoice edit
+    function cancelInvoiceEdit(invoiceId) {
+        toggleInvoiceEdit(invoiceId);
+    }
+
+    // Function to edit invoice
+    function editInvoice(invoiceNumber) {
+        // Set the invoice ID in the hidden field
+        document.getElementById("edit-invoice-id").value = invoiceNumber;
+
+        // Fetch the invoice data
+        fetch(`/api/invoices/get/${invoiceNumber}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const invoice = data.invoice;
+
+                    // Format date for input (YYYY-MM-DD)
+                    const dateObj = new Date(invoice.date);
+                    const formattedDate = dateObj.toISOString().split('T')[0];
+
+                    // Populate the form fields
+                    document.getElementById("edit-date").value = formattedDate;
+                    document.getElementById("edit-customer-name").value = invoice.customer_name;
+                    document.getElementById("edit-payment-method").value = invoice.payment_method;
+                    document.getElementById("edit-payment-status").value = invoice.payment_status;
+                    document.getElementById("edit-amount-paid").value = invoice.amount_paid;
+
+                    // Show the modal
+                    const editModal = document.getElementById("editModal");
+                    editModal.style.display = "block";
+                } else {
+                    showNotification("Error fetching invoice data: " + data.message, "error");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showNotification("Error fetching invoice data", "error");
+            });
+    }
+
+    // Initialize event listeners when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const editModal = document.getElementById("editModal");
+        const closeBtn = editModal.querySelector(".close");
+        const cancelBtn = document.getElementById("cancelEdit");
+        const saveBtn = document.getElementById("saveEdit");
+
+        // Close modal functions
+        function closeEditModal() {
+            editModal.style.display = "none";
+        }
+
+        // Event listeners for modal buttons
+        closeBtn.addEventListener('click', closeEditModal);
+
+        cancelBtn.addEventListener('click', closeEditModal);
+
+        saveBtn.addEventListener('click', function() {
+            const invoiceId = document.getElementById("edit-invoice-id").value;
+
+            // Get form values
+            const dateInput = document.getElementById("edit-date");
+            const customerNameInput = document.getElementById("edit-customer-name");
+            const paymentMethodInput = document.getElementById("edit-payment-method");
+            const paymentStatusInput = document.getElementById("edit-payment-status");
+            const amountPaidInput = document.getElementById("edit-amount-paid");
+
+            // Validate required fields
+            if (!dateInput.value || !customerNameInput.value || !paymentStatusInput.value) {
+                showNotification("Please fill in all required fields", "error");
+                return;
+            }
+
+            // Create the update data object
+            const updateData = {
+                date: dateInput.value,
+                customer_name: customerNameInput.value.trim(),
+                payment_method: paymentMethodInput.value,
+                payment_status: paymentStatusInput.value,
+                amount_paid: parseFloat(amountPaidInput.value) || 0
+            };
+
+            // Show loading notification
+            showNotification("Updating invoice...", "info");
+
+            // Send AJAX request to update the invoice
+            fetch(`/api/invoices/update/${invoiceId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification("Invoice updated successfully", "success");
+                    // Close the modal
+                    closeEditModal();
+                    // Reload the page to show updated information
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showNotification("Error updating invoice: " + (data.message || "Unknown error"), "error");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showNotification("Error updating invoice", "error");
+            });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === editModal) {
+                closeEditModal();
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+

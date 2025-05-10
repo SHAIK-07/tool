@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Database Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="db-management-container">
+        <!-- Page Header -->
+        <div class="section-header text-center">
+            <h2>Database Management</h2>
+            <p>Manage your application database</p>
+        </div>
+
+        <!-- Database Information -->
+        <div class="card-container">
+            <div class="db-card">
+                <div class="db-card-header">
+                    <h3><i class="fas fa-database"></i> Database Information</h3>
+                </div>
+                <div class="db-card-body">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Table Name</th>
+                                    <th>Records</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for table, count in table_data.items() %}
+                                <tr>
+                                    <td>{{ table }}</td>
+                                    <td class="text-center">{{ count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="db-info">
+                        <div class="info-item">
+                            <span class="info-label">Database Size:</span>
+                            <span class="info-value">{{ db_size }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Modified:</span>
+                            <span class="info-value">{{ last_modified }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Database -->
+        <div class="card-container">
+            <div class="db-card">
+                <div class="db-card-header">
+                    <h3><i class="fas fa-download"></i> Download Database</h3>
+                </div>
+                <div class="db-card-body">
+                    <p>Download the current database from the application. This contains all your inventory, services, invoices, and other data.</p>
+                    <div class="action-buttons">
+                        <a href="/api/download-database" class="primary-btn">
+                            <i class="fas fa-download"></i> Download Current Database
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Database -->
+        <div class="card-container">
+            <div class="db-card">
+                <div class="db-card-header">
+                    <h3><i class="fas fa-upload"></i> Upload Database</h3>
+                </div>
+                <div class="db-card-body">
+                    <p>Upload a database file to replace the current application database. This is useful before deployments or to restore from a backup.</p>
+                    <form action="/api/upload-database" method="post" enctype="multipart/form-data" class="upload-form">
+                        <div class="form-group">
+                            <label for="database_file">Select Database File</label>
+                            <input type="file" class="form-control" id="database_file" name="database_file" accept=".db" required>
+                        </div>
+                        <input type="hidden" name="create_backup" value="false">
+                        <div class="action-buttons">
+                            <button type="submit" class="primary-btn">
+                                <i class="fas fa-upload"></i> Upload Database
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Database Management Page Styles */
+    .db-management-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px 0;
+    }
+
+    .section-header {
+        margin-bottom: 2rem;
+    }
+
+    .section-header h2 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .section-header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .card-container {
+        margin-bottom: 2rem;
+    }
+
+    .db-card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px var(--shadow-color);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .db-card-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--bg-tertiary);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .db-card-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        color: var(--text-primary);
+    }
+
+    .db-card-header h3 i {
+        margin-right: 0.75rem;
+        color: var(--accent-primary);
+    }
+
+    .db-card-body {
+        padding: 1.5rem;
+    }
+
+    .db-info {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+        justify-content: space-between;
+    }
+
+    .info-item {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        width: 48%;
+    }
+
+    .info-label {
+        font-weight: 600;
+        margin-right: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .info-value {
+        color: var(--text-secondary);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px var(--shadow-color);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .data-table th {
+        background-color: var(--table-header-bg);
+        color: var(--text-primary);
+        font-weight: 600;
+        text-align: left;
+        padding: 0.75rem 1rem;
+        border-bottom: 2px solid var(--table-border);
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .data-table td {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--table-border);
+        color: var(--text-primary);
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover {
+        background-color: var(--table-row-hover);
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .upload-form {
+        margin-top: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+
+    .primary-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+    }
+
+    .primary-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    .primary-btn i {
+        margin-right: 0.5rem;
+    }
+
+    @media (max-width: 767px) {
+        .db-info {
+            flex-direction: column;
+        }
+
+        .info-item {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="invoice-container">
+    <div class="page-header">
+        <h2>Invoice</h2>
+        <p>Your order has been successfully placed</p>
+    </div>
+
+    <div class="invoice-actions-top">
+        <a href="/" class="continue-shopping-btn">Continue Shopping</a>
+        <div class="invoice-buttons">
+            <button class="edit-invoice-btn" onclick="toggleInvoiceEdit()">
+                <i class="fas fa-edit"></i> Edit Invoice
+            </button>
+            <button class="view-pdf-btn" onclick="viewPdf('{{ invoice.invoice_number }}')">
+                <i class="fas fa-eye"></i> View PDF
+            </button>
+            <button class="download-pdf-btn" onclick="downloadInvoice('{{ invoice.invoice_number }}')">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Add edit form container -->
+    <div id="edit-invoice-container" class="edit-invoice-container" style="display: none;">
+        <h3>Edit Invoice</h3>
+        <form id="edit-invoice-form" class="edit-invoice-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="invoice_date">Date:</label>
+                    <input type="date" id="invoice_date" name="date" value="{{ invoice.date.strftime('%Y-%m-%d') if invoice.date.strftime else invoice.date }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer_name">Customer Name:</label>
+                    <input type="text" id="customer_name" name="customer_name" value="{{ invoice.customer_name }}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="payment_method">Payment Method:</label>
+                    <select id="payment_method" name="payment_method">
+                        <option value="">Select payment method</option>
+                        <option value="cash" {% if invoice.payment_method == 'cash' %}selected{% endif %}>Cash</option>
+                        <option value="bank_transfer" {% if invoice.payment_method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                        <option value="upi" {% if invoice.payment_method == 'upi' %}selected{% endif %}>UPI</option>
+                        <option value="credit_card" {% if invoice.payment_method == 'credit_card' %}selected{% endif %}>Credit Card</option>
+                        <option value="debit_card" {% if invoice.payment_method == 'debit_card' %}selected{% endif %}>Debit Card</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="payment_status">Payment Status:</label>
+                    <select id="payment_status" name="payment_status" required>
+                        <option value="Unpaid" {% if invoice.payment_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                        <option value="Partially Paid" {% if invoice.payment_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                        <option value="Fully Paid" {% if invoice.payment_status == 'Fully Paid' %}selected{% endif %}>Fully Paid</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="cancelInvoiceEdit()" class="cancel-btn">Cancel</button>
+                <button type="button" onclick="saveInvoiceEdit('{{ invoice.invoice_number }}')" class="save-btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="invoice-document">
+        <div class="invoice-header">
+            <div class="invoice-logo">
+                <img src="/static/images/logo.png" alt="Sunmax Renewables Logo" class="invoice-logo-img">
+                <h3>Sunmax Renewables</h3>
+            </div>
+            <div class="invoice-details">
+                <div class="invoice-row">
+                    <span>Invoice Number:</span>
+                    <span>{{ invoice.invoice_number }}</span>
+                </div>
+                <div class="invoice-row">
+                    <span>Date:</span>
+                    <span>{{ invoice.date.strftime('%d-%m-%Y') if invoice.date.strftime else invoice.date }}</span>
+                </div>
+                <div class="invoice-row">
+                    <span>GST Number:</span>
+                    <span>37FUWPS9742A1ZT</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="invoice-addresses">
+            <div class="address-block">
+                <h4>Seller:</h4>
+                <p><strong>Sunmax Renewables</strong></p>
+                <p>26/3/482, Ground floor of Sneha Nagar Sachivalayam</p>
+                <p>B.V.Nagar, NGO Colony, Nellore</p>
+                <p>Andhra Pradesh 524004</p>
+                <p>GST Number: 37FUWPS9742A1ZT</p>
+            </div>
+
+            <div class="address-block">
+                <h4>Buyer:</h4>
+                <p><strong>{{ invoice.customer_name }}</strong></p>
+                <p>{{ invoice.customer_address }}</p>
+                <p>Phone: {{ invoice.customer_phone }}</p>
+                <p>Email: {{ invoice.customer_email|default('') }}</p>
+                <p>GST Number: {{ invoice.customer_gst|default('') }}</p>
+            </div>
+        </div>
+
+        {% if invoice.invoice_type == 'service' %}
+        <div class="invoice-items">
+            <h3>Service Details</h3>
+            <div class="invoice-table-container">
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Description</th>
+                            <th>Employee</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ invoice.service_name|default('Service') }}</td>
+                            <td>{{ invoice.service_description|default('') }}</td>
+                            <td>{{ invoice.employee_name|default('') }}</td>
+                            <td>₹{{ invoice.total_amount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="invoice-items">
+            <h3>Invoice Items</h3>
+            <div class="invoice-table-container">
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>HSN Code</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                            <th>Discount</th>
+                            <th>Taxable Amount</th>
+                            <th>GST Rate</th>
+                            <th>GST Amount</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice.invoice_items %}
+                        <tr>
+                            <td>{{ item.item_name }}</td>
+                            <td>{{ item.hsn_code }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>₹{{ item.price }}</td>
+                            <td>₹{{ item.price * item.quantity }}</td>
+                            <td>₹{{ item.discount_amount|default(0) }}</td>
+                            <td>₹{{ item.discounted_subtotal|default((item.price * item.quantity) - item.discount_amount|default(0)) }}</td>
+                            <td>{{ item.gst_rate }}%</td>
+                            <td>₹{{ item.gst_amount }}</td>
+                            <td>₹{{ item.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="invoice-summary">
+            <div class="summary-columns">
+                <div class="summary-column">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span>₹{{ invoice.subtotal }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Discount:</span>
+                        <span>₹{{ invoice.invoice_items|sum(attribute='discount_amount')|default(0) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Taxable Amount:</span>
+                        <span>₹{{ invoice.invoice_items|sum(attribute='discounted_subtotal')|default(0) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST:</span>
+                        <span>₹{{ invoice.total_gst }}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span>₹{{ invoice.total_amount }}</span>
+                    </div>
+                </div>
+                <div class="summary-column">
+                    <div class="summary-row payment">
+                        <span>Payment Method:</span>
+                        <span>{{ invoice.payment_method|default('Cash') }}</span>
+                    </div>
+                    <div class="summary-row payment-status {% if invoice.payment_status == 'Fully Paid' %}paid{% elif invoice.payment_status == 'Partially Paid' %}partial{% else %}unpaid{% endif %}">
+                        <span>Payment Status:</span>
+                        <span>{{ invoice.payment_status }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Amount Paid:</span>
+                        <span>₹{{ invoice.amount_paid }}</span>
+                    </div>
+                    <div class="summary-row balance {% if invoice.total_amount > invoice.amount_paid %}due{% else %}paid{% endif %}">
+                        <span>Balance Due:</span>
+                        <span>₹{{ (invoice.total_amount - invoice.amount_paid)|round(2) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if invoice.payment_status != 'Fully Paid' %}
+        <div class="payment-form-container">
+            <h3>Add Payment</h3>
+            <form id="payment-form" class="payment-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="payment_amount">Payment Amount:</label>
+                        <input type="number" id="payment_amount" name="amount" step="0.01" min="0.01" max="{{ (invoice.total_amount - invoice.amount_paid)|round(2) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="payment_method">Payment Method:</label>
+                        <select id="payment_method" name="payment_method" required>
+                            <option value="">Select payment method</option>
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="upi">UPI</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="debit_card">Debit Card</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="payment_notes">Notes:</label>
+                        <textarea id="payment_notes" name="notes" placeholder="Optional payment notes"></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="add-payment-btn">Add Payment</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="invoice-footer">
+            <p>Thank you for your business!</p>
+            <p>For any queries, please contact us at contactsunmax@gmail.com</p>
+            <p>This is a computer-generated invoice and does not require a signature.</p>
+        </div>
+    </div>
+
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle payment form submission
+        const paymentForm = document.getElementById('payment-form');
+        if (paymentForm) {
+            paymentForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const invoiceNumber = '{{ invoice.invoice_number }}';
+                const formData = new FormData(this);
+
+                // Submit payment
+                fetch(`/api/invoices/payment/${invoiceNumber}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Payment added successfully!');
+                        // Reload the page to show updated payment status
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            });
+        }
+    });
+
+    function viewPdf(invoiceNumber) {
+        window.open(`/api/invoices/view/${invoiceNumber}`, '_blank');
+    }
+
+    function downloadInvoice(invoiceNumber) {
+        window.open(`/api/invoices/download/${invoiceNumber}`, '_blank');
+    }
+    
+    // Toggle edit mode for the invoice
+    function toggleInvoiceEdit() {
+        const editContainer = document.getElementById('edit-invoice-container');
+        if (editContainer.style.display === 'none') {
+            editContainer.style.display = 'block';
+            // Scroll to the edit form
+            editContainer.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            editContainer.style.display = 'none';
+        }
+    }
+    
+    // Cancel invoice edit
+    function cancelInvoiceEdit() {
+        toggleInvoiceEdit();
+    }
+    
+    // Save invoice edit
+    function saveInvoiceEdit(invoiceNumber) {
+        // Get form values
+        const dateInput = document.getElementById('invoice_date');
+        const customerNameInput = document.getElementById('customer_name');
+        const paymentMethodInput = document.getElementById('payment_method');
+        const paymentStatusInput = document.getElementById('payment_status');
+        
+        // Validate required fields
+        if (!dateInput.value || !customerNameInput.value || !paymentStatusInput.value) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Create the update data object
+        const updateData = {
+            date: dateInput.value,
+            customer_name: customerNameInput.value.trim(),
+            payment_method: paymentMethodInput.value,
+            payment_status: paymentStatusInput.value
+        };
+        
+        // Show loading message
+        alert('Updating invoice...');
+        
+        // Send AJAX request to update the invoice
+        fetch(`/api/invoices/update/${invoiceNumber}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Invoice updated successfully');
+                // Reload the page to show updated information
+                window.location.reload();
+            } else {
+                alert('Error updating invoice: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating invoice');
+        });
+    }
+</script>
+
+<style>
+    .edit-invoice-container {
+        margin: 20px 0;
+        padding: 20px;
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 2px 5px var(--shadow-color);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .edit-invoice-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .cancel-btn,
+    .save-btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .cancel-btn {
+        background-color: var(--btn-secondary-bg);
+        color: var(--btn-secondary-text);
+        border: 1px solid var(--border-color);
+    }
+    
+    .save-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+    }
+    
+    .edit-invoice-btn {
+        background-color: var(--btn-secondary-bg);
+        color: var(--btn-secondary-text);
+        border: 1px solid var(--border-color);
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .edit-invoice-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+</style>
+{% endblock %}

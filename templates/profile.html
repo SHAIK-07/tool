@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="page-header">
+        <h2>User Profile</h2>
+        <p>Manage your account information</p>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-title">
+                    <h3>{{ user.name }}</h3>
+                    <span class="profile-role {% if user.role == 'admin' %}admin-badge{% else %}employee-badge{% endif %}">
+                        {{ user.role|title }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="profile-details">
+                <div class="detail-row">
+                    <div class="detail-label"><i class="fas fa-envelope"></i> Email:</div>
+                    <div class="detail-value">{{ user.email }}</div>
+                </div>
+                {% if user.phone %}
+                <div class="detail-row">
+                    <div class="detail-label"><i class="fas fa-phone"></i> Phone:</div>
+                    <div class="detail-value">{{ user.phone }}</div>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <div class="detail-label"><i class="fas fa-clock"></i> Last Login:</div>
+                    <div class="detail-value">{{ user.last_login|default('Never', true) }}</div>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <a href="/change-password" class="profile-btn secondary-btn">
+                    <i class="fas fa-key"></i> Change Password
+                </a>
+                <a href="/api/auth/logout" class="profile-btn danger-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        {% if user.role == 'admin' %}
+        <div class="admin-section">
+            <div class="section-header">
+                <h3><i class="fas fa-shield-alt"></i> Admin Controls</h3>
+                <p>Manage users and system settings</p>
+            </div>
+
+            <div class="admin-actions">
+                <a href="/users" class="admin-action-card">
+                    <div class="action-icon users-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="action-details">
+                        <h4>User Management</h4>
+                        <p>Create, edit, and manage employee accounts</p>
+                    </div>
+                </a>
+
+                <a href="/insights" class="admin-action-card">
+                    <div class="action-icon insights-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="action-details">
+                        <h4>Insights Dashboard</h4>
+                        <p>View detailed sales and inventory analytics</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .profile-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        color: #003366;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+
+    .page-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .profile-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .profile-card {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        transition: transform 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 1.5rem;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background-color: #e0f2ff;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 1.5rem;
+        color: #003366;
+    }
+
+    .profile-avatar i {
+        font-size: 2.5rem;
+    }
+
+    .profile-title h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        color: #333;
+    }
+
+    .profile-role {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .admin-badge {
+        background-color: #e0f2ff;
+        color: #0066cc;
+    }
+
+    .employee-badge {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .profile-details {
+        margin-bottom: 2rem;
+    }
+
+    .detail-row {
+        display: flex;
+        margin-bottom: 1rem;
+        padding: 0.8rem;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        transition: background-color 0.3s ease;
+    }
+
+    .detail-row:hover {
+        background-color: #f0f0f0;
+    }
+
+    .detail-label {
+        width: 150px;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .detail-label i {
+        margin-right: 0.5rem;
+        color: #003366;
+    }
+
+    .detail-value {
+        flex: 1;
+        color: #333;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .profile-btn {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.8rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .profile-btn i {
+        margin-right: 0.5rem;
+    }
+
+    .secondary-btn {
+        background-color: #e0f2ff;
+        color: #0066cc;
+        border: 1px solid #b3d7ff;
+    }
+
+    .secondary-btn:hover {
+        background-color: #cce7ff;
+    }
+
+    .danger-btn {
+        background-color: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+
+    .danger-btn:hover {
+        background-color: #ffcdd2;
+    }
+
+    .admin-section {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-top: 1rem;
+    }
+
+    .section-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header h3 {
+        color: #003366;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+
+    .section-header h3 i {
+        margin-right: 0.5rem;
+    }
+
+    .section-header p {
+        color: #666;
+    }
+
+    .admin-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .admin-action-card {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .admin-action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 1rem;
+        font-size: 1.5rem;
+    }
+
+    .users-icon {
+        background-color: #e0f2ff;
+        color: #0066cc;
+    }
+
+    .insights-icon {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .action-details h4 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+    }
+
+    .action-details p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .profile-content {
+            flex-direction: column;
+        }
+
+        .admin-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

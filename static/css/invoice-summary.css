@@ -1,0 +1,106 @@
+/* Invoice Summary Styles */
+.invoice-summary {
+    margin-top: 2rem;
+    background-color: var(--bg-tertiary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.summary-columns {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+    width: 100%;
+}
+
+.summary-column {
+    flex: 1;
+    min-width: 250px;
+    max-width: 48%;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+    width: 100%;
+}
+
+.summary-row span:first-child {
+    font-weight: bold;
+    margin-right: 1rem;
+    min-width: 150px;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.summary-row.total {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    transition: color 0.3s ease, border-color 0.3s ease;
+    font-weight: bold;
+}
+
+.summary-column:nth-child(2) .summary-row:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.summary-row.payment {
+    margin-top: 0;
+    padding-top: 0;
+    transition: border-color 0.3s ease;
+}
+
+.summary-row.payment-status {
+    font-weight: bold;
+}
+
+.summary-row.payment-status.paid span:last-child {
+    color: var(--success-color, #28a745);
+}
+
+.summary-row.payment-status.partial span:last-child {
+    color: var(--warning-color, #ffc107);
+}
+
+.summary-row.payment-status.unpaid span:last-child {
+    color: var(--danger-color, #dc3545);
+}
+
+.summary-row.balance.due span:last-child {
+    color: var(--danger-color, #dc3545);
+    font-weight: bold;
+}
+
+.summary-row.balance.paid span:last-child {
+    color: var(--success-color, #28a745);
+    font-weight: bold;
+}
+
+/* Media queries for responsive layout */
+@media (max-width: 768px) {
+    .summary-columns {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .summary-column {
+        max-width: 100%;
+    }
+    
+    .summary-column:nth-child(2) .summary-row:first-child {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+}

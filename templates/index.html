@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="home-container">
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1>Sunmax Inventory Management</h1>
+            <p>Internal system for managing inventory and sales</p>
+        </div>
+    </div>
+
+    <!-- Stats section removed as it's available in the Insights page -->
+
+    <div id="products" class="products-section">
+        <div class="section-header">
+            <h2>Inventory Products</h2>
+            <p>Current products available in inventory</p>
+            <div class="search-container">
+                <input type="text" id="product-search" placeholder="Search products...">
+                <button id="search-btn">Search</button>
+            </div>
+        </div>
+
+        <div class="items-container">
+            {% if items %}
+                {% for item in items %}
+                    <div class="item-card">
+                        <div class="item-image">
+                            <div class="placeholder-image">
+                                <span>{{ item.item_name[:1] }}</span>
+                            </div>
+                        </div>
+                        <div class="item-details">
+                            <h3>{{ item.item_name }}</h3>
+                            <div class="item-code">Code: {{ item.item_code }}</div>
+                            <div class="item-meta">
+                                <div class="price-row">
+                                    <span class="price-label">Buy Price:</span>
+                                    <span class="price-value">₹{{ item.purchase_price_per_unit }}</span>
+                                </div>
+
+                                <div class="price-row">
+                                    <span class="price-label">GST:</span>
+                                    <span class="price-value">{{ item.gst_rate }}%</span>
+                                </div>
+                                <div class="price-row">
+                                    <span class="price-label">Margin:</span>
+                                    <span class="price-value">{{ item.margin|default(20) }}%</span>
+                                </div>
+                                <div class="price-row">
+                                    <span class="price-label">Selling Price:</span>
+                                    <span class="price-value">₹{{ (item.purchase_price_per_unit * (1 + (item.margin|default(20) / 100)))|round(2) }}</span>
+                                </div>
+                            </div>
+                            <div class="item-stock {% if item.quantity < 5 %}low-stock{% endif %}" data-id="{{ item.item_code }}">
+                                {% if item.quantity > 0 %}
+                                    <span>In Stock: {{ item.quantity }}</span>
+                                {% else %}
+                                    <span class="out-of-stock">Out of Stock</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <div class="quantity-input-container">
+                                <button class="quantity-btn-small" onclick="decrementQuantity('qty-{{ item.item_code }}')">-</button>
+                                <input type="number" id="qty-{{ item.item_code }}" class="quantity-input" value="1" min="1" max="{{ item.quantity }}" {% if item.quantity <= 0 %}disabled{% endif %}>
+                                <button class="quantity-btn-small" onclick="incrementQuantity('qty-{{ item.item_code }}', {{ item.quantity }})">+</button>
+                            </div>
+                            {% if item.quantity > 0 %}
+                                <button class="add-to-cart-btn"
+                                    data-id="{{ item.item_code }}"
+                                    data-name="{{ item.item_name }}"
+                                    data-price="{{ (item.purchase_price_per_unit * (1 + (item.margin|default(20) / 100)))|round(2) }}"
+                                    data-gst="{{ item.gst_rate }}"
+                                    data-quantity="{{ item.quantity }}"
+                                    data-type="product">
+                                    Add to Cart
+                                </button>
+                            {% else %}
+                                <button class="delete-item-btn"
+                                    onclick="confirmDeleteItem('{{ item.item_code }}', '{{ item.item_name }}')">
+                                    Delete Item
+                                </button>
+                            {% endif %}
+                            <button class="view-details-btn" data-id="{{ item.item_code }}">View Details</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-items">
+                    <div class="no-items-icon">📦</div>
+                    <h3>No Products Available</h3>
+                    <p>There are no products available at the moment.</p>
+                    <a href="/stock" class="btn primary-btn">Add Products</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="services" class="products-section">
+        <div class="section-header">
+            <h2>Available Services</h2>
+            <p>Current services offered</p>
+            <div class="search-container">
+                <input type="text" id="service-search" placeholder="Search services...">
+                <button id="search-btn">Search</button>
+            </div>
+        </div>
+
+        <div class="items-container">
+            {% if services %}
+                {% for service in services %}
+                    <div class="item-card service-card">
+                        <div class="item-image service-image">
+                            <div class="placeholder-image">
+                                <span>{{ service.service_name[:1] }}</span>
+                            </div>
+                        </div>
+                        <div class="item-details">
+                            <h3>{{ service.service_name }}</h3>
+                            <div class="item-code">Code: {{ service.service_code }}</div>
+                            <div class="item-meta">
+                                <div class="price-row">
+                                    <span class="price-label">Price:</span>
+                                    <span class="price-value">₹{{ service.price }}</span>
+                                </div>
+                                <div class="price-row">
+                                    <span class="price-label">GST:</span>
+                                    <span class="price-value">{{ service.gst_rate }}%</span>
+                                </div>
+                                <div class="price-row">
+                                    <span class="price-label">Total Price:</span>
+                                    <span class="price-value">₹{{ (service.price + (service.price * service.gst_rate / 100))|round(2) }}</span>
+                                </div>
+                            </div>
+                            <div class="service-employee">
+                                <span>Employee: {{ service.employee_name }}</span>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="add-to-cart-btn service-btn"
+                                data-id="{{ service.service_code }}"
+                                data-name="{{ service.service_name }}"
+                                data-price="{{ service.price }}"
+                                data-gst="{{ service.gst_rate }}"
+                                data-type="service">
+                                Add to Cart
+                            </button>
+                            <button class="view-details-btn service-details-btn" data-id="{{ service.id }}" onclick="openServiceModal({{ service.id }})">View Details</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-items">
+                    <div class="no-items-icon">🔧</div>
+                    <h3>No Services Available</h3>
+                    <p>There are no services available at the moment.</p>
+                    <a href="/services" class="btn primary-btn">Add Services</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- About section removed as this is an internal tool -->
+</div>
+
+<!-- Product Details Modal -->
+<div id="product-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="product-details-container">
+            <!-- Product details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Delete</h3>
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <span id="delete-item-name"></span>?</p>
+            <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+            <button class="delete-confirm-btn" onclick="deleteItem()">Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

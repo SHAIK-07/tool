@@ -1,0 +1,1574 @@
+{% extends "base.html" %}
+
+{% block title %}Services | Sunmax Renewables{% endblock %}
+
+{% block head %}
+<style>
+    /* Form Styling */
+    .service-form {
+        background-color: var(--bg-secondary);
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 30px;
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Inventory Header Styling */
+    .inventory-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+        gap: 15px;
+    }
+
+    .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .form-group.full-width {
+        flex-basis: 100%;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .submit-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .submit-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .generate-invoice-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .generate-invoice-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    /* Status Badge Styling */
+    .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-badge.unpaid {
+        background-color: #ffcdd2;
+        color: #c62828;
+    }
+
+    .status-badge.partially-paid {
+        background-color: #fff9c4;
+        color: #f57f17;
+    }
+
+    .status-badge.fully-paid {
+        background-color: #c8e6c9;
+        color: #2e7d32;
+    }
+
+    /* Action Buttons Styling */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 14px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        color: var(--btn-primary-text);
+        text-align: center;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        transition: all 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .view-btn {
+        background-color: var(--btn-primary-bg);
+    }
+
+    .edit-btn {
+        background-color: var(--btn-primary-bg);
+    }
+
+    .delete-btn {
+        background-color: var(--btn-primary-bg);
+    }
+
+    .generate-btn {
+        background-color: var(--btn-primary-bg);
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    }
+
+    /* Inline Editing Styles */
+    .edit-input {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .edit-content {
+        display: none;
+    }
+
+    .view-content {
+        display: block;
+    }
+
+    tr.editing .view-content {
+        display: none;
+    }
+
+    tr.editing .edit-content {
+        display: block;
+    }
+
+    .edit-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    .save-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .cancel-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Search Panel Styles */
+    .search-panel {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .search-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .search-container input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .search-results {
+        margin-top: 15px;
+    }
+
+    .search-results-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-result-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .search-result-info {
+        flex: 1;
+    }
+
+    .search-result-details {
+        display: flex;
+        gap: 15px;
+        margin-top: 5px;
+        font-size: 0.9em;
+        color: var(--text-secondary);
+    }
+
+    .search-result-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .loading-message {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: var(--text-secondary);
+    }
+
+    .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-top: 2px solid var(--accent-primary);
+        border-radius: 50%;
+        margin-right: 10px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .empty-message, .error-message {
+        padding: 15px;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .error-message {
+        color: #f44336;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal.hidden {
+        opacity: 0;
+    }
+
+    .modal-content {
+        background-color: var(--bg-primary);
+        border-radius: 5px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .modal-header .close {
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--text-secondary);
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 15px 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Button Styles */
+    .btn {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .btn.primary {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+    }
+
+    .btn.secondary {
+        background-color: var(--btn-secondary-bg);
+        color: var(--btn-secondary-text);
+    }
+
+    .btn.danger {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Make table rows clickable */
+    .inventory-table tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .inventory-table tbody tr:hover {
+        background-color: rgba(76, 175, 80, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stock-container">
+    <div class="page-header">
+        <h2>Service Management</h2>
+    </div>
+
+    <div class="stock-form-container">
+        <h3>New Service</h3>
+
+        {% if message %}
+        <div class="success-message">
+            <i class="success-icon">✓</i>
+            <p>{{ message }}</p>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="error-message">
+            <i class="error-icon">!</i>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/service/new" class="service-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" value="{{ today }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="employee_name">Employee Name:</label>
+                    <input type="text" id="employee_name" name="employee_name" required placeholder="Name of employee who performed the service">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="service_name">Service Name:</label>
+                    <input type="text" id="service_name" name="service_name" required placeholder="Name of the service">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="description">Work Description:</label>
+                    <textarea id="description" name="description" rows="2" placeholder="Detailed description of the work performed"></textarea>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="price">Service Price (₹):</label>
+                    <input type="number" id="price" name="price" step="0.01" min="0" required placeholder="Service price" oninput="calculateTotal()">
+                </div>
+            </div>
+
+            <!-- Hidden fields with default values -->
+            <input type="hidden" id="gst_rate" name="gst_rate" value="18.0">
+            <input type="hidden" id="payment_method" name="payment_method" value="">
+            <input type="hidden" id="payment_status" name="payment_status" value="Unpaid">
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">Create Service</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="current-inventory">
+        <div class="inventory-header">
+            <h3>Service Records</h3>
+            <div style="display: flex; gap: 15px;">
+                <button id="edit-service-btn" class="export-btn" onclick="toggleEditSearch()">
+                    <i class="fas fa-edit"></i> Edit Service
+                </button>
+                <button id="import-excel-btn" class="export-btn" onclick="showImportModal()">
+                    <i class="fas fa-file-import"></i> Import from Excel
+                </button>
+                <button id="export-excel-btn" class="export-btn" onclick="exportServicesToExcel()">
+                    <i class="fas fa-file-export"></i> Export to Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Service Search and Edit Panel -->
+        <div id="service-search-panel" class="search-panel" style="display: none;">
+            <div class="search-container">
+                <input type="text" id="service-search-input" placeholder="Search by Service Code or Name...">
+                <button class="btn primary" onclick="searchService()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button class="btn secondary" onclick="toggleEditSearch()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+            <div id="search-results" class="search-results">
+                <!-- Search results will appear here -->
+            </div>
+        </div>
+
+        {% if services %}
+        <div class="inventory-table-container">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Service Code</th>
+                        <th>Date</th>
+                        <th>Service Name</th>
+                        <th>Employee</th>
+                        <th>Description</th>
+                        <th>Price (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for service in services %}
+                    <tr id="row-{{ service.id }}" data-service-id="{{ service.id }}" onclick="getAndEditService('{{ service.id }}')">
+                        <td>{{ service.service_code }}</td>
+                        <td>
+                            <span class="view-content">{{ service.date.strftime('%d-%m-%Y') if service.date.strftime else service.date }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="date" class="edit-input" id="date-{{ service.id }}" value="{{ service.date.strftime('%Y-%m-%d') if service.date.strftime else service.date }}">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ service.service_name }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="text" class="edit-input" id="service-name-{{ service.id }}" value="{{ service.service_name }}">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ service.employee_name }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="text" class="edit-input" id="employee-{{ service.id }}" value="{{ service.employee_name }}">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ service.description }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <textarea class="edit-input" id="description-{{ service.id }}" rows="2">{{ service.description }}</textarea>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">₹{{ service.price }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="price-{{ service.id }}" value="{{ service.price }}" step="0.01" min="0">
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-inventory">
+            <p>No services found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Calculate total amount with GST
+    function calculateTotal() {
+        const price = parseFloat(document.getElementById('price').value) || 0;
+        const gstRate = 18.0; // Fixed GST rate
+
+        const gstAmount = price * (gstRate / 100);
+        const totalAmount = price + gstAmount;
+
+        // Display the calculated total (if we had a field for it)
+        console.log(`Price: ₹${price.toFixed(2)}, GST (${gstRate}%): ₹${gstAmount.toFixed(2)}, Total: ₹${totalAmount.toFixed(2)}`);
+    }
+
+    // Function to update payment status in edit mode
+    function updateEditPaymentStatus(serviceId) {
+        const price = parseFloat(document.getElementById(`price-${serviceId}`).value) || 0;
+        const paymentStatus = document.getElementById(`status-${serviceId}`);
+
+        // Default to unpaid for now
+        paymentStatus.value = 'Unpaid';
+    }
+
+    // Toggle service edit mode
+    function toggleServiceEdit(serviceId) {
+        const row = document.getElementById(`row-${serviceId}`);
+        row.classList.add('editing');
+    }
+
+    // Cancel service edit
+    function cancelServiceEdit(serviceId) {
+        const row = document.getElementById(`row-${serviceId}`);
+        row.classList.remove('editing');
+    }
+
+    // Save service edit
+    function saveServiceEdit(serviceId) {
+        // Get edited values
+        const date = document.getElementById(`date-${serviceId}`).value;
+        const serviceName = document.getElementById(`service-${serviceId}`).value;
+        const employeeName = document.getElementById(`employee-${serviceId}`).value;
+        const description = document.getElementById(`description-${serviceId}`).value || '';
+        const price = document.getElementById(`price-${serviceId}`).value;
+        const gstRate = document.getElementById(`gst-${serviceId}`).value || 18.0;
+        const paymentMethod = document.getElementById(`method-${serviceId}`).value || '';
+        const paymentStatus = document.getElementById(`status-${serviceId}`).value;
+
+        // Validate required fields
+        if (!date || !serviceName || !employeeName || !price) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Show loading notification
+        showNotification('Saving changes...', 'info');
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('date', date);
+        formData.append('service_name', serviceName);
+        formData.append('employee_name', employeeName);
+        formData.append('description', description);
+        formData.append('price', price);
+        formData.append('gst_rate', gstRate);
+        formData.append('payment_method', paymentMethod);
+        formData.append('payment_status', paymentStatus);
+
+        // Send AJAX request
+        fetch(`/api/services/${serviceId}/update`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Service updated successfully', 'success');
+                // Remove editing class
+                const row = document.getElementById(`row-${serviceId}`);
+                row.classList.remove('editing');
+                // Reload the page to show updated data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showNotification(data.message || 'Error updating service', 'error');
+                const row = document.getElementById(`row-${serviceId}`);
+                row.classList.remove('editing');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while updating the service', 'error');
+            const row = document.getElementById(`row-${serviceId}`);
+            row.classList.remove('editing');
+        });
+    }
+
+
+
+    // Function to generate invoice for a service
+    function generateInvoice(serviceId) {
+        if (confirm('Are you sure you want to generate an invoice for this service?')) {
+            // Show loading indicator
+            showNotification('Generating invoice...', 'info');
+
+            // Redirect to generate invoice endpoint
+            window.location.href = `/service/${serviceId}/generate-invoice`;
+        }
+    }
+
+    // Function to delete a service
+    function deleteService(serviceId) {
+        // Show loading indicator
+        showNotification('Deleting service...', 'info');
+
+        console.log(`Deleting service with ID: ${serviceId}`);
+
+        // Send delete request to the API endpoint
+        fetch(`/api/services/delete/${serviceId}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            console.log('Delete response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showNotification('Service deleted successfully', 'success');
+
+                // Remove the row from the table if it exists
+                const row = document.getElementById(`row-${serviceId}`);
+                if (row) {
+                    row.remove();
+                }
+
+                // Also remove the search result item if it exists
+                const searchResultItem = document.querySelector(`.search-result-item[data-service-id="${serviceId}"]`);
+                if (searchResultItem) {
+                    searchResultItem.remove();
+                }
+
+                // If we're in the search results and there are no more results, show a message
+                const searchResults = document.getElementById('search-results');
+                if (searchResults && searchResults.querySelector('.search-results-container') &&
+                    !searchResults.querySelector('.search-results-container').children.length) {
+                    searchResults.innerHTML = '<p class="empty-message">No services found matching your search</p>';
+                }
+            } else {
+                showNotification(data.message || 'Error deleting service', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while deleting the service. Please try again.', 'error');
+        });
+    }
+
+    // Toggle service edit mode
+    function toggleServiceEdit(serviceId) {
+        const row = document.getElementById(`row-${serviceId}`);
+
+        // Get all view and edit content elements in the row
+        const viewContents = row.querySelectorAll('.view-content');
+        const editContents = row.querySelectorAll('.edit-content');
+
+        // Toggle visibility
+        viewContents.forEach(el => {
+            el.style.display = el.style.display === 'none' ? '' : 'none';
+        });
+
+        editContents.forEach(el => {
+            el.style.display = el.style.display === 'none' ? '' : 'none';
+        });
+
+        // Focus on first input if entering edit mode
+        if (editContents[0].style.display !== 'none') {
+            const firstInput = row.querySelector('.edit-input');
+            if (firstInput) firstInput.focus();
+        }
+    }
+
+    // Save service edit
+    function saveServiceEdit(serviceId) {
+        const row = document.getElementById(`row-${serviceId}`);
+
+        // Get edited values
+        const dateInput = document.getElementById(`date-${serviceId}`);
+        const serviceNameInput = document.getElementById(`service-name-${serviceId}`);
+        const employeeInput = document.getElementById(`employee-${serviceId}`);
+        const descriptionInput = document.getElementById(`description-${serviceId}`);
+        const priceInput = document.getElementById(`price-${serviceId}`);
+
+        // Validate required fields
+        if (!dateInput.value || !serviceNameInput.value || !employeeInput.value) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        const price = parseFloat(priceInput.value);
+        if (isNaN(price) || price < 0) {
+            showNotification('Please enter a valid price', 'error');
+            priceInput.focus();
+            return;
+        }
+
+        // Create the update data object
+        const updateData = {
+            date: dateInput.value,
+            service_name: serviceNameInput.value.trim(),
+            employee_name: employeeInput.value.trim(),
+            description: descriptionInput.value.trim(),
+            price: price,
+            // Hidden fields with default values
+            gst_rate: 18.0,
+            payment_method: "",
+            payment_status: "Unpaid"
+        };
+
+        // Show loading indicator
+        showNotification('Updating service...', 'info');
+
+        // Send AJAX request to update the service
+        fetch(`/service/${serviceId}/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Service updated successfully', 'success');
+
+                // Format date for display
+                const dateObj = new Date(updateData.date);
+                const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}`;
+
+                // Update each view content with the new values
+                const cells = row.querySelectorAll('td');
+                cells[1].querySelector('.view-content').textContent = formattedDate;
+                cells[2].querySelector('.view-content').textContent = updateData.service_name;
+                cells[3].querySelector('.view-content').textContent = updateData.employee_name;
+                cells[4].querySelector('.view-content').textContent = updateData.description;
+                cells[5].querySelector('.view-content').textContent = `₹${updateData.price}`;
+
+                // Exit edit mode
+                toggleServiceEdit(serviceId);
+            } else {
+                showNotification('Error updating service: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error updating service', 'error');
+        });
+    }
+
+    // Cancel service edit
+    function cancelServiceEdit(serviceId) {
+        toggleServiceEdit(serviceId);
+    }
+
+    // Helper function to show notifications
+    function showNotification(message, type = 'success') {
+        // Create notification container if it doesn't exist
+        if (!document.querySelector('.notification-container')) {
+            const container = document.createElement('div');
+            container.className = 'notification-container';
+            document.body.appendChild(container);
+        }
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+
+        const icon = document.createElement('i');
+        if (type === 'success') {
+            icon.className = 'fas fa-check-circle';
+        } else if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle';
+        } else if (type === 'info') {
+            icon.className = 'fas fa-info-circle';
+        }
+
+        const text = document.createElement('span');
+        text.textContent = message;
+
+        notification.appendChild(icon);
+        notification.appendChild(text);
+
+        document.querySelector('.notification-container').appendChild(notification);
+
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                notification.remove();
+            }, 500);
+        }, 3000);
+    }
+
+    // Function to show import modal
+    function showImportModal() {
+        const modal = document.getElementById('import-modal');
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+
+        // Reset file input and message
+        document.getElementById('excel-file').value = '';
+        document.getElementById('file-upload-info').textContent = 'No file selected';
+
+        const importMessage = document.getElementById('import-message');
+        importMessage.classList.add('hidden');
+        importMessage.textContent = '';
+        importMessage.classList.remove('success', 'error');
+    }
+
+    // Function to close import modal
+    function closeImportModal() {
+        const modal = document.getElementById('import-modal');
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+
+    // Function to show import message
+    function showImportMessage(message, type) {
+        const importMessage = document.getElementById('import-message');
+        importMessage.textContent = message;
+        importMessage.classList.remove('hidden', 'success', 'error');
+        importMessage.classList.add(type);
+    }
+
+    // Function to download template
+    function downloadTemplate() {
+        // Create a template with the required columns
+        const template = [
+            ['service_name', 'employee_name', 'description', 'price', 'date'],
+            ['AC Service', 'John Doe', 'Regular maintenance of AC unit', '1000', '2023-05-15']
+        ];
+
+        // Convert to CSV
+        let csvContent = template.map(row => row.join(',')).join('\n');
+
+        // Create a download link
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'services_template.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Show success message
+        showImportMessage('Template downloaded successfully. Fill it with your data and upload.', 'success');
+    }
+
+    // Function to handle file selection
+    function handleFileSelect() {
+        const fileInput = document.getElementById('excel-file');
+        const fileInfo = document.getElementById('file-upload-info');
+
+        if (fileInput.files.length > 0) {
+            fileInfo.textContent = fileInput.files[0].name;
+        } else {
+            fileInfo.textContent = 'No file selected';
+        }
+    }
+
+    // Toggle the service search panel
+    function toggleEditSearch() {
+        const searchPanel = document.getElementById('service-search-panel');
+        if (searchPanel.style.display === 'none') {
+            searchPanel.style.display = 'block';
+            document.getElementById('service-search-input').focus();
+        } else {
+            searchPanel.style.display = 'none';
+        }
+    }
+
+    // Search for services
+    function searchService() {
+        const searchInput = document.getElementById('service-search-input');
+        const searchTerm = searchInput.value.trim();
+        const searchResults = document.getElementById('search-results');
+
+        if (!searchTerm) {
+            searchResults.innerHTML = '<p class="empty-message">Please enter a service code or name to search</p>';
+            return;
+        }
+
+        // Show loading indicator
+        searchResults.innerHTML = '<div class="loading-message"><div class="loading-spinner"></div><p>Searching services...</p></div>';
+
+        // Send AJAX request to search services
+        fetch(`/api/services/search?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    searchResults.innerHTML = '<p class="empty-message">No services found matching your search</p>';
+                } else {
+                    // Clear previous results
+                    searchResults.innerHTML = '';
+
+                    // Create results container
+                    const resultsContainer = document.createElement('div');
+                    resultsContainer.className = 'search-results-container';
+
+                    // Add each service to the results
+                    data.forEach(service => {
+                        const escapedServiceName = service.service_name.replace(/'/g, "\\'");
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'search-result-item';
+                        resultItem.setAttribute('data-service-id', service.id);
+
+                        resultItem.innerHTML = `
+                            <div class="search-result-info">
+                                <strong>${service.service_code}</strong> - ${service.service_name}
+                                <div class="search-result-details">
+                                    <span>Employee: ${service.employee_name}</span>
+                                    <span>Price: ₹${service.price}</span>
+                                </div>
+                            </div>
+                            <div class="search-result-actions">
+                                <button class="btn primary" onclick="getAndEditService('${service.id}')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn danger" onclick="event.stopPropagation(); confirmDeleteService('${service.id}', '${escapedServiceName}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        `;
+
+                        resultsContainer.appendChild(resultItem);
+                    });
+
+                    searchResults.appendChild(resultsContainer);
+                }
+            })
+            .catch(error => {
+                console.error('Error searching services:', error);
+                searchResults.innerHTML = '<p class="error-message">Error searching services. Please try again.</p>';
+            });
+    }
+
+    // Get service details from API and open edit modal
+    function getAndEditService(serviceId) {
+        // Show loading indicator in the search results
+        const searchResults = document.getElementById('search-results');
+        const loadingMessage = document.createElement('div');
+        loadingMessage.className = 'loading-message';
+        loadingMessage.innerHTML = '<div class="loading-spinner"></div><p>Loading service details...</p>';
+        searchResults.appendChild(loadingMessage);
+
+        // Fetch the service details from the API
+        fetch(`/api/services/${serviceId}`)
+            .then(response => response.json())
+            .then(service => {
+                // Remove loading indicator
+                searchResults.removeChild(loadingMessage);
+
+                if (service.error) {
+                    showCustomPopup('Error', `Error loading service: ${service.error}`, 'Close');
+                    return;
+                }
+
+                // Create and show the edit modal with the service data
+                createEditModal(service);
+            })
+            .catch(error => {
+                // Remove loading indicator
+                if (loadingMessage.parentNode === searchResults) {
+                    searchResults.removeChild(loadingMessage);
+                }
+
+                console.error('Error fetching service details:', error);
+                showCustomPopup('Error', 'Error loading service details. Please try again.', 'Close');
+            });
+    }
+
+    // Create and show the edit modal with service data
+    function createEditModal(service) {
+        // Create a modal for editing the service
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'edit-service-modal';
+        modal.style.display = 'flex'; // Ensure the modal is displayed as flex
+
+        // Extract service data
+        const serviceId = service.id;
+        const serviceCode = service.service_code;
+        const serviceName = service.service_name;
+        const employeeName = service.employee_name;
+        const description = service.description || '';
+        const price = service.price;
+        const date = service.date;
+
+        // Format date for input field (YYYY-MM-DD)
+        let formattedDate = date;
+        if (typeof date === 'string') {
+            // If date is in DD-MM-YYYY format, convert to YYYY-MM-DD
+            if (date.match(/^\d{2}-\d{2}-\d{4}$/)) {
+                const parts = date.split('-');
+                formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+        }
+
+        // Create modal content with improved styling
+        modal.innerHTML = `
+            <div class="modal-content" style="width: 90%; max-width: 600px; margin: auto;">
+                <div class="modal-header" style="background-color: var(--btn-primary-bg); color: white; padding: 15px 20px; border-radius: 5px 5px 0 0;">
+                    <h3 style="margin: 0; color: white;">Edit Service: ${serviceCode}</h3>
+                    <span class="close" onclick="closeEditModal()" style="font-size: 24px; cursor: pointer; color: white;">&times;</span>
+                </div>
+                <div class="modal-body" style="padding: 20px; background-color: white;">
+                    <form id="edit-service-form" onsubmit="event.preventDefault(); saveEditedService('${serviceId}');">
+                        <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="edit-date" style="display: block; margin-bottom: 5px; font-weight: 500;">Date:</label>
+                                <input type="date" id="edit-date" value="${formattedDate}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="edit-service-name" style="display: block; margin-bottom: 5px; font-weight: 500;">Service Name:</label>
+                                <input type="text" id="edit-service-name" value="${serviceName}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="edit-employee" style="display: block; margin-bottom: 5px; font-weight: 500;">Employee Name:</label>
+                                <input type="text" id="edit-employee" value="${employeeName}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="edit-price" style="display: block; margin-bottom: 5px; font-weight: 500;">Price (₹):</label>
+                                <input type="number" id="edit-price" value="${price}" step="0.01" min="0" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-bottom: 15px;">
+                            <div class="form-group" style="width: 100%;">
+                                <label for="edit-description" style="display: block; margin-bottom: 5px; font-weight: 500;">Description:</label>
+                                <textarea id="edit-description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${description}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="padding: 15px 20px; background-color: #f9f9f9; border-top: 1px solid #ddd; border-radius: 0 0 5px 5px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button id="cancel-button" class="btn secondary" style="padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button id="save-button" class="btn primary" style="padding: 8px 15px; background-color: var(--btn-primary-bg); color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+                </div>
+            </div>
+        `;
+
+        // Add event listeners to buttons after the modal is created
+        setTimeout(() => {
+            // Add event listener to Cancel button
+            const cancelButton = document.getElementById('cancel-button');
+            if (cancelButton) {
+                cancelButton.addEventListener('click', closeEditModal);
+            }
+
+            // Add event listener to Save Changes button
+            const saveButton = document.getElementById('save-button');
+            if (saveButton) {
+                saveButton.addEventListener('click', () => saveEditedService(serviceId));
+            }
+        }, 0);
+
+        // Add modal to the document
+        document.body.appendChild(modal);
+
+        // No need for setTimeout since we're setting display: flex directly
+        modal.classList.remove('hidden');
+    }
+
+    // Close the edit modal
+    function closeEditModal() {
+        const modal = document.getElementById('edit-service-modal');
+        if (modal) {
+            // Immediately remove the modal from the DOM
+            modal.remove();
+        }
+    }
+
+    // Save the edited service
+    function saveEditedService(serviceId) {
+        console.log('Saving service with ID:', serviceId);
+
+        // Show loading state
+        const saveButton = document.getElementById('save-button');
+        if (!saveButton) {
+            console.error('Save button not found');
+            return;
+        }
+
+        const originalButtonText = saveButton.textContent;
+        saveButton.textContent = 'Saving...';
+        saveButton.disabled = true;
+
+        // Get form values
+        const date = document.getElementById('edit-date').value;
+        const serviceName = document.getElementById('edit-service-name').value.trim();
+        const employeeName = document.getElementById('edit-employee').value.trim();
+        const description = document.getElementById('edit-description').value.trim();
+        const price = document.getElementById('edit-price').value;
+
+        console.log('Form values:', { date, serviceName, employeeName, description, price });
+
+        // Validate required fields
+        if (!date || !serviceName || !employeeName || !price) {
+            // Reset button state
+            saveButton.textContent = originalButtonText;
+            saveButton.disabled = false;
+
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        // Create JSON data
+        const serviceData = {
+            date: date,
+            service_name: serviceName,
+            employee_name: employeeName,
+            description: description,
+            price: parseFloat(price),
+            gst_rate: 18.0, // Default GST rate
+            payment_method: "",
+            payment_status: "Unpaid"
+        };
+
+        console.log('Sending data:', serviceData);
+
+        // Send AJAX request
+        fetch(`/service/${serviceId}/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(serviceData)
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+
+            // Reset button state
+            saveButton.textContent = originalButtonText;
+            saveButton.disabled = false;
+
+            if (data.success) {
+                // Close the edit modal
+                closeEditModal();
+
+                // Show success message
+                alert('Service updated successfully!');
+
+                // Reload the page to show the updated service
+                window.location.reload();
+            } else {
+                // Show error message
+                alert('Error updating service: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            // Reset button state
+            saveButton.textContent = originalButtonText;
+            saveButton.disabled = false;
+
+            // Show error message
+            alert('Error updating service. Please try again.');
+        });
+    }
+
+    // Confirm delete service
+    function confirmDeleteService(serviceId, serviceName) {
+        if (confirm(`Are you sure you want to delete the service "${serviceName}"? This action cannot be undone.`)) {
+            deleteService(serviceId);
+        }
+    }
+
+    // Show custom popup
+    function showCustomPopup(title, message, cancelText, cancelCallback, confirmText, confirmCallback) {
+        // Create modal element
+        const modal = document.createElement('div');
+        modal.className = 'modal custom-popup';
+        modal.id = 'custom-popup';
+
+        // Create modal content
+        let modalContent = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <span class="close" onclick="closeCustomPopup()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>${message}</p>
+                </div>
+                <div class="modal-footer">
+        `;
+
+        // Add cancel button if provided
+        if (cancelText) {
+            modalContent += `<button class="btn secondary" onclick="closeCustomPopup(${cancelCallback ? ', true' : ''})">${cancelText}</button>`;
+        }
+
+        // Add confirm button if provided
+        if (confirmText && confirmCallback) {
+            modalContent += `<button class="btn primary" id="custom-popup-confirm">${confirmText}</button>`;
+        }
+
+        modalContent += `
+                </div>
+            </div>
+        `;
+
+        // Set modal content
+        modal.innerHTML = modalContent;
+
+        // Add modal to the document
+        document.body.appendChild(modal);
+
+        // Show the modal
+        setTimeout(() => {
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+        }, 10);
+
+        // Add event listener for confirm button
+        if (confirmText && confirmCallback) {
+            const confirmButton = document.getElementById('custom-popup-confirm');
+            confirmButton.addEventListener('click', function() {
+                closeCustomPopup();
+                confirmCallback();
+            });
+        }
+
+        // Store callback for cancel button
+        if (cancelCallback) {
+            window.customPopupCancelCallback = cancelCallback;
+        }
+    }
+
+    // Close custom popup
+    function closeCustomPopup(runCallback = false) {
+        const modal = document.getElementById('custom-popup');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+            setTimeout(() => {
+                modal.remove();
+
+                // Run cancel callback if requested
+                if (runCallback && window.customPopupCancelCallback) {
+                    window.customPopupCancelCallback();
+                    window.customPopupCancelCallback = null;
+                }
+            }, 300);
+        }
+    }
+
+    // Function to upload Excel file
+    function uploadExcelFile() {
+        const fileInput = document.getElementById('excel-file');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            showImportMessage('Please select a file to upload', 'error');
+            return;
+        }
+
+        // Check file extension
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        if (fileExt !== 'xlsx' && fileExt !== 'xls' && fileExt !== 'csv') {
+            showImportMessage('Please upload an Excel or CSV file (.xlsx, .xls, or .csv)', 'error');
+            return;
+        }
+
+        // Show loading state
+        const uploadButton = document.getElementById('upload-excel-btn');
+        const originalButtonText = uploadButton.innerHTML;
+        uploadButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+        uploadButton.disabled = true;
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Send AJAX request
+        fetch('/api/services/import-excel', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            uploadButton.innerHTML = originalButtonText;
+            uploadButton.disabled = false;
+
+            if (data.success) {
+                showImportMessage(data.message, 'success');
+
+                // If there are errors, show them
+                if (data.errors && data.errors.length > 0) {
+                    const errorList = document.createElement('ul');
+                    errorList.className = 'error-list';
+
+                    data.errors.forEach(error => {
+                        const errorItem = document.createElement('li');
+                        errorItem.textContent = error;
+                        errorList.appendChild(errorItem);
+                    });
+
+                    const importMessage = document.getElementById('import-message');
+                    importMessage.appendChild(errorList);
+                }
+
+                // Reload the page after 2 seconds to show the updated services
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showImportMessage(data.message, 'error');
+
+                // If there are required columns, show them
+                if (data.required_columns) {
+                    const columnList = document.createElement('div');
+                    columnList.className = 'required-columns-message';
+                    columnList.innerHTML = '<p>Required columns:</p><ul>';
+
+                    data.required_columns.forEach(column => {
+                        columnList.innerHTML += `<li>${column}</li>`;
+                    });
+
+                    columnList.innerHTML += '</ul>';
+
+                    const importMessage = document.getElementById('import-message');
+                    importMessage.appendChild(columnList);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            uploadButton.innerHTML = originalButtonText;
+            uploadButton.disabled = false;
+            showImportMessage('An error occurred while importing the file. Please try again.', 'error');
+        });
+    }
+
+    // Initialize page when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize price calculation
+        calculateTotal();
+
+        // Add event listener for file selection
+        const fileInput = document.getElementById('excel-file');
+        if (fileInput) {
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        // Add notification styles if not already present
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                .notification-container {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                }
+                .notification {
+                    background-color: var(--notification-bg);
+                    border-left: 4px solid #4CAF50;
+                    box-shadow: 0 2px 4px var(--shadow-color);
+                    border-radius: 4px;
+                    padding: 12px 15px;
+                    margin-bottom: 10px;
+                    display: flex;
+                    align-items: center;
+                    animation: slide-in 0.3s ease-out;
+                    color: var(--notification-text);
+                    transition: background-color 0.3s ease, color 0.3s ease;
+                }
+                .notification.error {
+                    border-left-color: #f44336;
+                }
+                .notification.info {
+                    border-left-color: #2196F3;
+                }
+                .notification i {
+                    margin-right: 10px;
+                    font-size: 18px;
+                }
+                .notification.success i {
+                    color: #4CAF50;
+                }
+                .notification.error i {
+                    color: #f44336;
+                }
+                .notification.info i {
+                    color: #2196F3;
+                }
+                .notification.fade-out {
+                    opacity: 0;
+                    transition: opacity 0.5s;
+                }
+                @keyframes slide-in {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Function to export services to Excel
+        window.exportServicesToExcel = function() {
+            // Show loading state
+            const exportButton = document.getElementById('export-excel-btn');
+            const originalButtonText = exportButton.innerHTML;
+            exportButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            exportButton.disabled = true;
+
+            // Create a download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = '/services/export-excel';
+            downloadLink.target = '_blank';
+
+            // Append to body, click, and remove
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+
+            // Reset button state after a short delay
+            setTimeout(() => {
+                exportButton.innerHTML = originalButtonText;
+                exportButton.disabled = false;
+            }, 2000);
+        };
+    });
+</script>
+<!-- Import Excel Modal -->
+<div id="import-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Import Services from Excel</h3>
+            <span class="close" onclick="closeImportModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Upload an Excel file with the following columns:</p>
+            <ul class="required-columns">
+                <li>service_name</li>
+                <li>employee_name</li>
+                <li>description</li>
+                <li>price</li>
+                <li>date</li>
+            </ul>
+            <div class="template-info">
+                <p>Don't have a file yet? <a href="#" onclick="downloadTemplate(); return false;">Download a template</a> to get started.</p>
+            </div>
+
+            <div class="file-upload-container">
+                <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" />
+                <div class="file-upload-info" id="file-upload-info">No file selected</div>
+                <div class="file-types">Accepted formats: .xlsx, .xls, .csv</div>
+            </div>
+            <div id="import-message" class="import-message hidden"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeImportModal()">Cancel</button>
+            <button class="export-btn" id="upload-excel-btn" onclick="uploadExcelFile()">
+                <i class="fas fa-upload"></i> Import
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

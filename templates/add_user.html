@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="add-user-container">
+    {% if error %}
+    <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <div class="message-content">
+            <p>{{ error }}</p>
+        </div>
+        <span class="close-message" onclick="this.parentElement.style.display='none'">&times;</span>
+    </div>
+    {% endif %}
+
+    <div class="page-header">
+        <h2><i class="fas fa-user-plus"></i> Add New User</h2>
+        <p>Create a new user account</p>
+    </div>
+
+    <div class="add-user-content">
+        <div class="add-user-form-container">
+            <form id="add-user-form" action="/api/users/create" method="post" class="add-user-form">
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Name:</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter email address">
+                </div>
+                <div class="form-group">
+                    <label for="phone"><i class="fas fa-phone"></i> Phone:</label>
+                    <input type="text" id="phone" name="phone" placeholder="Enter phone number (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="role"><i class="fas fa-user-tag"></i> Role:</label>
+                    <select id="role" name="role">
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                        {% if user.email == 'contactsunmax@gmail.com' %}
+                        <option value="top_user">Top User</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="password-hint">
+                        <i class="fas fa-info-circle"></i> A system-generated password will be created for this user.
+                        <div>The user will be prompted to change this password on first login.</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="/user-management" class="btn secondary-btn">
+                        <i class="fas fa-arrow-left"></i> Back to User Management
+                    </a>
+                    <button type="submit" class="btn primary-btn">
+                        <i class="fas fa-plus"></i> Add User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .add-user-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .add-user-form-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+    }
+
+    .add-user-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+    }
+
+    .password-hint {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        border-left: 4px solid #0066cc;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn i {
+        margin-right: 0.5rem;
+    }
+
+    .primary-btn {
+        background-color: #003366;
+        color: white;
+    }
+
+    .primary-btn:hover {
+        background-color: #00509e;
+    }
+
+    .secondary-btn {
+        background-color: #f5f5f5;
+        color: #333;
+    }
+
+    .secondary-btn:hover {
+        background-color: #e0e0e0;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: #0066cc;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+    }
+
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        position: relative;
+    }
+
+    .error-message i.fa-exclamation-circle {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        color: #dc3545;
+    }
+</style>
+{% endblock %}

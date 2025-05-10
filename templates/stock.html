@@ -1,0 +1,1196 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="stock-container">
+    <div class="page-header">
+        <h2>Inventory Management</h2>
+        <p>Add new items to your inventory</p>
+    </div>
+
+    <div class="stock-form-container">
+        <h3>Add New Stock Item</h3>
+
+        <form id="add-item-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" required value="{{ today }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="item_name">Item Name:</label>
+                    <input type="text" id="item_name" name="item_name" required placeholder="Enter item name">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hsn_code">HSN Code:</label>
+                    <input type="text" id="hsn_code" name="hsn_code" required placeholder="Enter HSN code">
+                </div>
+
+                <div class="form-group">
+                    <label for="gst_rate">GST Rate (%):</label>
+                    <input type="number" id="gst_rate" name="gst_rate" step="0.01" required placeholder="e.g. 18">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="purchase_price_per_unit">Purchase Price Per Unit (₹):</label>
+                    <input type="number" id="purchase_price_per_unit" name="purchase_price_per_unit" step="0.01" required placeholder="Enter price" oninput="calculateSellingPrice()">
+                </div>
+
+                <div class="form-group">
+                    <label for="margin">Margin (%):</label>
+                    <input type="number" id="margin" name="margin" step="0.1" min="0" max="100" required oninput="calculateSellingPrice()" placeholder="Enter margin percentage">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="selling_price">Selling Price Per Unit (₹):</label>
+                    <input type="number" id="selling_price" name="selling_price" step="0.01" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" required placeholder="Enter quantity">
+                </div>
+
+                <div class="form-group">
+                    <label for="unit_of_measurement">Unit of Measurement:</label>
+                    <select id="unit_of_measurement" name="unit_of_measurement" required>
+                        <option value="No.s" selected>No.s</option>
+                        <option value="Meters">Meters</option>
+                        <option value="Kg.s">Kg.s</option>
+                        <option value="Feet">Feet</option>
+                        <option value="Liters">Liters</option>
+                        <option value="Plates">Plates</option>
+                        <option value="Bags">Bags</option>
+                        <option value="Box">Box</option>
+                        <option value="Pairs">Pairs</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="supplier_name">Supplier Name:</label>
+                    <input type="text" id="supplier_name" name="supplier_name" required placeholder="Enter supplier name">
+                </div>
+
+                <div class="form-group">
+                    <label for="supplier_gst_number">Supplier GST Number:</label>
+                    <input type="text" id="supplier_gst_number" name="supplier_gst_number" required placeholder="Enter GST number">
+                </div>
+            </div>
+
+            <button type="button" id="add-item-btn" class="submit-btn">Add Item to Inventory</button>
+        </form>
+
+        {% if message %}
+        <div class="success-message">
+            <i class="success-icon">✓</i>
+            <p>{{ message }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="current-inventory">
+        <div class="inventory-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Current Inventory</h3>
+            <div style="display: flex; gap: 15px;">
+                <button id="edit-item-btn" class="export-btn" onclick="toggleEditSearch()">
+                    <i class="fas fa-edit"></i> Edit Item
+                </button>
+                <button id="import-excel-btn" class="export-btn" onclick="showImportModal()">
+                    <i class="fas fa-file-import"></i> Import from Excel
+                </button>
+                <button id="export-excel-btn" class="export-btn" onclick="exportInventoryToExcel()">
+                    <i class="fas fa-file-export"></i> Export to Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Item Search and Edit Panel -->
+        <div id="item-search-panel" class="search-panel" style="display: none;">
+            <div class="search-container">
+                <input type="text" id="item-search-input" placeholder="Search by Item Code or Name...">
+                <button class="btn primary" onclick="searchItem()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button class="btn secondary" onclick="toggleEditSearch()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+            <div id="search-results" class="search-results">
+                <!-- Search results will appear here -->
+            </div>
+        </div>
+
+        {% if items %}
+        <div class="inventory-info">
+            <div class="inventory-count">
+                Showing {{ items|length }} of {{ total_items }} items (Page {{ current_page }} of {{ total_pages }})
+            </div>
+        </div>
+
+        <div class="inventory-table-container">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th class="hsn-column hide-column">HSN</th>
+                        <th>Buy (₹)</th>
+                        <th>Margin</th>
+                        <th>Sell (₹)</th>
+                        <th>GST</th>
+                        <th>Quantity</th>
+                        <th class="unit-column hide-column">Unit</th>
+                        <th>Supplier</th>
+                        <th class="date-column">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr id="row-{{ item.item_code }}" data-item-code="{{ item.item_code }}">
+                        <td>{{ item.item_code }}</td>
+                        <td data-full-name="{{ item.item_name }}">
+                            <span class="view-content">{{ item.item_name }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="text" class="edit-input" id="name-{{ item.item_code }}" value="{{ item.item_name }}">
+                            </div>
+                        </td>
+                        <td class="hsn-column hide-column">
+                            <span class="view-content">{{ item.hsn_code }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="text" class="edit-input" id="hsn-{{ item.item_code }}" value="{{ item.hsn_code }}">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ item.purchase_price_per_unit }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="price-{{ item.item_code }}" value="{{ item.purchase_price_per_unit }}" step="0.01" min="0" oninput="calculateEditSellingPrice('{{ item.item_code }}')">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ item.margin|default(20) }}%</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="margin-{{ item.item_code }}" value="{{ item.margin|default(20) }}" step="0.1" min="0" max="100" oninput="calculateEditSellingPrice('{{ item.item_code }}')">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ (item.purchase_price_per_unit * (1 + (item.margin|default(20) / 100)))|round(2) }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="selling-price-{{ item.item_code }}" readonly>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ item.gst_rate }}%</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="gst-{{ item.item_code }}" value="{{ item.gst_rate }}" step="0.01" min="0">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">{{ item.quantity }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="quantity-{{ item.item_code }}" value="{{ item.quantity }}" min="0">
+                            </div>
+                        </td>
+                        <td class="unit-column hide-column">
+                            <span class="view-content">{{ item.unit_of_measurement|default("No.s") }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <select class="edit-input" id="unit-{{ item.item_code }}">
+                                    <option value="No.s" {% if item.unit_of_measurement == "No.s" or not item.unit_of_measurement %}selected{% endif %}>No.s</option>
+                                    <option value="Meters" {% if item.unit_of_measurement == "Meters" %}selected{% endif %}>Meters</option>
+                                    <option value="Kg.s" {% if item.unit_of_measurement == "Kg.s" %}selected{% endif %}>Kg.s</option>
+                                    <option value="Feet" {% if item.unit_of_measurement == "Feet" %}selected{% endif %}>Feet</option>
+                                    <option value="Liters" {% if item.unit_of_measurement == "Liters" %}selected{% endif %}>Liters</option>
+                                    <option value="Plates" {% if item.unit_of_measurement == "Plates" %}selected{% endif %}>Plates</option>
+                                    <option value="Bags" {% if item.unit_of_measurement == "Bags" %}selected{% endif %}>Bags</option>
+                                    <option value="Box" {% if item.unit_of_measurement == "Box" %}selected{% endif %}>Box</option>
+                                    <option value="Pairs" {% if item.unit_of_measurement == "Pairs" %}selected{% endif %}>Pairs</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td data-full-supplier="{{ item.supplier_name }}">
+                            <span class="view-content">{{ item.supplier_name }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="text" class="edit-input" id="supplier-{{ item.item_code }}" value="{{ item.supplier_name }}">
+                            </div>
+                        </td>
+                        <td class="date-column">{{ item.date.strftime('%d-%m-%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination controls -->
+            <div class="pagination-controls">
+                {% if total_pages > 1 %}
+                    <div class="pagination">
+                        {% if current_page > 1 %}
+                            <a href="/stock?page=1" class="pagination-btn">First</a>
+                            <a href="/stock?page={{ current_page - 1 }}" class="pagination-btn">Previous</a>
+                        {% else %}
+                            <span class="pagination-btn disabled">First</span>
+                            <span class="pagination-btn disabled">Previous</span>
+                        {% endif %}
+
+                        <span class="pagination-info">Page {{ current_page }} of {{ total_pages }}</span>
+
+                        {% if current_page < total_pages %}
+                            <a href="/stock?page={{ current_page + 1 }}" class="pagination-btn">Next</a>
+                            <a href="/stock?page={{ total_pages }}" class="pagination-btn">Last</a>
+                        {% else %}
+                            <span class="pagination-btn disabled">Next</span>
+                            <span class="pagination-btn disabled">Last</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="pagination-options">
+                        <form action="/stock" method="get" class="items-per-page-form">
+                            <label for="limit">Items per page:</label>
+                            <select name="limit" id="limit" onchange="this.form.submit()">
+                                <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
+                                <option value="200" {% if limit == 200 %}selected{% endif %}>200</option>
+                                <option value="500" {% if limit == 500 %}selected{% endif %}>500</option>
+                            </select>
+                            <input type="hidden" name="page" value="1">
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-inventory">
+            <p>No items in inventory yet. Add your first item above.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Delete</h3>
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <span id="delete-item-name"></span>?</p>
+            <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+            <button class="delete-confirm-btn" onclick="deleteItem()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Import Excel Modal -->
+<div id="import-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header" style="background-color: var(--btn-primary-bg); color: var(--btn-primary-text);">
+            <h3>Import Inventory from Excel</h3>
+            <span class="close" onclick="closeImportModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Upload an Excel file with the following columns:</p>
+            <ul class="required-columns">
+                <li>item_name</li>
+                <li>hsn_code</li>
+                <li>purchase_price_per_unit</li>
+                <li>margin</li>
+                <li>gst_rate</li>
+                <li>quantity</li>
+                <li>unit_of_measurement</li>
+                <li>supplier_name</li>
+                <li>supplier_gst_number</li>
+            </ul>
+            <div class="import-instructions">
+                <p><strong>IMPORTANT:</strong> The system will automatically generate unique item codes for each new item. You do not need to include an item_code column.</p>
+                <p><strong>Note:</strong> Use the template below for the correct format. All columns are required.</p>
+                <p><strong>Tip:</strong> For large imports, consider splitting into multiple files of 50-100 items each.</p>
+            </div>
+            <div class="template-info">
+                <p>Don't have a file yet? <a href="#" onclick="downloadTemplate(); return false;">Download a template</a> to get started.</p>
+            </div>
+
+            <div class="file-upload-container">
+                <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" />
+                <div class="file-upload-info" id="file-upload-info">No file selected</div>
+                <div class="file-types">Accepted formats: .xlsx, .xls, .csv</div>
+            </div>
+            <div id="import-message" class="import-message hidden"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeImportModal()">Cancel</button>
+            <button class="export-btn" id="upload-excel-btn" onclick="uploadExcelFile()">
+                <i class="fas fa-upload"></i> Import
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Template Download Modal -->
+<div id="template-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Download Template</h3>
+            <span class="close" onclick="closeTemplateModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Download a template Excel file with the required columns:</p>
+            <button class="download-template-btn" onclick="downloadTemplate()">
+                <i class="fas fa-download"></i> Download Template
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Debug function to check if the modal is working
+    function checkModal() {
+        const modal = document.getElementById('delete-modal');
+        console.log('Modal element:', modal);
+        if (modal) {
+            console.log('Modal classes:', modal.className);
+            modal.classList.remove('hidden');
+            console.log('Modal classes after removing hidden:', modal.className);
+        } else {
+            console.error('Modal element not found');
+        }
+    }
+
+    // Calculate selling price based on purchase price and margin
+    function calculateSellingPrice() {
+        const purchasePriceInput = document.getElementById('purchase_price_per_unit');
+        const marginInput = document.getElementById('margin');
+        const sellingPriceInput = document.getElementById('selling_price');
+
+        // Only calculate if both purchase price and margin are entered
+        if (purchasePriceInput.value && marginInput.value) {
+            const purchasePrice = parseFloat(purchasePriceInput.value);
+            const margin = parseFloat(marginInput.value);
+
+            if (!isNaN(purchasePrice) && !isNaN(margin)) {
+                const sellingPrice = purchasePrice * (1 + (margin / 100));
+                sellingPriceInput.value = sellingPrice.toFixed(2);
+            } else {
+                sellingPriceInput.value = '';
+            }
+        } else {
+            sellingPriceInput.value = '';
+        }
+    }
+
+    // Calculate selling price for edit mode
+    function calculateEditSellingPrice(itemCode) {
+        const purchasePriceInput = document.getElementById(`price-${itemCode}`);
+        const marginInput = document.getElementById(`margin-${itemCode}`);
+        const sellingPriceInput = document.getElementById(`selling-price-${itemCode}`);
+
+        // Only calculate if both purchase price and margin are entered
+        if (purchasePriceInput.value && marginInput.value) {
+            const purchasePrice = parseFloat(purchasePriceInput.value);
+            const margin = parseFloat(marginInput.value);
+
+            if (!isNaN(purchasePrice) && !isNaN(margin)) {
+                const sellingPrice = purchasePrice * (1 + (margin / 100));
+                sellingPriceInput.value = sellingPrice.toFixed(2);
+            } else {
+                sellingPriceInput.value = '';
+            }
+        } else {
+            sellingPriceInput.value = '';
+        }
+    }
+
+    // Function to add a new item to inventory using AJAX
+    function addItemToInventory() {
+        // Show loading state
+        const addButton = document.getElementById('add-item-btn');
+        const originalButtonText = addButton.textContent;
+        addButton.textContent = 'Adding...';
+        addButton.disabled = true;
+
+        // Get form data
+        const form = document.getElementById('add-item-form');
+        const formData = new FormData(form);
+
+        // Send AJAX request
+        fetch('/api/inventory/stock', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            addButton.textContent = originalButtonText;
+            addButton.disabled = false;
+
+            if (data.success) {
+                // Show success message using custom popup
+                showCustomPopup('Success', data.message, 'OK', function() {
+                    // Reset the form
+                    form.reset();
+                    document.getElementById('date').value = new Date().toISOString().split('T')[0]; // Set today's date
+                    document.getElementById('selling_price').value = ''; // Clear selling price
+
+                    // Refresh the table to show the new item
+                    if (window.inventoryTable) {
+                        window.inventoryTable.loadData();
+                    }
+                });
+            } else {
+                // Show error message
+                showCustomPopup('Error', data.message || 'Error adding item to inventory. Please try again.', 'Close');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            // Reset button state
+            addButton.textContent = originalButtonText;
+            addButton.disabled = false;
+
+            // Show error message
+            showCustomPopup('Error', 'Error adding item to inventory. Please try again.', 'Close');
+        });
+    }
+
+    // Function to set up edit button event listeners
+    function setupEditButtons() {
+        const editButtons = document.querySelectorAll('.edit-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const itemCode = this.closest('tr').getAttribute('data-item-code');
+                setTimeout(() => calculateEditSellingPrice(itemCode), 100);
+            });
+        });
+    }
+
+    // Function to export inventory to Excel
+    function exportInventoryToExcel() {
+        // Show loading state
+        const exportButton = document.getElementById('export-excel-btn');
+        const originalButtonText = exportButton.innerHTML;
+        exportButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+        exportButton.disabled = true;
+
+        // Create a download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = '/api/inventory/export-excel';
+        downloadLink.target = '_blank';
+
+        // Append to body, click, and remove
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        // Reset button state after a short delay
+        setTimeout(() => {
+            exportButton.innerHTML = originalButtonText;
+            exportButton.disabled = false;
+        }, 2000);
+    }
+
+    // Function to show import modal
+    function showImportModal() {
+        const modal = document.getElementById('import-modal');
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+
+        // Reset file input and message
+        document.getElementById('excel-file').value = '';
+        document.getElementById('file-upload-info').textContent = 'No file selected';
+
+        const importMessage = document.getElementById('import-message');
+        importMessage.classList.add('hidden');
+        importMessage.textContent = '';
+        importMessage.classList.remove('success', 'error');
+    }
+
+    // Function to close import modal
+    function closeImportModal() {
+        const modal = document.getElementById('import-modal');
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+
+    // Function to show template modal
+    function showTemplateModal() {
+        const modal = document.getElementById('template-modal');
+        modal.classList.remove('hidden');
+    }
+
+    // Function to close template modal
+    function closeTemplateModal() {
+        const modal = document.getElementById('template-modal');
+        modal.classList.add('hidden');
+    }
+
+    // Function to upload Excel file
+    function uploadExcelFile() {
+        const fileInput = document.getElementById('excel-file');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            showImportMessage('Please select a file to upload', 'error');
+            return;
+        }
+
+        // Check file extension
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        if (fileExt !== 'xlsx' && fileExt !== 'xls' && fileExt !== 'csv') {
+            showImportMessage('Please upload an Excel or CSV file (.xlsx, .xls, or .csv)', 'error');
+            return;
+        }
+
+        // Show loading state
+        const uploadButton = document.getElementById('upload-excel-btn');
+        const originalButtonText = uploadButton.textContent;
+        uploadButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+        uploadButton.disabled = true;
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Send AJAX request
+        fetch('/api/inventory/import-excel', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            uploadButton.innerHTML = originalButtonText;
+            uploadButton.disabled = false;
+
+            if (data.success) {
+                // Show success message with item count
+                let successMessage = data.message;
+                if (data.items_count) {
+                    successMessage += ` Total items in inventory: ${data.items_count}`;
+                }
+                showImportMessage(successMessage, 'success');
+
+                // If there are errors, show them
+                if (data.errors && data.errors.length > 0) {
+                    const errorList = document.createElement('ul');
+                    errorList.className = 'error-list';
+
+                    data.errors.forEach(error => {
+                        const errorItem = document.createElement('li');
+                        errorItem.textContent = error;
+                        errorList.appendChild(errorItem);
+                    });
+
+                    const importMessage = document.getElementById('import-message');
+                    importMessage.appendChild(errorList);
+                }
+
+                // Create a message with both success info and errors if any
+                let popupTitle = 'Import Successful';
+
+                // Create a formatted message with total items count
+                let totalItems = data.items_count || 0;
+                let popupMessage = `<p>${successMessage}</p>`;
+                popupMessage += `<p>Total items in inventory: <strong>${totalItems}</strong></p>`;
+
+                // If there are errors, add them to the popup message
+                if (data.errors && data.errors.length > 0) {
+                    popupMessage += '<div class="import-errors"><h4>Some items failed to import:</h4><ul>';
+                    data.errors.forEach(error => {
+                        popupMessage += `<li>${error}</li>`;
+                    });
+                    popupMessage += '</ul></div>';
+                }
+
+                // Show a custom popup with success message and reload button
+                showCustomPopup(
+                    popupTitle,
+                    popupMessage,
+                    'Reload Page',
+                    function() {
+                        // Force a full page reload to show the updated inventory
+                        window.location.href = window.location.pathname + '?t=' + new Date().getTime();
+                    }
+                );
+            } else {
+                showImportMessage(data.message, 'error');
+
+                // If there are required columns, show them
+                if (data.required_columns) {
+                    const columnList = document.createElement('div');
+                    columnList.className = 'required-columns-message';
+                    columnList.innerHTML = '<p>Required columns:</p><ul>';
+
+                    data.required_columns.forEach(column => {
+                        columnList.innerHTML += `<li>${column}</li>`;
+                    });
+
+                    columnList.innerHTML += '</ul>';
+
+                    const importMessage = document.getElementById('import-message');
+                    importMessage.appendChild(columnList);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            // Reset button state
+            uploadButton.innerHTML = originalButtonText;
+            uploadButton.disabled = false;
+
+            showImportMessage('Error uploading file. Please try again.', 'error');
+        });
+    }
+
+    // Function to show import message
+    function showImportMessage(message, type) {
+        const importMessage = document.getElementById('import-message');
+        importMessage.textContent = message;
+        importMessage.classList.remove('hidden', 'success', 'error');
+        importMessage.classList.add(type);
+    }
+
+    // Function to download template
+    function downloadTemplate() {
+        // Create a template with the required columns (no item_code column)
+        const template = [
+            ['item_name', 'hsn_code', 'purchase_price_per_unit', 'margin', 'gst_rate', 'quantity', 'unit_of_measurement', 'supplier_name', 'supplier_gst_number'],
+            ['SOLAR PANELS 540 W', '85414300', '12000', '10', '12', '10', 'No.s', 'LUM', '36AAACS3561K1Z8'],
+            ['INVERTER 3 KW GTI', '85044090', '17000', '10', '12', '5', 'No.s', 'LUM', '33AAACS3561K1ZE'],
+            ['INVERTER 5 KW GTI', '85044090', '29000', '10', '12', '3', 'No.s', 'LUM', '33AAACS3561K1ZE']
+        ];
+
+        // Convert to CSV
+        let csvContent = template.map(row => row.join(',')).join('\n');
+
+        // Create a download link
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'inventory_template.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Show success message
+        showImportMessage('Template downloaded successfully. Fill it with your data and upload.', 'success');
+
+        // Close the template modal if it's open
+        if (document.getElementById('template-modal') &&
+            !document.getElementById('template-modal').classList.contains('hidden')) {
+            closeTemplateModal();
+        }
+    }
+
+    // Function to handle file selection
+    function handleFileSelect() {
+        const fileInput = document.getElementById('excel-file');
+        const fileInfo = document.getElementById('file-upload-info');
+
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            fileInfo.textContent = file.name;
+        } else {
+            fileInfo.textContent = 'No file selected';
+        }
+    }
+
+    // Toggle the item search panel
+    function toggleEditSearch() {
+        const searchPanel = document.getElementById('item-search-panel');
+        if (searchPanel.style.display === 'none') {
+            searchPanel.style.display = 'block';
+            document.getElementById('item-search-input').focus();
+        } else {
+            searchPanel.style.display = 'none';
+        }
+    }
+
+    // Search for items by code or name across the entire inventory
+    function searchItem() {
+        const searchInput = document.getElementById('item-search-input').value.trim();
+        const searchResults = document.getElementById('search-results');
+
+        // Show loading indicator
+        searchResults.innerHTML = '<div class="loading-spinner"></div><p>Searching...</p>';
+
+        if (!searchInput) {
+            searchResults.innerHTML = '<p>Please enter an item code or name to search.</p>';
+            return;
+        }
+
+        // Call the API to search across the entire inventory
+        fetch(`/api/inventory/search?query=${encodeURIComponent(searchInput)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    searchResults.innerHTML = `<p class="error-message">Error: ${data.message || 'Failed to search items'}</p>`;
+                    return;
+                }
+
+                const items = data.items || [];
+
+                // Display search results
+                if (items.length === 0) {
+                    searchResults.innerHTML = '<p>No items found matching your search.</p>';
+                } else {
+                    searchResults.innerHTML = `<p>Found ${items.length} items matching your search:</p>`;
+
+                    // Create a container for the results
+                    const resultsContainer = document.createElement('div');
+                    resultsContainer.className = 'search-results-container';
+
+                    items.forEach(item => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'search-result-item';
+
+                        // Escape any special characters in the item name for the onclick handler
+                        const escapedItemName = item.item_name.replace(/'/g, "\\'");
+
+                        resultItem.innerHTML = `
+                            <div class="search-result-info">
+                                <strong>${item.item_code}</strong> - ${item.item_name}
+                                <div class="search-result-details">
+                                    <span>Quantity: ${item.quantity} ${item.unit_of_measurement}</span>
+                                    <span>Price: ₹${item.purchase_price_per_unit}</span>
+                                </div>
+                            </div>
+                            <div class="search-result-actions">
+                                <button class="btn primary" onclick="getAndEditItem('${item.item_code}')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn danger" onclick="confirmDeleteItem('${item.item_code}', '${escapedItemName}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        `;
+
+                        resultsContainer.appendChild(resultItem);
+                    });
+
+                    searchResults.appendChild(resultsContainer);
+                }
+            })
+            .catch(error => {
+                console.error('Error searching items:', error);
+                searchResults.innerHTML = '<p class="error-message">Error searching items. Please try again.</p>';
+            });
+    }
+
+    // Get item details from API and open edit modal
+    function getAndEditItem(itemCode) {
+        // Show loading indicator in the search results
+        const searchResults = document.getElementById('search-results');
+        const loadingMessage = document.createElement('div');
+        loadingMessage.className = 'loading-message';
+        loadingMessage.innerHTML = '<div class="loading-spinner"></div><p>Loading item details...</p>';
+        searchResults.appendChild(loadingMessage);
+
+        // Fetch the item details from the API
+        fetch(`/api/inventory/item/${itemCode}`)
+            .then(response => response.json())
+            .then(item => {
+                // Remove loading indicator
+                searchResults.removeChild(loadingMessage);
+
+                if (item.error) {
+                    showCustomPopup('Error', `Error loading item: ${item.error}`, 'Close');
+                    return;
+                }
+
+                // Create and show the edit modal with the item data
+                createEditModal(item);
+            })
+            .catch(error => {
+                // Remove loading indicator
+                if (loadingMessage.parentNode === searchResults) {
+                    searchResults.removeChild(loadingMessage);
+                }
+
+                console.error('Error fetching item details:', error);
+                showCustomPopup('Error', 'Error loading item details. Please try again.', 'Close');
+            });
+    }
+
+    // Create and show the edit modal with item data
+    function createEditModal(item) {
+        // Create a modal for editing the item
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'edit-item-modal';
+
+        // Extract item data
+        const itemCode = item.item_code;
+        const itemName = item.item_name;
+        const hsnCode = item.hsn_code || '';
+        const purchasePrice = item.purchase_price_per_unit;
+        const margin = item.margin || 0;
+        const gstRate = item.gst_rate;
+        const quantity = item.quantity;
+        const unit = item.unit_of_measurement || 'No.s';
+        const supplier = item.supplier_name;
+        const supplierGst = item.supplier_gst_number || '';
+
+        // Create the modal content
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Item: ${itemName}</h3>
+                    <span class="close" onclick="closeEditModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-item-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-item-name">Item Name:</label>
+                                <input type="text" id="edit-item-name" value="${itemName}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-hsn-code">HSN Code:</label>
+                                <input type="text" id="edit-hsn-code" value="${hsnCode}" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-purchase-price">Purchase Price (₹):</label>
+                                <input type="number" id="edit-purchase-price" value="${purchasePrice}" step="0.01" required oninput="calculateEditModalSellingPrice()">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-margin">Margin (%):</label>
+                                <input type="number" id="edit-margin" value="${margin}" step="0.1" required oninput="calculateEditModalSellingPrice()">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-selling-price">Selling Price (₹):</label>
+                                <input type="number" id="edit-selling-price" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-gst-rate">GST Rate (%):</label>
+                                <input type="number" id="edit-gst-rate" value="${gstRate}" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-quantity">Quantity:</label>
+                                <input type="number" id="edit-quantity" value="${quantity}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-unit">Unit:</label>
+                                <select id="edit-unit" required>
+                                    <option value="No.s" ${unit === 'No.s' ? 'selected' : ''}>No.s</option>
+                                    <option value="Meters" ${unit === 'Meters' ? 'selected' : ''}>Meters</option>
+                                    <option value="Kg.s" ${unit === 'Kg.s' ? 'selected' : ''}>Kg.s</option>
+                                    <option value="Feet" ${unit === 'Feet' ? 'selected' : ''}>Feet</option>
+                                    <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>Liters</option>
+                                    <option value="Plates" ${unit === 'Plates' ? 'selected' : ''}>Plates</option>
+                                    <option value="Bags" ${unit === 'Bags' ? 'selected' : ''}>Bags</option>
+                                    <option value="Box" ${unit === 'Box' ? 'selected' : ''}>Box</option>
+                                    <option value="Pairs" ${unit === 'Pairs' ? 'selected' : ''}>Pairs</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-supplier">Supplier Name:</label>
+                                <input type="text" id="edit-supplier" value="${supplier}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-supplier-gst">Supplier GST Number:</label>
+                                <input type="text" id="edit-supplier-gst" placeholder="Enter supplier GST number" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn secondary" onclick="closeEditModal()">Cancel</button>
+                    <button class="btn primary" onclick="saveEditedItem('${itemCode}')">Save Changes</button>
+                </div>
+            </div>
+        `;
+
+        // Add the modal to the page
+        document.body.appendChild(modal);
+
+        // Show the modal
+        setTimeout(() => {
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+            calculateEditModalSellingPrice();
+        }, 10);
+    }
+
+    // Calculate selling price in the edit modal
+    function calculateEditModalSellingPrice() {
+        const purchasePriceInput = document.getElementById('edit-purchase-price');
+        const marginInput = document.getElementById('edit-margin');
+        const sellingPriceInput = document.getElementById('edit-selling-price');
+
+        if (purchasePriceInput && marginInput && sellingPriceInput) {
+            const purchasePrice = parseFloat(purchasePriceInput.value);
+            const margin = parseFloat(marginInput.value);
+
+            if (!isNaN(purchasePrice) && !isNaN(margin)) {
+                const sellingPrice = purchasePrice * (1 + (margin / 100));
+                sellingPriceInput.value = sellingPrice.toFixed(2);
+            }
+        }
+    }
+
+    // Close the edit modal
+    function closeEditModal() {
+        const modal = document.getElementById('edit-item-modal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
+
+    // Save the edited item
+    function saveEditedItem(itemCode) {
+        // Show loading state
+        const saveButton = document.querySelector('#edit-item-modal .modal-footer .btn.primary');
+        const originalButtonText = saveButton.textContent;
+        saveButton.textContent = 'Saving...';
+        saveButton.disabled = true;
+
+        // Get the form data
+        const itemName = document.getElementById('edit-item-name').value;
+        const hsnCode = document.getElementById('edit-hsn-code').value;
+        const purchasePrice = document.getElementById('edit-purchase-price').value;
+        const margin = document.getElementById('edit-margin').value;
+        const gstRate = document.getElementById('edit-gst-rate').value;
+        const quantity = document.getElementById('edit-quantity').value;
+        const unit = document.getElementById('edit-unit').value;
+        const supplier = document.getElementById('edit-supplier').value;
+        const supplierGst = document.getElementById('edit-supplier-gst').value;
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('item_code', itemCode);
+        formData.append('item_name', itemName);
+        formData.append('hsn_code', hsnCode);
+        formData.append('purchase_price_per_unit', purchasePrice);
+        formData.append('margin', margin);
+        formData.append('gst_rate', gstRate);
+        formData.append('quantity', quantity);
+        formData.append('unit_of_measurement', unit);
+        formData.append('supplier_name', supplier);
+        formData.append('supplier_gst_number', supplierGst);
+
+        // Send AJAX request
+        fetch('/api/inventory/update-item', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            saveButton.textContent = originalButtonText;
+            saveButton.disabled = false;
+
+            if (data.success) {
+                // Close the edit modal
+                closeEditModal();
+
+                // Show custom success popup
+                showCustomPopup('Success', 'Item updated successfully!', 'OK', function() {
+                    // Reload the page to show the updated item
+                    window.location.reload();
+                });
+            } else {
+                // Show custom error popup
+                showCustomPopup('Error', 'Error updating item: ' + data.message, 'Close');
+            }
+        })
+        .catch(error => {
+            // Reset button state
+            saveButton.textContent = originalButtonText;
+            saveButton.disabled = false;
+
+            console.error('Error:', error);
+            showCustomPopup('Error', 'Error updating item. Please try again.', 'Close');
+        });
+    }
+
+    // Show a custom popup
+    function showCustomPopup(title, message, buttonText, callback, cancelButtonText) {
+        // Create popup elements
+        const popup = document.createElement('div');
+        popup.className = 'custom-popup';
+
+        // Determine if we need a cancel button
+        const cancelButton = cancelButtonText ?
+            `<button class="popup-btn cancel">${cancelButtonText}</button>` : '';
+
+        popup.innerHTML = `
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h3>${title}</h3>
+                </div>
+                <div class="popup-body">
+                    <div class="popup-message">${message}</div>
+                </div>
+                <div class="popup-footer">
+                    ${cancelButton}
+                    <button class="popup-btn confirm">${buttonText}</button>
+                </div>
+            </div>
+        `;
+
+        // Add to body
+        document.body.appendChild(popup);
+
+        // Show popup with animation
+        setTimeout(() => {
+            popup.classList.add('show');
+        }, 10);
+
+        // Function to close the popup
+        const closePopup = (runCallback) => {
+            popup.classList.remove('show');
+
+            setTimeout(() => {
+                document.body.removeChild(popup);
+
+                // Call callback if provided and requested
+                if (runCallback && typeof callback === 'function') {
+                    callback();
+                }
+            }, 300);
+        };
+
+        // Add event listener to confirm button
+        const confirmButton = popup.querySelector('.popup-btn.confirm');
+        confirmButton.addEventListener('click', function() {
+            closePopup(true); // Close and run callback
+        });
+
+        // Add event listener to cancel button if it exists
+        if (cancelButtonText) {
+            const cancelBtn = popup.querySelector('.popup-btn.cancel');
+            cancelBtn.addEventListener('click', function() {
+                closePopup(false); // Close without running callback
+            });
+        }
+    }
+
+    // Function to confirm delete
+    function confirmDeleteItem(itemCode, itemName) {
+        // Show custom confirmation popup
+        showCustomPopup(
+            'Confirm Delete',
+            `Are you sure you want to delete ${itemName} (${itemCode})? This action cannot be undone.`,
+            'Delete',
+            function() {
+                // User confirmed, proceed with deletion
+                deleteItem(itemCode);
+            },
+            'Cancel'
+        );
+    }
+
+    // Function to delete item
+    function deleteItem(itemCode) {
+        // Show loading popup
+        const loadingPopup = document.createElement('div');
+        loadingPopup.className = 'custom-popup show';
+        loadingPopup.id = 'loading-popup';
+
+        loadingPopup.innerHTML = `
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h3>Deleting Item</h3>
+                </div>
+                <div class="popup-body">
+                    <p>Deleting item, please wait...</p>
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(loadingPopup);
+
+        // Send request to delete the item
+        fetch(`/api/inventory/delete/${itemCode}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove loading popup
+            document.body.removeChild(loadingPopup);
+
+            if (data.success) {
+                // Show success popup
+                showCustomPopup('Success', data.message || 'Item deleted successfully', 'OK', function() {
+                    // Reload the page
+                    window.location.reload();
+                });
+            } else {
+                // Show error popup
+                showCustomPopup('Error', data.message || 'Error deleting item', 'Close');
+            }
+        })
+        .catch(error => {
+            // Remove loading popup
+            document.body.removeChild(loadingPopup);
+
+            console.error('Error:', error);
+            showCustomPopup('Error', 'Error deleting item. Please try again.', 'Close');
+        });
+    }
+
+    // Initialize page on load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up event listener for the add item button
+        const addButton = document.getElementById('add-item-btn');
+        if (addButton) {
+            addButton.addEventListener('click', addItemToInventory);
+        }
+
+        // Set up form submission on Enter key
+        const form = document.getElementById('add-item-form');
+        if (form) {
+            form.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent default form submission
+                    addItemToInventory();
+                }
+            });
+        }
+
+        // Set up event listener for file input
+        const fileInput = document.getElementById('excel-file');
+        if (fileInput) {
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        // Set up event listener for search input
+        const searchInput = document.getElementById('item-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchItem();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
