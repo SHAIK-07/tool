@@ -12,13 +12,24 @@
     <!-- Stats section removed as it's available in the Insights page -->
 
     <div id="products" class="products-section">
+        <!-- Ultra modern search bar with premium design -->
+        <div class="ultra-modern-search-container">
+            <h2 class="section-title">Find Products & Services</h2>
+            <div class="search-input-group">
+                <div class="search-input-wrapper">
+                    <input type="text" id="search-input" placeholder="Search products or services...">
+                    <button id="search-button">
+                        <span>Search</span>
+                    </button>
+                </div>
+                <div id="search-suggestions" class="search-suggestions"></div>
+                <div id="search-results-summary" class="search-results-summary"></div>
+            </div>
+        </div>
+
         <div class="section-header">
             <h2>Inventory Products</h2>
             <p>Current products available in inventory</p>
-            <div class="search-container">
-                <input type="text" id="product-search" placeholder="Search products...">
-                <button id="search-btn">Search</button>
-            </div>
         </div>
 
         <div class="items-container">
@@ -101,10 +112,6 @@
         <div class="section-header">
             <h2>Available Services</h2>
             <p>Current services offered</p>
-            <div class="search-container">
-                <input type="text" id="service-search" placeholder="Search services...">
-                <button id="search-btn">Search</button>
-            </div>
         </div>
 
         <div class="items-container">

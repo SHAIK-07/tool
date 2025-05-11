@@ -894,11 +894,398 @@ function closeModal() {
     }
 }
 
-// Product search functionality
-function searchProducts() {
-    const searchInput = document.getElementById('product-search');
-    const searchTerm = searchInput.value.toLowerCase();
+// Simple search functionality for both products and services
+function unifiedSearch() {
+    console.log("Unified search function called");
+
+    const searchInput = document.getElementById('unified-search');
+    if (!searchInput) {
+        console.error("Search input element not found");
+        return;
+    }
+
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    console.log("Search term:", searchTerm);
+
+    // Get all item cards
     const itemCards = document.querySelectorAll('.item-card');
+    console.log("Found", itemCards.length, "item cards");
+
+    if (itemCards.length === 0) {
+        console.warn("No item cards found on the page");
+    }
+
+    const searchResultsSummary = document.getElementById('search-results-summary');
+
+    // Hide search suggestions when performing a search
+    const searchSuggestions = document.getElementById('search-suggestions');
+    if (searchSuggestions) {
+        searchSuggestions.classList.remove('active');
+    }
+
+    // Count visible items
+    let visibleProducts = 0;
+    let visibleServices = 0;
+
+    // Function to calculate match score (higher is better)
+    const getMatchScore = (text, term) => {
+        if (!text) return 0;
+        if (!term) return 100; // Empty search shows everything
+
+        // Convert to lowercase for case-insensitive comparison
+        const textLower = text.toLowerCase();
+        const termLower = term.toLowerCase();
+
+        console.log(`Checking match: "${textLower}" against "${termLower}"`);
+
+        // Exact match gets highest score
+        if (textLower === termLower) {
+            console.log(`Exact match: ${textLower} = ${termLower}`);
+            return 100;
+        }
+
+        // Starts with term gets high score
+        if (textLower.startsWith(termLower)) {
+            console.log(`Starts with: ${textLower} starts with ${termLower}`);
+            return 80;
+        }
+
+        // Contains term gets medium score
+        if (textLower.includes(termLower)) {
+            console.log(`Contains: ${textLower} contains ${termLower}`);
+            return 60;
+        }
+
+        // Word boundary match (e.g., "solar panel" matches "panel")
+        const words = textLower.split(/\s+/);
+        for (const word of words) {
+            if (word.startsWith(termLower)) {
+                console.log(`Word boundary match: "${word}" in "${textLower}" starts with "${termLower}"`);
+                return 50;
+            }
+        }
+
+        // Contains all characters in sequence but not continuously
+        let lastIndex = -1;
+        let allCharsMatch = true;
+        for (let char of termLower) {
+            const index = textLower.indexOf(char, lastIndex + 1);
+            if (index === -1) {
+                allCharsMatch = false;
+                break;
+            }
+            lastIndex = index;
+        }
+        if (allCharsMatch) {
+            console.log(`Sequential chars match: ${textLower} contains all chars in ${termLower} in sequence`);
+            return 40;
+        }
+
+        // Contains most characters in term
+        let matchCount = 0;
+        for (let char of termLower) {
+            if (textLower.includes(char)) matchCount++;
+        }
+        const matchRatio = matchCount / termLower.length;
+        if (matchRatio > 0.7) {
+            console.log(`Partial match: ${textLower} contains ${matchRatio * 100}% of chars in ${termLower}`);
+            return 20;
+        }
+
+        console.log(`No match between "${textLower}" and "${termLower}"`);
+        return 0;
+    };
+
+    // Process each card
+    itemCards.forEach(card => {
+        try {
+            const h3Element = card.querySelector('h3');
+            if (!h3Element) {
+                console.error("No h3 element found in card:", card);
+                return;
+            }
+            const itemName = h3Element.textContent;
+
+            const itemCodeElement = card.querySelector('.item-code');
+            if (!itemCodeElement) {
+                console.error("No item-code element found in card:", card);
+                return;
+            }
+            const itemCode = itemCodeElement.textContent.replace('Code: ', '');
+
+            const isService = card.classList.contains('service-card');
+
+            // Get additional searchable content
+            let additionalContent = '';
+
+            // For products, include supplier name if available
+            if (!isService) {
+                const supplierElement = card.querySelector('.supplier-name');
+                if (supplierElement) {
+                    additionalContent += ' ' + supplierElement.textContent;
+                }
+            }
+
+            // For services, include employee name if available
+            if (isService) {
+                const employeeElement = card.querySelector('.service-employee');
+                if (employeeElement) {
+                    additionalContent += ' ' + employeeElement.textContent;
+                }
+            }
+
+            // Get match scores
+            const nameScore = getMatchScore(itemName, searchTerm);
+            const codeScore = getMatchScore(itemCode, searchTerm);
+            const additionalScore = getMatchScore(additionalContent, searchTerm);
+            const score = Math.max(nameScore, codeScore, additionalScore);
+
+            // Show or hide based on search match
+            if (score > 0) {
+                card.style.display = 'flex';
+                if (isService) {
+                    visibleServices++;
+                } else {
+                    visibleProducts++;
+                }
+            } else {
+                card.style.display = 'none';
+            }
+        } catch (error) {
+            console.error("Error processing card:", error);
+        }
+    });
+
+    // Show/hide "no items" message based on search results
+    const productsSection = document.getElementById('products');
+    const servicesSection = document.getElementById('services');
+
+    if (productsSection) {
+        const noProductsMessage = productsSection.querySelector('.no-items');
+        if (noProductsMessage) {
+            if (visibleProducts === 0) {
+                noProductsMessage.style.display = 'block';
+            } else {
+                noProductsMessage.style.display = 'none';
+            }
+        }
+    }
+
+    if (servicesSection) {
+        const noServicesMessage = servicesSection.querySelector('.no-items');
+        if (noServicesMessage) {
+            if (visibleServices === 0) {
+                noServicesMessage.style.display = 'block';
+            } else {
+                noServicesMessage.style.display = 'none';
+            }
+        }
+    }
+
+    // Update search results summary
+    if (searchResultsSummary) {
+        if (searchTerm !== '') {
+            const totalResults = visibleProducts + visibleServices;
+            const summaryText = `Found ${totalResults} items matching "${searchTerm}"`;
+            searchResultsSummary.textContent = summaryText;
+            searchResultsSummary.classList.add('active');
+            console.log("Updated search results summary:", summaryText);
+
+            // Show notification
+            showNotification(summaryText);
+        } else {
+            searchResultsSummary.classList.remove('active');
+        }
+    }
+}
+
+// Generate search suggestions as user types
+function generateSearchSuggestions() {
+    console.log("generateSearchSuggestions called");
+
+    const searchInput = document.getElementById('unified-search');
+    const searchSuggestions = document.getElementById('search-suggestions');
+
+    if (!searchInput || !searchSuggestions) {
+        console.error("Search input or suggestions element not found");
+        return;
+    }
+
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    console.log("Generating suggestions for:", searchTerm);
+
+    // Clear previous suggestions
+    searchSuggestions.innerHTML = '';
+
+    // Hide suggestions if search term is empty
+    if (searchTerm === '') {
+        searchSuggestions.classList.remove('active');
+        console.log("Search term is empty, hiding suggestions");
+        return;
+    }
+
+    // Always show the suggestions container when there's a search term
+    searchSuggestions.classList.add('active');
+    console.log("Showing suggestions container");
+
+    // Get all product and service names
+    const itemCards = document.querySelectorAll('.item-card');
+    const suggestions = [];
+
+    // Function to calculate match score (higher is better)
+    const getMatchScore = (text, term) => {
+        if (!text) return 0;
+        if (!term) return 100; // Empty search shows everything
+
+        // Convert to lowercase for case-insensitive comparison
+        const textLower = text.toLowerCase();
+        const termLower = term.toLowerCase();
+
+        console.log(`Checking suggestion match: "${textLower}" against "${termLower}"`);
+
+        // Exact match gets highest score
+        if (textLower === termLower) {
+            console.log(`Exact match: ${textLower} = ${termLower}`);
+            return 100;
+        }
+
+        // Starts with term gets high score
+        if (textLower.startsWith(termLower)) {
+            console.log(`Starts with: ${textLower} starts with ${termLower}`);
+            return 80;
+        }
+
+        // Contains term gets medium score
+        if (textLower.includes(termLower)) {
+            console.log(`Contains: ${textLower} contains ${termLower}`);
+            return 60;
+        }
+
+        // Word boundary match (e.g., "solar panel" matches "panel")
+        const words = textLower.split(/\s+/);
+        for (const word of words) {
+            if (word.startsWith(termLower)) {
+                console.log(`Word boundary match: "${word}" in "${textLower}" starts with "${termLower}"`);
+                return 50;
+            }
+        }
+
+        // Contains all characters in sequence but not continuously
+        let lastIndex = -1;
+        let allCharsMatch = true;
+        for (let char of termLower) {
+            const index = textLower.indexOf(char, lastIndex + 1);
+            if (index === -1) {
+                allCharsMatch = false;
+                break;
+            }
+            lastIndex = index;
+        }
+        if (allCharsMatch) {
+            console.log(`Sequential chars match: ${textLower} contains all chars in ${termLower} in sequence`);
+            return 40;
+        }
+
+        // Contains most characters in term
+        let matchCount = 0;
+        for (let char of termLower) {
+            if (textLower.includes(char)) matchCount++;
+        }
+        const matchRatio = matchCount / termLower.length;
+        if (matchRatio > 0.7) {
+            console.log(`Partial match: ${textLower} contains ${matchRatio * 100}% of chars in ${termLower}`);
+            return 20;
+        }
+
+        return 0;
+    };
+
+    itemCards.forEach(card => {
+        try {
+            const nameElement = card.querySelector('h3');
+            const codeElement = card.querySelector('.item-code');
+
+            if (!nameElement || !codeElement) return;
+
+            const name = nameElement.textContent;
+            const code = codeElement.textContent.replace('Code: ', '');
+            const isService = card.classList.contains('service-card');
+
+            // Get match scores
+            const nameScore = getMatchScore(name, searchTerm);
+            const codeScore = getMatchScore(code, searchTerm);
+            const score = Math.max(nameScore, codeScore);
+
+            // If there's any match, add to suggestions
+            if (score > 0) {
+                suggestions.push({
+                    name: name,
+                    code: code,
+                    type: isService ? 'service' : 'product',
+                    score: score
+                });
+            }
+        } catch (error) {
+            console.error("Error processing suggestion:", error);
+        }
+    });
+
+    // Sort by score (highest first)
+    suggestions.sort((a, b) => b.score - a.score);
+
+    // Limit to 5 suggestions
+    const limitedSuggestions = suggestions.slice(0, 5);
+    console.log("Found suggestions:", limitedSuggestions);
+
+    // Add suggestions to the dropdown
+    if (limitedSuggestions.length > 0) {
+        limitedSuggestions.forEach(suggestion => {
+            const suggestionItem = document.createElement('div');
+            suggestionItem.className = `suggestion-item ${suggestion.type}`;
+            suggestionItem.innerHTML = `
+                <span class="suggestion-name">${suggestion.name}</span>
+                <span class="suggestion-code">${suggestion.code}</span>
+            `;
+
+            // Add click event to fill the search input and perform search
+            suggestionItem.addEventListener('click', () => {
+                searchInput.value = suggestion.name;
+                searchSuggestions.classList.remove('active');
+                unifiedSearch();
+            });
+
+            searchSuggestions.appendChild(suggestionItem);
+        });
+
+        searchSuggestions.classList.add('active');
+    } else {
+        // If no suggestions, show a "no results" message
+        const noResults = document.createElement('div');
+        noResults.className = 'suggestion-item no-results';
+        noResults.textContent = `No matches found for "${searchTerm}"`;
+        searchSuggestions.appendChild(noResults);
+        searchSuggestions.classList.add('active');
+    }
+}
+
+// Legacy product search functionality (kept for backward compatibility)
+function searchProducts() {
+    // Redirect to unified search if it exists
+    if (document.getElementById('unified-search')) {
+        const productSearchInput = document.getElementById('product-search');
+        if (productSearchInput) {
+            document.getElementById('unified-search').value = productSearchInput.value;
+        }
+        unifiedSearch();
+        return;
+    }
+
+    // Fall back to original implementation if unified search doesn't exist
+    const searchInput = document.getElementById('product-search');
+    if (!searchInput) return;
+
+    const searchTerm = searchInput.value.toLowerCase();
+    const itemCards = document.querySelectorAll('.item-card:not(.service-card)');
 
     itemCards.forEach(card => {
         const itemName = card.querySelector('h3').textContent.toLowerCase();
@@ -1735,13 +2122,78 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Add event listener to search button
+    // Add event listener to unified search button
+    const unifiedSearchBtn = document.getElementById('unified-search-btn');
+    if (unifiedSearchBtn) {
+        console.log("Adding click event listener to search button");
+        unifiedSearchBtn.addEventListener('click', function() {
+            console.log("Search button clicked");
+            unifiedSearch();
+        });
+    } else {
+        console.error("Search button not found");
+    }
+
+    // Add event listener to unified search input for enter key and suggestions
+    const unifiedSearchInput = document.getElementById('unified-search');
+    if (unifiedSearchInput) {
+        console.log("Adding event listeners to search input");
+
+        // Search on Enter key
+        unifiedSearchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                console.log("Enter key pressed in search input");
+                unifiedSearch();
+            }
+        });
+
+        // Generate suggestions as user types
+        unifiedSearchInput.addEventListener('input', function() {
+            console.log("Search input changed:", this.value);
+
+            // Debounce suggestions to avoid too many updates
+            clearTimeout(this.suggestionsTimeout);
+
+            // If input is empty, show all items
+            if (this.value.trim() === '') {
+                console.log("Search input is empty, showing all items");
+                unifiedSearch();
+
+                // Hide suggestions
+                const searchSuggestions = document.getElementById('search-suggestions');
+                if (searchSuggestions) {
+                    searchSuggestions.classList.remove('active');
+                }
+            } else {
+                // Generate suggestions after a short delay
+                const searchValue = this.value;
+                this.suggestionsTimeout = setTimeout(function() {
+                    console.log("Generating suggestions after timeout for:", searchValue);
+                    generateSearchSuggestions();
+                }, 200);
+            }
+        });
+
+        // Handle click outside to close suggestions
+        document.addEventListener('click', function(event) {
+            const searchSuggestions = document.getElementById('search-suggestions');
+            if (searchSuggestions &&
+                event.target !== unifiedSearchInput &&
+                !searchSuggestions.contains(event.target)) {
+                searchSuggestions.classList.remove('active');
+            }
+        });
+    } else {
+        console.error("Search input not found");
+    }
+
+    // Legacy search button support
     const searchBtn = document.getElementById('search-btn');
     if (searchBtn) {
         searchBtn.addEventListener('click', searchProducts);
     }
 
-    // Add event listener to search input for enter key
+    // Legacy search input support
     const searchInput = document.getElementById('product-search');
     if (searchInput) {
         searchInput.addEventListener('keyup', function(event) {
@@ -1772,5 +2224,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname === '/cart') {
         renderCartItems();
         updateCartTotals();
+    }
+
+    // Initialize search on page load to show all items
+    if (window.location.pathname === '/' || window.location.pathname === '/index') {
+        console.log("Initializing search on page load");
+        unifiedSearch();
     }
 });
