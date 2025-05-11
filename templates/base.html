@@ -10,19 +10,22 @@
     <link rel="apple-touch-icon" href="/static/images/favicon/apple-touch-icon.png">
     <link rel="stylesheet" href="/static/css/theme.css">
     <link rel="stylesheet" href="/static/css/style.css?v=1.2">
+    <link rel="stylesheet" href="/static/css/sidebar.css?v=1.0">
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=1.0">
     <link rel="stylesheet" href="/static/css/cart-popup.css">
     <link rel="stylesheet" href="/static/css/invoice-summary.css?v=1.0">
     <link rel="stylesheet" href="/static/css/modern-search.css?v=1.5">
+    <link rel="stylesheet" href="/static/css/quote-popup.css?v=1.0">
     <style>
         /* Inline cart popup styles to ensure they're applied */
         .cart-toggle-btn {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            background-color: #000000;
+            background-color: var(--accent-primary);
             color: white;
             display: flex;
             align-items: center;
@@ -31,24 +34,31 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             z-index: 999;
             border: none;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .cart-toggle-btn:hover {
+            transform: translateY(-3px);
+            background-color: var(--accent-secondary);
         }
 
         /* Add cart count badge styles */
         .cart-toggle-count {
             position: absolute;
-            top: -12px;
-            right: -12px;
+            top: -10px;
+            right: -10px;
             background-color: #ff6b6b;
             color: white;
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             display: flex !important;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: bold;
             border: 2px solid white;
+            transition: transform 0.3s ease;
         }
 
         .cart-popup.show {
@@ -142,93 +152,137 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="header-wrapper">
-        <header>
-            <div class="container">
-                <!-- Left side: Logo -->
-                <div class="header-left">
-                    <div class="logo">
-                        <a href="/">
-                            <div class="logo-container">
-                                <img src="/static/images/logo.png" alt="Logo" class="logo-image">
-                            </div>
-                        </a>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <a href="/">
+                    <div class="logo-container">
+                        <img src="/static/images/logo.png" alt="Logo" class="logo-image">
                     </div>
-                </div>
-
-                <!-- Middle: Navigation links -->
-                <nav class="header-middle">
-                    <div class="nav-links">
-                        <a href="/" class="nav-link">Home</a>
-                        <a href="/stock" class="nav-link">Inventory</a>
-                        <a href="/services" class="nav-link">Services</a>
-                        <a href="/invoices" class="nav-link">Invoices</a>
-                        {% if user and user.role in ['admin', 'top_user'] %}
-                        <a href="/insights" class="nav-link">Insights</a>
-                        {% endif %}
-                    </div>
-                </nav>
-
-                <!-- Right side: Theme toggle and user profile -->
-                <div class="header-right">
-                    <!-- Theme Toggle -->
-                    <div class="theme-toggle">
-                        <span class="theme-toggle-icon" id="theme-toggle-icon"><i class="fas fa-sun"></i></span>
-                        <label class="theme-toggle-switch">
-                            <input type="checkbox" id="theme-toggle">
-                            <span class="theme-toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    {% if user %}
-                    <div class="contact-user-container">
-                        <button class="contact-btn user-dropdown-btn">
-                            <i class="fas fa-user-circle"></i> {{ user.name }}
-                        </button>
-                        <div class="user-dropdown-content">
-                            <div class="user-info">
-                                <div class="user-role">{{ user.role|title }}</div>
-                                <div class="user-email">{{ user.email }}</div>
-                            </div>
-                            <a href="/profile"><i class="fas fa-id-card"></i> Profile</a>
-                            {% if user.role == 'top_user' %}
-                            <a href="/user-management"><i class="fas fa-users-cog"></i> User Management</a>
-                            <a href="/api/database-management"><i class="fas fa-database"></i> Database Management</a>
-                            {% elif user.role == 'admin' %}
-                            <a href="/users"><i class="fas fa-users"></i> Manage Users</a>
-                            {% endif %}
-                            <a href="/change-password"><i class="fas fa-key"></i> Change Password</a>
-                            <a href="/api/auth/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <a href="/login" class="contact-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
-                    {% endif %}
-                </div>
-            </div>
-        </header>
-    </div>
-
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
-
-    <footer>
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2024. All rights reserved.</p>
-                <p>Developed With ❤️ By <a href="https://www.linkedin.com/in/shaik-hidaythulla-73bb572b9/" target="_blank">Shaik Hidaythulla</a></p>
+                </a>
             </div>
         </div>
 
+        <nav class="sidebar-nav">
+            <div class="nav-links">
+                <a href="/" class="nav-link" title="Home">
+                    <i class="fas fa-home"></i>
+                    <span class="nav-text">Home</span>
+                </a>
+                <a href="/stock" class="nav-link" title="Inventory">
+                    <i class="fas fa-boxes"></i>
+                    <span class="nav-text">Inventory</span>
+                </a>
+                <a href="/services" class="nav-link" title="Services">
+                    <i class="fas fa-concierge-bell"></i>
+                    <span class="nav-text">Services</span>
+                </a>
+                <a href="/invoices" class="nav-link" title="Invoices">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span class="nav-text">Invoices</span>
+                </a>
+                <a href="/quotations" class="nav-link" title="Quotations">
+                    <i class="fas fa-file-contract"></i>
+                    <span class="nav-text">Quotations</span>
+                </a>
+                {% if user and user.role in ['admin', 'top_user'] %}
+                <a href="/insights" class="nav-link" title="Insights">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="nav-text">Insights</span>
+                </a>
+
+                <!-- Admin Section Divider -->
+                <div class="nav-divider">
+                    <span class="nav-divider-text">Admin</span>
+                </div>
+
+                <!-- Admin Links -->
+                <a href="/profile" class="nav-link" title="Profile">
+                    <i class="fas fa-id-card"></i>
+                    <span class="nav-text">Profile</span>
+                </a>
+
+                <a href="/change-password" class="nav-link" title="Change Password">
+                    <i class="fas fa-key"></i>
+                    <span class="nav-text">Change Password</span>
+                </a>
+
+                {% if user.role == 'top_user' %}
+                <a href="/user-management" class="nav-link" title="User Management">
+                    <i class="fas fa-users-cog"></i>
+                    <span class="nav-text">User Management</span>
+                </a>
+
+                <a href="/api/database-management" class="nav-link" title="Database Management">
+                    <i class="fas fa-database"></i>
+                    <span class="nav-text">Database</span>
+                </a>
+                {% elif user.role == 'admin' %}
+                <a href="/users" class="nav-link" title="Manage Users">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-text">Manage Users</span>
+                </a>
+                {% endif %}
+
+                <a href="/api/auth/logout" class="nav-link" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-text">Logout</span>
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Sidebar">
+                <div class="hamburger-icon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile sidebar toggle (moved outside header) -->
+    <div class="mobile-sidebar-toggle">
+        <button id="mobile-sidebar-toggle" class="mobile-toggle-btn">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <!-- Footer content removed -->
+            </div>
+        </div>
     </footer>
 
-    <!-- Cart Popup Toggle Button -->
+    <!-- Cart and Quote Popup Toggle Buttons - Only shown on home page -->
+    {% if request.path == '/' %}
     <button class="cart-toggle-btn" id="cart-toggle-btn" onclick="showCartPopup(event)">
         <i class="fas fa-shopping-cart"></i>
         <span class="cart-toggle-count" id="cart-toggle-count">0</span>
     </button>
+
+    <button class="quote-toggle-btn" id="quote-toggle-btn" onclick="showQuotePopup(event)">
+        <i class="fas fa-file-invoice"></i>
+        <span class="quote-toggle-count" id="quote-toggle-count">0</span>
+    </button>
+    {% endif %}
 
     <script>
         // Function to show cart popup
@@ -275,6 +329,8 @@
         }
     </script>
 
+    <!-- Cart and Quote Popups - Only included on home page -->
+    {% if request.path == '/' %}
     <!-- Cart Popup -->
     <div class="cart-popup" id="cart-popup">
         <div class="cart-popup-header">
@@ -299,43 +355,100 @@
         </div>
     </div>
 
+    <!-- Quote Popup -->
+    <div class="quote-popup" id="quote-popup">
+        <div class="quote-popup-header">
+            <span class="quote-count" id="popup-quote-count">0</span>
+            <button class="quote-popup-close" id="quote-popup-close" onclick="hideQuotePopup(event)"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="quote-popup-body" id="quote-popup-body">
+            <!-- Quote items will be inserted here by JavaScript -->
+            <div class="quote-popup-empty" id="quote-popup-empty">
+                <p>Your quote is empty</p>
+            </div>
+        </div>
+        <div class="quote-popup-footer">
+            <div class="quote-popup-total">
+                <span>Total:</span>
+                <span id="quote-popup-total-amount">₹0.00</span>
+            </div>
+            <div class="quote-popup-actions">
+                <a href="/quote-cart" class="view-quote-btn">View Quote Cart</a>
+                <button class="checkout-btn" onclick="window.location.href='/quote-checkout'">Create Quote</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <script>
-        // Initialize cart popup when document is ready
+        // Initialize popups when document is ready
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Document ready, initializing cart popup');
+            console.log('Document ready, initializing popups');
 
-            // Make sure cart popup is initially hidden
-            const cartPopup = document.getElementById('cart-popup');
-            if (cartPopup) {
-                cartPopup.style.display = 'none';
-                cartPopup.style.opacity = '0';
-                console.log('Cart popup initialized');
-            }
+            // Check if we're on the home page
+            const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index';
 
-            // Ensure cart count is visible
-            const cartToggleCount = document.getElementById('cart-toggle-count');
-            if (cartToggleCount) {
-                cartToggleCount.style.display = 'flex';
-                console.log('Cart count badge initialized');
-            }
+            // Only initialize popups on home page
+            if (isHomePage) {
+                console.log('On home page, initializing popups');
 
-            // Add click event to document to close popup when clicking outside
-            document.addEventListener('click', function(event) {
+                // Make sure cart popup is initially hidden
                 const cartPopup = document.getElementById('cart-popup');
-                const cartToggleBtn = document.getElementById('cart-toggle-btn');
-
-                if (cartPopup && cartPopup.style.display === 'flex' &&
-                    !cartPopup.contains(event.target) &&
-                    cartToggleBtn && !cartToggleBtn.contains(event.target)) {
-                    hideCartPopup();
+                if (cartPopup) {
+                    cartPopup.style.display = 'none';
+                    cartPopup.style.opacity = '0';
+                    console.log('Cart popup initialized');
                 }
-            });
+
+                // Make sure quote popup is initially hidden
+                const quotePopup = document.getElementById('quote-popup');
+                if (quotePopup) {
+                    quotePopup.style.display = 'none';
+                    quotePopup.style.opacity = '0';
+                    console.log('Quote popup initialized');
+                }
+
+                // Ensure cart count is visible
+                const cartToggleCount = document.getElementById('cart-toggle-count');
+                if (cartToggleCount) {
+                    cartToggleCount.style.display = 'flex';
+                    console.log('Cart count badge initialized');
+                }
+
+                // Ensure quote count is visible
+                const quoteToggleCount = document.getElementById('quote-toggle-count');
+                if (quoteToggleCount) {
+                    quoteToggleCount.style.display = 'flex';
+                    console.log('Quote count badge initialized');
+                }
+
+                // Add click event to document to close popups when clicking outside
+                document.addEventListener('click', function(event) {
+                    const cartPopup = document.getElementById('cart-popup');
+                    const cartToggleBtn = document.getElementById('cart-toggle-btn');
+                    const quotePopup = document.getElementById('quote-popup');
+                    const quoteToggleBtn = document.getElementById('quote-toggle-btn');
+
+                    if (cartPopup && cartPopup.style.display === 'flex' &&
+                        !cartPopup.contains(event.target) &&
+                        cartToggleBtn && !cartToggleBtn.contains(event.target)) {
+                        hideCartPopup();
+                    }
+
+                    if (quotePopup && quotePopup.style.display === 'flex' &&
+                        !quotePopup.contains(event.target) &&
+                        quoteToggleBtn && !quoteToggleBtn.contains(event.target)) {
+                        hideQuotePopup();
+                    }
+                });
+            }
         });
     </script>
 
-    <script src="/static/js/theme.js"></script>
     <script src="/static/js/app.js"></script>
     <script src="/static/js/header.js"></script>
+    <script src="/static/js/sidebar.js"></script>
     <script src="/static/js/search.js"></script>
+    <script src="/static/js/quote.js"></script>
 </body>
 </html>

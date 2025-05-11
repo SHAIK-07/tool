@@ -261,29 +261,13 @@
     z-index: 1000;
 }
 
-/* Dark mode specific overrides */
-[data-theme="dark"] .cart-popup {
-    background-color: var(--card-bg, #2a2a2a);
-    border-color: var(--border-color, #444);
-}
 
-[data-theme="dark"] .cart-popup-header {
-    background-color: var(--btn-primary-bg, #003366);
-}
 
-[data-theme="dark"] .cart-popup-body {
-    background-color: var(--card-bg, #2a2a2a);
-}
 
-[data-theme="dark"] .cart-popup-footer {
-    background-color: var(--bg-secondary, #222);
-    border-top-color: var(--border-color, #444);
-}
 
-[data-theme="dark"] .cart-popup-item {
-    border-bottom-color: var(--border-color, #444);
-}
 
-[data-theme="dark"] .cart-toggle-count {
-    border-color: var(--bg-primary, #1a1a1a);
-}
+
+
+
+
+

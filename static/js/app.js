@@ -56,7 +56,15 @@ function addToCart(itemId, itemName, price, gstRate, availableQuantity, itemType
 
     // Get quantity from input field if it exists
     let quantity = 1;
-    const quantityInput = document.getElementById(`qty-${itemId}`);
+
+    // Try to get quantity from product input field
+    let quantityInput = document.getElementById(`qty-${itemId}`);
+
+    // If not found, try to get quantity from service input field
+    if (!quantityInput && itemType === 'service') {
+        quantityInput = document.getElementById(`qty-service-${itemId}`);
+    }
+
     if (quantityInput) {
         quantity = parseInt(quantityInput.value, 10);
         if (isNaN(quantity) || quantity < 1) {

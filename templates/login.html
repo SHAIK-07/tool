@@ -132,15 +132,7 @@
             border: 1px solid rgba(46, 125, 50, 0.3);
         }
 
-        [data-theme="dark"] .error-message {
-            background-color: rgba(198, 40, 40, 0.2);
-            color: #ff8a80;
-        }
-
-        [data-theme="dark"] .success-message {
-            background-color: rgba(46, 125, 50, 0.2);
-            color: #b9f6ca;
-        }
+        /* No dark mode - Application uses light theme only */
 
         footer {
             background-color: var(--footer-bg);
@@ -195,47 +187,9 @@
 
     <footer>
         <div class="footer-bottom">
-            <p>&copy; 2024. All rights reserved. Developed With ❤️ By Shaik Hidaythulla</p>
-            <div class="theme-toggle">
-                <span class="theme-toggle-icon">
-                    <i class="fas fa-sun"></i>
-                </span>
-                <label class="theme-toggle-switch">
-                    <input type="checkbox" id="theme-toggle-checkbox">
-                    <span class="theme-toggle-slider"></span>
-                </label>
-            </div>
+            <!-- Footer content -->
         </div>
     </footer>
-
-    <script>
-        // Theme toggle functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('theme-toggle-checkbox');
-            const themeIcon = document.querySelector('.theme-toggle-icon i');
-
-            // Check if user has a theme preference in localStorage
-            const currentTheme = localStorage.getItem('theme');
-            if (currentTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                themeToggle.checked = true;
-                themeIcon.classList.replace('fa-sun', 'fa-moon');
-            }
-
-            // Toggle theme when checkbox is clicked
-            themeToggle.addEventListener('change', function() {
-                if (this.checked) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                    themeIcon.classList.replace('fa-sun', 'fa-moon');
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    localStorage.setItem('theme', 'light');
-                    themeIcon.classList.replace('fa-moon', 'fa-sun');
-                }
-            });
-        });
-    </script>
 </body>
 </html>
 

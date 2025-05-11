@@ -2,18 +2,14 @@
 
 {% block content %}
 <div class="home-container">
-    <div class="hero-section">
-        <div class="hero-content">
+    <div class="dashboard-header">
+        <div class="dashboard-welcome">
             <h1>Sunmax Inventory Management</h1>
             <p>Internal system for managing inventory and sales</p>
         </div>
-    </div>
 
-    <!-- Stats section removed as it's available in the Insights page -->
-
-    <div id="products" class="products-section">
         <!-- Ultra modern search bar with premium design -->
-        <div class="ultra-modern-search-container">
+        <div class="dashboard-search">
             <h2 class="section-title">Find Products & Services</h2>
             <div class="search-input-group">
                 <div class="search-input-wrapper">
@@ -26,6 +22,9 @@
                 <div id="search-results-summary" class="search-results-summary"></div>
             </div>
         </div>
+    </div>
+
+    <div id="products" class="products-section">
 
         <div class="section-header">
             <h2>Inventory Products</h2>
@@ -78,15 +77,26 @@
                                 <button class="quantity-btn-small" onclick="incrementQuantity('qty-{{ item.item_code }}', {{ item.quantity }})">+</button>
                             </div>
                             {% if item.quantity > 0 %}
-                                <button class="add-to-cart-btn"
-                                    data-id="{{ item.item_code }}"
-                                    data-name="{{ item.item_name }}"
-                                    data-price="{{ (item.purchase_price_per_unit * (1 + (item.margin|default(20) / 100)))|round(2) }}"
-                                    data-gst="{{ item.gst_rate }}"
-                                    data-quantity="{{ item.quantity }}"
-                                    data-type="product">
-                                    Add to Cart
-                                </button>
+                                <div class="button-group">
+                                    <button class="add-to-cart-btn"
+                                        data-id="{{ item.item_code }}"
+                                        data-name="{{ item.item_name }}"
+                                        data-price="{{ (item.purchase_price_per_unit * (1 + (item.margin|default(20) / 100)))|round(2) }}"
+                                        data-gst="{{ item.gst_rate }}"
+                                        data-quantity="{{ item.quantity }}"
+                                        data-type="product">
+                                        Add to Cart
+                                    </button>
+                                    <button class="add-to-quote-btn"
+                                        data-id="{{ item.item_code }}"
+                                        data-name="{{ item.item_name }}"
+                                        data-price="{{ (item.purchase_price_per_unit * (1 + (item.margin|default(20) / 100)))|round(2) }}"
+                                        data-gst="{{ item.gst_rate }}"
+                                        data-quantity="{{ item.quantity }}"
+                                        data-type="product">
+                                        Add to Quote
+                                    </button>
+                                </div>
                             {% else %}
                                 <button class="delete-item-btn"
                                     onclick="confirmDeleteItem('{{ item.item_code }}', '{{ item.item_name }}')">
@@ -145,14 +155,29 @@
                             </div>
                         </div>
                         <div class="item-actions">
-                            <button class="add-to-cart-btn service-btn"
-                                data-id="{{ service.service_code }}"
-                                data-name="{{ service.service_name }}"
-                                data-price="{{ service.price }}"
-                                data-gst="{{ service.gst_rate }}"
-                                data-type="service">
-                                Add to Cart
-                            </button>
+                            <div class="quantity-input-container">
+                                <button class="quantity-btn-small" onclick="decrementQuantity('qty-service-{{ service.service_code }}')">-</button>
+                                <input type="number" id="qty-service-{{ service.service_code }}" class="quantity-input" value="1" min="1">
+                                <button class="quantity-btn-small" onclick="incrementQuantity('qty-service-{{ service.service_code }}')">+</button>
+                            </div>
+                            <div class="button-group">
+                                <button class="add-to-cart-btn service-btn"
+                                    data-id="{{ service.service_code }}"
+                                    data-name="{{ service.service_name }}"
+                                    data-price="{{ service.price }}"
+                                    data-gst="{{ service.gst_rate }}"
+                                    data-type="service">
+                                    Add to Cart
+                                </button>
+                                <button class="add-to-quote-btn service-btn"
+                                    data-id="{{ service.service_code }}"
+                                    data-name="{{ service.service_name }}"
+                                    data-price="{{ service.price }}"
+                                    data-gst="{{ service.gst_rate }}"
+                                    data-type="service">
+                                    Add to Quote
+                                </button>
+                            </div>
                             <button class="view-details-btn service-details-btn" data-id="{{ service.id }}" onclick="openServiceModal({{ service.id }})">View Details</button>
                         </div>
                     </div>

@@ -425,3 +425,102 @@ def export_invoices_to_excel(invoices, db: Session, payment_status=None):
     except Exception as e:
         print(f"Error exporting invoices to Excel: {e}")
         raise
+
+
+def export_quotations_to_excel(quotations):
+    """
+    Export quotations to Excel with formatting
+    
+    Args:
+        quotations: List of quotation objects
+        
+    Returns:
+        tuple: (filename, file_path)
+    """
+    import pandas as pd
+    import os
+    from datetime import datetime
+    
+    # Create a DataFrame from the quotations
+    data = []
+    for q in quotations:
+        data.append({
+            "Quote Number": q.quote_number,
+            "Date": q.date.strftime("%d-%m-%Y"),
+            "Customer Name": q.customer_name,
+            "Customer Phone": q.customer_phone,
+            "Customer Email": q.customer_email or "",
+            "Customer Address": q.customer_address or "",
+            "Asked About": q.asked_about or "",
+            "Subtotal": q.subtotal,
+            "GST": q.total_gst,
+            "Total Amount": q.total_amount,
+            "Created At": q.created_at.strftime("%d-%m-%Y %H:%M:%S")
+        })
+    
+    # Create DataFrame
+    df = pd.DataFrame(data)
+    
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"quotations_{timestamp}.xlsx"
+    
+    # Create directory if it doesn't exist
+    export_dir = os.path.join("static", "exports")
+    os.makedirs(export_dir, exist_ok=True)
+    
+    # Full path to the file
+    file_path = os.path.join(export_dir, filename)
+    
+    # Create Excel file with formatting
+    with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
+        df.to_excel(writer, sheet_name="Quotations", index=False)
+        
+        # Get the xlsxwriter workbook and worksheet objects
+        workbook = writer.book
+        worksheet = writer.sheets["Quotations"]
+        
+        # Add formatting
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#4285F4',
+            'color': 'white',
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter'
+        })
+        
+        # Currency format
+        currency_format = workbook.add_format({
+            'num_format': '₹#,##0.00',
+            'align': 'right'
+        })
+        
+        # Date format
+        date_format = workbook.add_format({
+            'num_format': 'dd-mm-yyyy',
+            'align': 'center'
+        })
+        
+        # Apply header format
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+        
+        # Set column widths and formats
+        worksheet.set_column('A:A', 15)  # Quote Number
+        worksheet.set_column('B:B', 12)  # Date
+        worksheet.set_column('C:C', 25)  # Customer Name
+        worksheet.set_column('D:D', 15)  # Customer Phone
+        worksheet.set_column('E:E', 25)  # Customer Email
+        worksheet.set_column('F:F', 30)  # Customer Address
+        worksheet.set_column('G:G', 30)  # Asked About
+        worksheet.set_column('H:H', 15, currency_format)  # Subtotal
+        worksheet.set_column('I:I', 15, currency_format)  # GST
+        worksheet.set_column('J:J', 15, currency_format)  # Total Amount
+        worksheet.set_column('K:K', 20)  # Created At
+        
+        # Add auto-filter
+        worksheet.autofilter(0, 0, len(df), len(df.columns) - 1)
+        
+    return filename, file_path
+

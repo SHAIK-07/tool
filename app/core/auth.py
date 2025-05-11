@@ -99,3 +99,31 @@ async def get_admin_user(current_user: models.User = Depends(get_current_user)):
             detail="Not authorized. Admin privileges required."
         )
     return current_user
+
+
+async def get_current_user_from_cookie(request, db):
+    """Get the current user from the session cookie."""
+    # Get token from cookie
+    token = request.cookies.get("access_token")
+    if not token:
+        return None
+
+    try:
+        # Remove "Bearer " prefix if present
+        if token.startswith("Bearer "):
+            token = token[7:]
+
+        # Decode the token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+
+        # Get the user from database
+        user = crud.get_user_by_email(db, email)
+        return user
+    except JWTError:
+        return None
+    except Exception as e:
+        print(f"Error getting user from cookie: {e}")
+        return None

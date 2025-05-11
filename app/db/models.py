@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Date, ForeignKey, DateTime, Boolean
+from sqlalchemy import Column, String, Integer, Float, Date, ForeignKey, DateTime, Boolean, Text
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 from datetime import datetime
@@ -108,6 +108,45 @@ class Service(Base):
 
     # Relationship with invoice
     invoice = relationship("Invoice", back_populates="services")
+
+
+class Quotation(Base):
+    __tablename__ = "quotations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    quote_number = Column(String, unique=True, index=True, nullable=False)
+    date = Column(Date, nullable=False, default=datetime.now().date())
+    customer_name = Column(String, nullable=False)
+    customer_address = Column(String)
+    customer_phone = Column(String)
+    customer_email = Column(String)
+    subtotal = Column(Float, nullable=False)
+    total_gst = Column(Float, nullable=False)
+    total_amount = Column(Float, nullable=False)
+    asked_about = Column(Text)
+    created_at = Column(DateTime, default=datetime.now)
+    pdf_path = Column(String)
+
+    # Relationship with quotation items
+    items = relationship("QuotationItem", back_populates="quotation", cascade="all, delete-orphan")
+
+
+class QuotationItem(Base):
+    __tablename__ = "quotation_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    quotation_id = Column(Integer, ForeignKey("quotations.id"), nullable=False)
+    item_code = Column(String, nullable=False)
+    item_name = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
+    gst_rate = Column(Float, nullable=False)
+    gst_amount = Column(Float, nullable=False)
+    total = Column(Float, nullable=False)
+    item_type = Column(String, nullable=False)  # "product" or "service"
+
+    # Relationship with quotation
+    quotation = relationship("Quotation", back_populates="items")
 
 
 class User(Base):

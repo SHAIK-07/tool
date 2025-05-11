@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="page-header">
+        <h2>Checkout</h2>
+        <p>Complete your purchase by providing the required information</p>
+    </div>
+    
+    <div class="checkout-form-container">
+        <form id="quote-checkout-form">
+            <div class="form-section">
+                <h3>Customer Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-name">Customer Name / Company Name:</label>
+                        <input type="text" id="customer-name" name="customer_name" required placeholder="Enter customer name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer-phone">Phone Number:</label>
+                        <input type="tel" id="customer-phone" name="customer_phone" required placeholder="Enter phone number">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-email">Email (optional):</label>
+                        <input type="email" id="customer-email" name="customer_email" placeholder="Enter email address">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer-address">Address (optional):</label>
+                        <textarea id="customer-address" name="customer_address" placeholder="Enter address"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="asked-about">Asked About (optional):</label>
+                        <textarea id="asked-about" name="asked_about" placeholder="What is this quotation for?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quote-date">Quotation Date:</label>
+                        <input type="date" id="quote-date" name="quote_date" required>
+                        <script>
+                            // Set default value to today's date
+                            document.getElementById('quote-date').valueAsDate = new Date();
+                        </script>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="order-summary">
+                    <div class="cart-items-summary">
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Discount</th>
+                                    <th>Taxable Amount</th>
+                                    <th>GST</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quote-items">
+                                <!-- Quote items will be inserted here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="order-totals">
+                        <div class="totals-table">
+                            <div class="totals-row">
+                                <div class="totals-label">Subtotal:</div>
+                                <div class="totals-value" id="quote-subtotal">₹0.00</div>
+                            </div>
+                            <div class="totals-row">
+                                <div class="totals-label">Discount:</div>
+                                <div class="totals-value" id="quote-discount">₹0.00</div>
+                            </div>
+                            <div class="totals-row">
+                                <div class="totals-label">Taxable Amount:</div>
+                                <div class="totals-value" id="quote-taxable">₹0.00</div>
+                            </div>
+                            <div class="totals-row">
+                                <div class="totals-label">GST:</div>
+                                <div class="totals-value" id="quote-gst">₹0.00</div>
+                            </div>
+                            <div class="totals-row total-row">
+                                <div class="totals-label">Total:</div>
+                                <div class="totals-value" id="quote-total">₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Seller Information</h3>
+                <div class="seller-info">
+                    <div class="seller-flex-container">
+                        <div class="seller-logo">
+                            <img src="/static/images/logo.png" alt="Sunmax Renewables Logo" class="seller-logo-img">
+                        </div>
+                        <div class="seller-details">
+                            <p><strong>Sunmax Renewables</strong></p>
+                            <p>GST Number: 37FUWPS9742A1ZT</p>
+                            <p>26/3/482, Ground floor of Sneha Nagar Sachivalayam</p>
+                            <p>B.V.Nagar, NGO Colony, Nellore</p>
+                            <p>Andhra Pradesh 524004</p>
+                            <p>Phone: 9381488225, 7013023946</p>
+                            <p>Email: contactsunmax@gmail.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="back-to-cart-btn" onclick="window.location.href='/quote-cart'">Back to Quote Cart</button>
+                <button type="submit" class="create-quote-btn">Create Quotation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load quote items from localStorage
+        const quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Populate quote summary
+        populateQuoteSummary(quoteItems);
+
+        // Handle form submission
+        document.getElementById('quote-checkout-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Validate form
+            const customerName = document.getElementById('customer-name').value;
+            const customerPhone = document.getElementById('customer-phone').value;
+            
+            if (!customerName || !customerPhone) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Prepare data
+            const quotationData = {
+                customer: {
+                    name: customerName,
+                    phone: customerPhone,
+                    email: document.getElementById('customer-email').value,
+                    address: document.getElementById('customer-address').value
+                },
+                items: quoteItems,
+                totals: {
+                    subtotal: parseFloat(document.getElementById('quote-subtotal').textContent.replace('₹', '')),
+                    gst: parseFloat(document.getElementById('quote-gst').textContent.replace('₹', '')),
+                    total: parseFloat(document.getElementById('quote-total').textContent.replace('₹', ''))
+                },
+                askedAbout: document.getElementById('asked-about').value,
+                quoteDate: document.getElementById('quote-date').value
+            };
+            
+            try {
+                // Send data to server
+                fetch('/api/create-quotation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(quotationData)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // Clear quote
+                        localStorage.removeItem('quoteItems');
+                        
+                        // Redirect to quotation details
+                        window.location.href = `/quotation/${result.id}`;
+                    } else {
+                        alert('Error creating quotation: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error creating quotation. Please try again.');
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error creating quotation. Please try again.');
+            }
+        });
+    });
+
+    function populateQuoteSummary(quoteItems) {
+        const quoteItemsElement = document.getElementById('quote-items');
+        const subtotalElement = document.getElementById('quote-subtotal');
+        const discountElement = document.getElementById('quote-discount');
+        const taxableElement = document.getElementById('quote-taxable');
+        const gstElement = document.getElementById('quote-gst');
+        const totalElement = document.getElementById('quote-total');
+
+        // Clear existing items
+        quoteItemsElement.innerHTML = '';
+
+        if (quoteItems.length === 0) {
+            // Redirect to quote cart if empty
+            window.location.href = '/quote-cart';
+            return;
+        }
+
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalTaxableAmount = 0;
+        let totalGst = 0;
+
+        // Add rows for each item
+        quoteItems.forEach(item => {
+            // Ensure discount exists and is a number
+            if (item.discount === undefined) {
+                item.discount = 0;
+            }
+
+            const itemSubtotal = item.price * item.quantity;
+            const discountAmount = itemSubtotal * (item.discount / 100);
+            const taxableAmount = itemSubtotal - discountAmount;
+            const itemGst = taxableAmount * (item.gstRate / 100);
+            const itemTotal = taxableAmount + itemGst;
+
+            subtotal += itemSubtotal;
+            totalDiscount += discountAmount;
+            totalTaxableAmount += taxableAmount;
+            totalGst += itemGst;
+
+            const row = document.createElement('tr');
+            const itemType = item.type || 'product';
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td><span class="item-type-badge item-type-${itemType}">${itemType.charAt(0).toUpperCase() + itemType.slice(1)}</span></td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td>${item.quantity}</td>
+                <td>${item.discount || 0}%</td>
+                <td>₹${taxableAmount.toFixed(2)}</td>
+                <td>${item.gstRate}% (₹${itemGst.toFixed(2)})</td>
+                <td>₹${itemTotal.toFixed(2)}</td>
+            `;
+            quoteItemsElement.appendChild(row);
+        });
+
+        // Update totals
+        const totalAmount = totalTaxableAmount + totalGst;
+        subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+        discountElement.textContent = `₹${totalDiscount.toFixed(2)}`;
+        taxableElement.textContent = `₹${totalTaxableAmount.toFixed(2)}`;
+        gstElement.textContent = `₹${totalGst.toFixed(2)}`;
+        totalElement.textContent = `₹${totalAmount.toFixed(2)}`;
+    }
+</script>
+
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .checkout-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .summary-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .checkout-form-container {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .form-section h3 {
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .form-group textarea {
+        height: 100px;
+        resize: vertical;
+    }
+
+    .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .summary-table th, .summary-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    .summary-table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .item-type-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .item-type-product {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .item-type-service {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+
+    .order-totals {
+        margin-top: 20px;
+    }
+
+    .totals-table {
+        width: 100%;
+        max-width: 400px;
+        margin-left: auto;
+    }
+
+    .totals-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .totals-row.total-row {
+        font-weight: 700;
+        font-size: 1.2rem;
+        border-bottom: none;
+        margin-top: 10px;
+    }
+
+    .seller-flex-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .seller-logo {
+        flex: 0 0 100px;
+    }
+
+    .seller-logo-img {
+        width: 100%;
+        height: auto;
+    }
+
+    .seller-details {
+        flex: 1;
+    }
+
+    .seller-details p {
+        margin: 5px 0;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+
+    .back-to-cart-btn {
+        background-color: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .back-to-cart-btn:hover {
+        background-color: #e0e0e0;
+    }
+
+    .create-quote-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .create-quote-btn:hover {
+        background-color: #388E3C;
+    }
+
+    /* Make the summary table background light gray */
+    .order-summary {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+
+

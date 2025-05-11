@@ -1,0 +1,749 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    /* Item Type Badge Styling */
+    .item-type-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .item-type-product {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .item-type-service {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="quote-cart-container">
+    <div class="page-header">
+        <h2>Your Quote Cart</h2>
+        <p>Review your items and create a quotation</p>
+    </div>
+
+    <!-- Empty quote cart message -->
+    <div class="empty-quote-cart">
+        <div class="no-items-icon">📋</div>
+        <h3>Your Quote Cart is Empty</h3>
+        <p>Looks like you haven't added any items to your quote cart yet.</p>
+        <a href="/" class="continue-shopping">Continue Shopping</a>
+    </div>
+
+    <!-- Quote items will be loaded dynamically by JavaScript -->
+    <div class="quote-items" id="quote-details-container" style="display: none;">
+        <table class="quote-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Discount (%)</th>
+                    <th>Taxable Amount</th>
+                    <th>GST</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Quote items will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+
+        <div class="quote-summary">
+            <div class="summary-row">
+                <span>Subtotal:</span>
+                <span id="quote-subtotal">₹0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Discount:</span>
+                <span id="quote-discount">₹0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Taxable Amount:</span>
+                <span id="quote-taxable">₹0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>GST:</span>
+                <span id="quote-gst">₹0.00</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total:</span>
+                <span id="quote-total">₹0.00</span>
+            </div>
+
+            <div class="quote-actions">
+                <button class="reset-discount-btn" onclick="resetQuoteDiscount()">Reset Discount</button>
+                <button class="create-quote-btn" onclick="createQuote()">Create Quotation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add discount form container similar to cart page -->
+    <div class="discount-form-container" id="discount-form-container" style="display: none;">
+        <div class="discount-form-card">
+            <h3>Apply Global Discount</h3>
+            <p>Apply a percentage discount to all items in your quote.</p>
+
+            <div class="discount-form">
+                <div class="form-group">
+                    <label for="global-discount">Discount Percentage (%)</label>
+                    <input type="number" id="global-discount" min="0" max="100" step="0.1" value="0">
+                </div>
+                <button class="apply-discount-btn" onclick="applyGlobalQuoteDiscount()">Apply Discount</button>
+            </div>
+
+            <div class="discount-items-preview">
+                <h4>Items in Quote</h4>
+                <ul id="discount-items-list">
+                    <!-- Quote items will be inserted here by JavaScript -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Match the cart container styles */
+    .quote-cart-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .quote-cart-container h2 {
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        text-align: center;
+        transition: color 0.3s ease;
+    }
+
+    /* Match the empty cart styles */
+    .empty-quote-cart {
+        text-align: center;
+        padding: 3rem;
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        box-shadow: 0 2px 5px var(--shadow-color);
+        transition: background-color 0.3s ease;
+    }
+
+    .empty-quote-cart h3 {
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+
+    .empty-quote-cart p {
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+
+    .no-items-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+
+    .continue-shopping {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .continue-shopping:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    /* Match the cart table styles */
+    .quote-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+        background-color: var(--bg-secondary);
+        box-shadow: 0 2px 5px var(--shadow-color);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: background-color 0.3s ease;
+    }
+
+    .quote-table th, .quote-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .quote-table th {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .quote-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Match the cart summary styles */
+    .quote-summary {
+        background-color: var(--bg-secondary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px var(--shadow-color);
+        transition: background-color 0.3s ease;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+
+    .summary-row.total {
+        font-weight: bold;
+        font-size: 1.3rem;
+        color: var(--text-primary);
+        border-top: 1px solid var(--border-color);
+        padding-top: 1rem;
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Match the cart actions styles */
+    .quote-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .reset-discount-btn {
+        background-color: var(--danger-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .reset-discount-btn:hover {
+        opacity: 0.9;
+    }
+
+    .create-quote-btn {
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        padding: 1rem;
+        background-color: var(--success-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: opacity 0.2s;
+    }
+
+    .create-quote-btn:hover {
+        opacity: 0.9;
+    }
+
+    /* Match the quantity controls styles */
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .quantity-controls button {
+        width: 30px;
+        height: 30px;
+        background-color: var(--btn-secondary-bg);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0.5rem;
+        color: var(--btn-secondary-text);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .quantity-controls button:hover {
+        background-color: var(--accent-tertiary);
+    }
+
+    .quantity-controls span {
+        margin: 0 0.5rem;
+    }
+
+    /* Match the discount control styles */
+    .discount-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .discount-input {
+        width: 60px;
+        padding: 5px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        text-align: center;
+        font-size: 14px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .discount-input:focus {
+        border-color: var(--accent-primary);
+        outline: none;
+        box-shadow: 0 0 3px var(--shadow-color);
+    }
+
+    /* Match the remove button styles */
+    .remove-btn {
+        background-color: var(--danger-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .remove-btn:hover {
+        opacity: 0.9;
+    }
+
+    /* Discount form styles */
+    .discount-form-container {
+        margin: 20px auto;
+        max-width: 800px;
+    }
+
+    .discount-form-card {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 5px var(--shadow-color);
+        transition: background-color 0.3s ease;
+    }
+
+    .discount-form-card h3 {
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        transition: color 0.3s ease;
+    }
+
+    .discount-form-card p {
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        transition: color 0.3s ease;
+    }
+
+    .discount-form {
+        display: flex;
+        align-items: flex-end;
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    .discount-form .form-group {
+        flex: 1;
+    }
+
+    .discount-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+
+    .discount-form input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .apply-discount-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .apply-discount-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .discount-items-preview {
+        margin-top: 20px;
+        border-top: 1px solid var(--border-color);
+        padding-top: 15px;
+        transition: border-color 0.3s ease;
+    }
+
+    .discount-items-preview h4 {
+        color: var(--text-primary);
+        margin-bottom: 10px;
+        transition: color 0.3s ease;
+    }
+
+    .discount-items-preview ul {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0;
+    }
+
+    .discount-items-preview li {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-primary);
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+</style>
+
+<script>
+    // This script will run when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Quote cart page loaded");
+
+        // Load quote items from localStorage
+        const quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Check if discount has been applied
+        const discountApplied = localStorage.getItem('quoteDiscountApplied');
+
+        // Check if quote cart is empty
+        if (quoteItems.length === 0) {
+            // Show empty quote cart message
+            document.querySelector('.empty-quote-cart').style.display = 'block';
+            document.getElementById('quote-details-container').style.display = 'none';
+            document.getElementById('discount-form-container').style.display = 'none';
+        } else if (discountApplied) {
+            // Show quote details if discount has been applied
+            document.querySelector('.empty-quote-cart').style.display = 'none';
+            document.getElementById('discount-form-container').style.display = 'none';
+            document.getElementById('quote-details-container').style.display = 'block';
+            renderQuoteItems(quoteItems);
+        } else {
+            // Show discount form if discount has not been applied
+            document.querySelector('.empty-quote-cart').style.display = 'none';
+            document.getElementById('quote-details-container').style.display = 'none';
+            document.getElementById('discount-form-container').style.display = 'block';
+
+            // Populate discount items list
+            populateDiscountItemsList(quoteItems);
+        }
+    });
+
+    // Function to render quote items
+    function renderQuoteItems(quoteItems) {
+        const tbody = document.querySelector('.quote-table tbody');
+        tbody.innerHTML = '';
+
+        // Calculate totals
+        let subtotal = 0;
+        let totalDiscount = 0;
+        let totalTaxableAmount = 0;
+        let totalGst = 0;
+
+        // Add each item to the table
+        quoteItems.forEach(item => {
+            // Ensure discount exists and is a number
+            if (item.discount === undefined) {
+                item.discount = 0;
+            }
+
+            const itemSubtotal = item.price * item.quantity;
+            const discountAmount = itemSubtotal * (item.discount / 100);
+            const taxableAmount = itemSubtotal - discountAmount;
+            const itemGst = taxableAmount * (item.gstRate / 100);
+            const itemTotal = taxableAmount + itemGst;
+
+            subtotal += itemSubtotal;
+            totalDiscount += discountAmount;
+            totalTaxableAmount += taxableAmount;
+            totalGst += itemGst;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td><span class="item-type-badge item-type-${item.type}">${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</span></td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td>
+                    <div class="quantity-controls">
+                        <button onclick="decreaseQuoteItemQuantityByCode('${item.code}')">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="increaseQuoteItemQuantityByCode('${item.code}')">+</button>
+                    </div>
+                </td>
+                <td>
+                    <div class="discount-control">
+                        <input type="number"
+                               id="discount-${item.code}"
+                               class="discount-input"
+                               value="${item.discount || 0}"
+                               min="0"
+                               max="100"
+                               step="0.1"
+                               onchange="updateQuoteItemDiscount('${item.code}', this.value)">
+                    </div>
+                </td>
+                <td>₹${taxableAmount.toFixed(2)}</td>
+                <td>${item.gstRate}% (₹${itemGst.toFixed(2)})</td>
+                <td>₹${itemTotal.toFixed(2)}</td>
+                <td><button class="remove-btn" onclick="removeQuoteItemByCode('${item.code}')">Remove</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Update quote summary
+        updateQuoteSummary(subtotal, totalDiscount, totalTaxableAmount, totalGst);
+    }
+
+    // Function to update quote summary
+    function updateQuoteSummary(subtotal, totalDiscount, totalTaxableAmount, totalGst) {
+        const totalAmount = totalTaxableAmount + totalGst;
+
+        // Update summary values
+        document.getElementById('quote-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+        document.getElementById('quote-discount').textContent = `₹${totalDiscount.toFixed(2)}`;
+        document.getElementById('quote-taxable').textContent = `₹${totalTaxableAmount.toFixed(2)}`;
+        document.getElementById('quote-gst').textContent = `₹${totalGst.toFixed(2)}`;
+        document.getElementById('quote-total').textContent = `₹${totalAmount.toFixed(2)}`;
+    }
+
+    // Function to update quote item discount
+    function updateQuoteItemDiscount(itemCode, discountValue) {
+        // Get quote items from localStorage
+        let quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Find the item
+        const itemIndex = quoteItems.findIndex(item => item.code === itemCode);
+
+        if (itemIndex !== -1) {
+            // Validate discount
+            let discount = parseFloat(discountValue);
+            if (isNaN(discount)) discount = 0;
+            if (discount < 0) discount = 0;
+            if (discount > 100) discount = 100;
+
+            // Update the item's discount
+            quoteItems[itemIndex].discount = discount;
+
+            // Save updated quote items
+            localStorage.setItem('quoteItems', JSON.stringify(quoteItems));
+
+            // Re-render quote items
+            renderQuoteItems(quoteItems);
+
+            // Show notification
+            showNotification(`Discount updated for ${quoteItems[itemIndex].name}`);
+        }
+    }
+
+    // Function to increase quote item quantity
+    function increaseQuoteItemQuantityByCode(itemCode) {
+        // Get quote items from localStorage
+        let quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Find the item
+        const itemIndex = quoteItems.findIndex(item => item.code === itemCode);
+
+        if (itemIndex !== -1) {
+            // Increase quantity
+            quoteItems[itemIndex].quantity += 1;
+
+            // Save updated quote items
+            localStorage.setItem('quoteItems', JSON.stringify(quoteItems));
+
+            // Re-render quote items
+            renderQuoteItems(quoteItems);
+        }
+    }
+
+    // Function to decrease quote item quantity
+    function decreaseQuoteItemQuantityByCode(itemCode) {
+        // Get quote items from localStorage
+        let quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Find the item
+        const itemIndex = quoteItems.findIndex(item => item.code === itemCode);
+
+        if (itemIndex !== -1 && quoteItems[itemIndex].quantity > 1) {
+            // Decrease quantity
+            quoteItems[itemIndex].quantity -= 1;
+
+            // Save updated quote items
+            localStorage.setItem('quoteItems', JSON.stringify(quoteItems));
+
+            // Re-render quote items
+            renderQuoteItems(quoteItems);
+        }
+    }
+
+    // Function to remove quote item
+    function removeQuoteItemByCode(itemCode) {
+        // Get quote items from localStorage
+        let quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Find the item
+        const itemIndex = quoteItems.findIndex(item => item.code === itemCode);
+
+        if (itemIndex !== -1) {
+            // Remove item
+            quoteItems.splice(itemIndex, 1);
+
+            // Save updated quote items
+            localStorage.setItem('quoteItems', JSON.stringify(quoteItems));
+
+            // Check if quote is now empty
+            if (quoteItems.length === 0) {
+                // Show empty quote message
+                document.querySelector('.empty-quote-cart').style.display = 'block';
+                document.getElementById('quote-details-container').style.display = 'none';
+            } else {
+                // Re-render quote items
+                renderQuoteItems(quoteItems);
+            }
+
+            // Show notification
+            showNotification('Item removed from quote');
+        }
+    }
+
+    // Function to populate the items list in the discount form
+    function populateDiscountItemsList(quoteItems) {
+        const itemsList = document.getElementById('discount-items-list');
+        itemsList.innerHTML = '';
+
+        quoteItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${item.name} (${item.quantity} x ₹${item.price.toFixed(2)})</span>
+                <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+            `;
+            itemsList.appendChild(li);
+        });
+    }
+
+    // Function to apply global discount to all items
+    function applyGlobalQuoteDiscount() {
+        // Get discount value
+        const discountInput = document.getElementById('global-discount');
+        let discount = parseFloat(discountInput.value);
+
+        // Validate discount
+        if (isNaN(discount)) discount = 0;
+        if (discount < 0) discount = 0;
+        if (discount > 100) discount = 100;
+
+        // Update discount input with validated value
+        discountInput.value = discount;
+
+        // Get quote items from localStorage
+        const quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Apply discount to all items
+        quoteItems.forEach(item => {
+            item.discount = discount;
+        });
+
+        // Save updated quote items
+        localStorage.setItem('quoteItems', JSON.stringify(quoteItems));
+
+        // Set flag that discount has been applied
+        localStorage.setItem('quoteDiscountApplied', 'true');
+
+        // Show quote details
+        document.querySelector('.empty-quote-cart').style.display = 'none';
+        document.getElementById('discount-form-container').style.display = 'none';
+        document.getElementById('quote-details-container').style.display = 'block';
+
+        // Render quote items
+        renderQuoteItems(quoteItems);
+
+        // Show notification
+        showNotification(`Discount of ${discount}% applied to all items`);
+    }
+
+    // Function to reset discount
+    function resetQuoteDiscount() {
+        // Remove discount applied flag
+        localStorage.removeItem('quoteDiscountApplied');
+
+        // Get quote items from localStorage
+        let quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Reset discount for all items
+        quoteItems.forEach(item => {
+            item.discount = 0;
+        });
+
+        // Save updated quote items
+        localStorage.setItem('quoteItems', JSON.stringify(quoteItems));
+
+        // Reload the page to show the discount form again
+        window.location.reload();
+    }
+
+    // Function to create quotation
+    function createQuote() {
+        // Get quote items from localStorage
+        const quoteItems = JSON.parse(localStorage.getItem('quoteItems')) || [];
+
+        // Check if quote cart is empty
+        if (quoteItems.length === 0) {
+            showNotification('Your quote cart is empty. Please add items before creating a quotation.');
+            return;
+        }
+
+        // Redirect to quote checkout page
+        window.location.href = '/quote-checkout';
+    }
+
+    // Function to show notification
+    function showNotification(message) {
+        // Check if notification function exists in global scope
+        if (typeof window.showNotification === 'function') {
+            window.showNotification(message);
+        } else {
+            // Fallback notification
+            alert(message);
+        }
+    }
+</script>
+{% endblock %}
+
+

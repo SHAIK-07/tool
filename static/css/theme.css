@@ -55,172 +55,10 @@
     --login-btn-text: #ffffff;
 }
 
-/* Dark Theme */
-[data-theme="dark"] {
-    --bg-primary: #121212;
-    --bg-secondary: #1e1e1e;
-    --bg-tertiary: #2d2d2d;
-
-    --text-primary: #f8f9fa;
-    --text-secondary: #e9ecef;
-    --text-muted: #adb5bd;
-
-    --accent-primary: #0d6efd;
-    --accent-secondary: #6610f2;
-    --accent-tertiary: #2d2d2d;
-
-    --border-color: #444444;
-    --shadow-color: rgba(0, 0, 0, 0.5);
-
-    --card-bg: #1e1e1e;
-    --header-bg: #121212;
-    --header-text: #f8f9fa;
-
-    --nav-link-color: #f8f9fa;
-    --nav-link-hover: #0d6efd;
-
-    --footer-bg: #121212;
-    --footer-text: #f8f9fa;
-
-    --btn-primary-bg: #0d6efd;
-    --btn-primary-text: #ffffff;
-
-    --btn-secondary-bg: #2d2d2d;
-    --btn-secondary-text: #f8f9fa;
-
-    --input-bg: #2d2d2d;
-    --input-border: #444444;
-    --input-text: #f8f9fa;
-
-    --success-color: #198754;
-    --warning-color: #ffc107;
-    --danger-color: #dc3545;
-    --info-color: #0dcaf0;
-
-    --chart-color-1: #0d6efd;
-    --chart-color-2: #6610f2;
-    --chart-color-3: #6f42c1;
-    --chart-color-4: #d63384;
-
-    --modal-bg: #1e1e1e;
-    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-
-    --toggle-bg: #444444;
-    --toggle-circle: #f8f9fa;
-
-    --contact-btn-bg: #0d6efd;
-    --contact-btn-text: #ffffff;
-
-    --heading-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    --form-field-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-
-    --table-header-bg: #121212;
-    --table-border: #444444;
-    --table-row-hover: #2d2d2d;
-
-    --notification-bg: #1e1e1e;
-    --notification-text: #f8f9fa;
-    --notification-border: #444444;
-
-    --login-bg: #121212;
-    --login-card-bg: #1e1e1e;
-    --login-text: #f8f9fa;
-    --login-btn-bg: #0d6efd;
-    --login-btn-text: #ffffff;
-
-    /* Optional Additions */
-    --link-color: #0d6efd;
-    --link-hover-color: #0a58ca;
-    --highlight-color: #ffc107;
-}
+/* No Dark Theme - Application uses light theme only */
 
 
-/* Theme Toggle Button */
-.theme-toggle {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    margin-right: 1rem;
-    padding: 0.5rem;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    transform: translateZ(0);
-}
-
-.theme-toggle:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
-}
-
-[data-theme="dark"] .theme-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.theme-toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 52px;
-    height: 28px;
-}
-
-.theme-toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.theme-toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--toggle-bg);
-    transition: .4s;
-    border-radius: 34px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15),
-                0 1px 3px rgba(0, 0, 0, 0.1),
-                inset 0 1px 1px rgba(255, 255, 255, 0.1);
-}
-
-.theme-toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 22px;
-    width: 22px;
-    left: 3px;
-    bottom: 3px;
-    background-color: var(--toggle-circle);
-    transition: .4s;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-input:checked + .theme-toggle-slider {
-    background-color: var(--accent-primary);
-}
-
-[data-theme="dark"] input:checked + .theme-toggle-slider {
-    background-color: var(--accent-primary);
-}
-
-input:checked + .theme-toggle-slider:before {
-    transform: translateX(24px);
-}
-
-.theme-toggle-icon {
-    margin-right: 8px;
-    font-size: 1.2rem;
-    color: var(--text-primary);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-[data-theme="dark"] .theme-toggle-icon {
-    color: var(--text-primary);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
+/* No Theme Toggle - Application uses light theme only */
 
 /* Apply theme variables to elements */
 body {
@@ -335,27 +173,11 @@ input, select, textarea {
     font-family: 'Poppins', sans-serif;
 }
 
-/* Fix for select elements in dark mode */
-[data-theme="dark"] select {
-    color: var(--text-primary);
-    background-color: var(--bg-secondary);
-}
-
-[data-theme="dark"] select option {
-    color: var(--text-primary);
-    background-color: var(--bg-secondary);
-}
-
+/* Form focus styles */
 input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--accent-primary);
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
-}
-
-[data-theme="dark"] input:focus, 
-[data-theme="dark"] select:focus, 
-[data-theme="dark"] textarea:focus {
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .form-group {
@@ -514,19 +336,5 @@ tbody td {
     margin-right: 0.5rem;
 }
 
-/* Dark mode contact button */
-[data-theme="dark"] .contact-btn {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3),
-                0 1px 3px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-[data-theme="dark"] .contact-btn:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-[data-theme="dark"] .contact-btn:active {
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
+/* Contact button styles */
 

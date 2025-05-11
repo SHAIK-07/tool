@@ -1,0 +1,625 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="quotation-container-main">
+    <div class="page-header">
+        <h2>Quotation</h2>
+        <p>Your quotation has been created successfully</p>
+    </div>
+
+    <div class="quotation-actions-top">
+        <a href="/" class="continue-shopping-btn">Continue Shopping</a>
+        <div class="quotation-buttons">
+            <button class="edit-quotation-btn" onclick="toggleQuotationEdit()">
+                <i class="fas fa-edit"></i> Edit Quotation
+            </button>
+            <button class="view-pdf-btn" onclick="viewPdf('{{ quotation.quote_number }}')">
+                <i class="fas fa-eye"></i> View PDF
+            </button>
+            <button class="download-pdf-btn" onclick="downloadQuotation('{{ quotation.quote_number }}')">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="quotation-container" id="quotation-content">
+        <!-- Header with logo and quotation info -->
+        <div class="header-section">
+            <div class="logo-section">
+                <img src="/static/images/logo.png" alt="Sunmax Renewables" class="logo">
+                <h2 class="company-name">Sunmax Renewables</h2>
+            </div>
+            <div class="quotation-info">
+                <div class="info-row">
+                    <div class="info-label">Quotation Number:</div>
+                    <div class="info-value">{{ quotation.quote_number }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Date:</div>
+                    <div class="info-value">{{ quotation.date.strftime('%d-%m-%Y') }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">GST Number:</div>
+                    <div class="info-value">37FUWPS9742A1ZT</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Valid Until:</div>
+                    <div class="info-value">{{ (quotation.date + timedelta(days=30)).strftime('%d-%m-%Y') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Seller and Buyer information -->
+        <div class="parties-section">
+            <div class="party-box">
+                <h3 class="party-title">Seller:</h3>
+                <div class="party-details">
+                    <p class="party-name">Sunmax Renewables</p>
+                    <p>26/3/482, Ground floor of Sneha Nagar Sachivalayam</p>
+                    <p>B.V.Nagar, NGO Colony, Nellore</p>
+                    <p>Andhra Pradesh 524004</p>
+                    <p>GST Number: 37FUWPS9742A1ZT</p>
+                </div>
+            </div>
+
+            <div class="party-box">
+                <h3 class="party-title">Buyer:</h3>
+                <div class="party-details">
+                    <p class="party-name">{{ quotation.customer_name }}</p>
+                    {% if quotation.customer_address %}
+                    <p>{{ quotation.customer_address }}</p>
+                    {% endif %}
+                    {% if quotation.customer_phone %}
+                    <p>Phone: {{ quotation.customer_phone }}</p>
+                    {% endif %}
+                    {% if quotation.customer_email %}
+                    <p>Email: {{ quotation.customer_email }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quotation Items -->
+        <h3 class="section-title">Quotation Items</h3>
+        <div class="items-table-container">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>HSN Code</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                        <th>Discount</th>
+                        <th>Taxable Amount</th>
+                        <th>GST Rate</th>
+                        <th>GST Amount</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.item_name }}</td>
+                        <td>-</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ "%.2f"|format(item.price) }}</td>
+                        <td>₹{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                        <td>₹0.0</td>
+                        <td>₹{{ "%.2f"|format(item.price * item.quantity) }}</td>
+                        <td>{{ item.gst_rate }}%</td>
+                        <td>₹{{ "%.2f"|format(item.gst_amount) }}</td>
+                        <td>₹{{ "%.2f"|format(item.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="table-navigation">
+                <span class="nav-arrow left">◄</span>
+                <div class="nav-track">
+                    <div class="nav-indicator"></div>
+                </div>
+                <span class="nav-arrow right">►</span>
+            </div>
+        </div>
+
+        <!-- Totals and Payment Information -->
+        <div class="summary-section">
+            <div class="totals-section">
+                <div class="total-row">
+                    <div class="total-label">Subtotal:</div>
+                    <div class="total-value">₹{{ "%.2f"|format(quotation.subtotal) }}</div>
+                </div>
+                <div class="total-row">
+                    <div class="total-label">Discount:</div>
+                    <div class="total-value">₹0.0</div>
+                </div>
+                <div class="total-row">
+                    <div class="total-label">Taxable Amount:</div>
+                    <div class="total-value">₹{{ "%.2f"|format(quotation.subtotal) }}</div>
+                </div>
+                <div class="total-row">
+                    <div class="total-label">GST:</div>
+                    <div class="total-value">₹{{ "%.2f"|format(quotation.total_gst) }}</div>
+                </div>
+                <div class="total-row grand-total">
+                    <div class="total-label">Total:</div>
+                    <div class="total-value">₹{{ "%.2f"|format(quotation.total_amount) }}</div>
+                </div>
+            </div>
+
+            <div class="quotation-info-section">
+                <div class="info-row">
+                    <div class="info-label">Validity:</div>
+                    <div class="info-value">30 days</div>
+                </div>
+                {% if quotation.asked_about %}
+                <div class="info-row">
+                    <div class="info-label">Regarding:</div>
+                    <div class="info-value">{{ quotation.asked_about }}</div>
+                </div>
+                {% endif %}
+                <div class="convert-section">
+                    <button id="convert-to-invoice-btn" class="convert-btn">
+                        <i class="fas fa-file-invoice-dollar"></i> Convert to Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-section">
+            <p class="thank-you">Thank you for your interest in our products and services!</p>
+            <p class="contact-info">For any queries, please contact us at contactsunmax@gmail.com</p>
+            <p class="disclaimer">This is a computer-generated quotation and does not require a signature.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Define functions in the global scope
+    function viewPdf(quoteNumber) {
+        window.open(`/quotation-pdf/${quoteNumber}`, '_blank');
+    }
+
+    function downloadQuotation(quoteNumber) {
+        window.location.href = `/download-quotation-pdf/${quoteNumber}`;
+    }
+
+    function toggleQuotationEdit() {
+        // Implement edit functionality
+        alert('Edit functionality will be implemented here');
+    }
+
+    // Initialize event listeners when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Convert to Invoice functionality
+        document.getElementById('convert-to-invoice-btn').addEventListener('click', async function() {
+            if (confirm('Are you sure you want to convert this quotation to an invoice?')) {
+                try {
+                    const response = await fetch(`/api/convert-quotation-to-invoice/{{ quotation.id }}`, {
+                        method: 'POST'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        window.location.href = `/invoice/${result.invoice_id}`;
+                    } else {
+                        alert('Error converting to invoice: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error converting to invoice');
+                }
+            }
+        });
+
+        // Table navigation
+        const leftArrow = document.querySelector('.nav-arrow.left');
+        const rightArrow = document.querySelector('.nav-arrow.right');
+        const tableContainer = document.querySelector('.items-table-container');
+        const table = document.querySelector('.items-table');
+
+        if (leftArrow && rightArrow && tableContainer && table) {
+            leftArrow.addEventListener('click', function() {
+                tableContainer.scrollLeft -= 100;
+            });
+
+            rightArrow.addEventListener('click', function() {
+                tableContainer.scrollLeft += 100;
+            });
+        }
+    });
+</script>
+
+<style>
+    /* Match the invoice styles */
+    .quotation-container-main {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .quotation-actions-top, .quotation-actions-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .quotation-actions-bottom {
+        margin-top: 1.5rem;
+        margin-bottom: 0;
+    }
+
+    .quotation-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .edit-quotation-btn, .view-pdf-btn, .download-pdf-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: opacity 0.2s;
+    }
+
+    .edit-quotation-btn {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+    }
+
+    .edit-quotation-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .view-pdf-btn {
+        background-color: var(--info-color, #17a2b8);
+        color: white;
+    }
+
+    .view-pdf-btn:hover {
+        opacity: 0.9;
+    }
+
+    .download-pdf-btn {
+        background-color: var(--success-color, #28a745);
+        color: white;
+    }
+
+    .download-pdf-btn:hover {
+        opacity: 0.9;
+    }
+
+    .continue-shopping-btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
+
+    .continue-shopping-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .quotation-container {
+        background-color: var(--bg-secondary);
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px var(--shadow-color);
+        margin-bottom: 2rem;
+        transition: background-color 0.3s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--accent-primary);
+        padding-bottom: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .logo-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .logo {
+        width: 100px;
+        height: auto;
+        background-color: white;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px var(--shadow-color);
+        margin-bottom: 0.5rem;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .company-name {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        transition: color 0.3s ease;
+    }
+
+    .quotation-info {
+        text-align: right;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-label {
+        font-weight: bold;
+        margin-right: 1rem;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+
+    .divider {
+        border: none;
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 20px 0;
+        transition: background-color 0.3s ease;
+    }
+
+    .parties-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        background-color: var(--bg-secondary);
+        transition: background-color 0.3s ease;
+    }
+
+    .party-box {
+        flex: 1;
+        min-width: 250px;
+        background-color: var(--bg-tertiary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .party-title {
+        color: var(--text-primary);
+        margin-top: 0;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .party-details p {
+        margin: 0.5rem 0;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+
+    .party-name {
+        font-weight: bold;
+    }
+
+    .section-title {
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .items-table-container {
+        overflow-x: auto;
+        margin-bottom: 2rem;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+    }
+
+    .items-table th, .items-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .items-table th {
+        background-color: var(--accent-tertiary);
+        font-weight: bold;
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .items-table tr {
+        background-color: var(--bg-secondary);
+    }
+
+    .items-table tr:hover {
+        background-color: var(--accent-tertiary);
+    }
+
+    .table-navigation {
+        display: none; /* Hide the table navigation as it's not used in invoice */
+    }
+
+    .summary-section {
+        margin-top: 2rem;
+        background-color: var(--bg-tertiary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+        border: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+
+    .totals-section {
+        flex: 1;
+        min-width: 250px;
+        max-width: 48%;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+
+    .total-label {
+        font-weight: bold;
+        margin-right: 1rem;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
+    }
+
+    .grand-total {
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        transition: color 0.3s ease, border-color 0.3s ease;
+        font-weight: bold;
+    }
+
+    .quotation-info-section {
+        flex: 1;
+        min-width: 250px;
+        max-width: 48%;
+        background-color: var(--bg-tertiary);
+        padding: 1.5rem;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+        border: 1px solid var(--border-color);
+    }
+
+    .convert-section {
+        margin-top: 1.5rem;
+    }
+
+    .convert-btn {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: var(--success-color, #28a745);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: opacity 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .convert-btn:hover {
+        opacity: 0.9;
+    }
+
+    .footer-section {
+        margin-top: 2rem;
+        text-align: center;
+        color: var(--text-secondary);
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.5rem;
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .thank-you {
+        font-weight: bold;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        transition: color 0.3s ease;
+    }
+
+    .contact-info, .disclaimer {
+        margin: 0.5rem 0;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #quotation-content, #quotation-content * {
+            visibility: visible;
+        }
+
+        #quotation-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+
+        .page-header, .quotation-actions-top, .convert-section {
+            display: none;
+        }
+
+        .quotation-container {
+            box-shadow: none;
+            border: none;
+        }
+    }
+
+    /* Media queries for responsive layout */
+    @media (max-width: 768px) {
+        .summary-section {
+            flex-direction: column;
+        }
+
+        .totals-section, .quotation-info-section {
+            max-width: 100%;
+        }
+
+        .quotation-actions-top {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .quotation-buttons {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+
+

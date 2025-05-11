@@ -1,0 +1,223 @@
+/* Dashboard Layout Styles */
+:root {
+    --card-shadow: 0 3px 5px rgba(0, 0, 0, 0.08);
+    --card-border-radius: 8px;
+    --card-padding: 1.25rem;
+    --card-bg: white;
+    --card-border: 1px solid rgba(0, 0, 0, 0.08);
+    --section-spacing: 1.5rem;
+}
+
+/* Home container */
+.home-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Dashboard header */
+.dashboard-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 0;
+    background: none;
+    box-shadow: none;
+    border: none;
+}
+
+.dashboard-welcome {
+    background-color: var(--card-bg);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.dashboard-welcome h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    margin-top: 0;
+}
+
+.dashboard-welcome p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.dashboard-search {
+    background-color: var(--card-bg);
+    border-radius: var(--card-border-radius);
+    padding: var(--card-padding);
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.dashboard-search .section-title {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+/* Products and Services sections */
+.products-section {
+    margin-bottom: 1rem;
+}
+
+.section-header {
+    margin-bottom: 1rem;
+    text-align: left;
+    background-color: var(--card-bg);
+    border-radius: var(--card-border-radius);
+    padding: 0.75rem var(--card-padding);
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
+}
+
+.section-header h2 {
+    font-size: 1.25rem;
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+}
+
+.section-header p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Items container */
+.items-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+/* Item cards */
+.item-card {
+    background-color: var(--card-bg);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-primary);
+}
+
+.item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* No dark mode styles */
+
+/* Search input styling */
+.search-input-group {
+    width: 100%;
+}
+
+.search-input-wrapper {
+    display: flex;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.search-input-wrapper input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+}
+
+.search-input-wrapper button {
+    background-color: var(--accent-primary);
+    color: white;
+    border: none;
+    padding: 0 1.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.search-input-wrapper button:hover {
+    background-color: var(--accent-secondary);
+}
+
+/* No items placeholder */
+.no-items {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--card-bg);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    border: var(--card-border);
+}
+
+.no-items-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.no-items h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.no-items p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* No dark mode - Application uses light theme only */
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .dashboard-header {
+        grid-template-columns: 1fr;
+    }
+
+    .items-container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-welcome h1 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard-welcome p {
+        font-size: 1rem;
+    }
+
+    .dashboard-search .section-title {
+        font-size: 1.3rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .items-container {
+        grid-template-columns: 1fr;
+    }
+}

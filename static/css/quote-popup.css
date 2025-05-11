@@ -1,0 +1,427 @@
+/* Quote popup styles */
+.quote-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 90px; /* Position to the left of the cart button */
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #4285f4; /* Different color from cart */
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    border: none;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    /* Ensure the button is always visible and clickable */
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.quote-toggle-btn:hover {
+    transform: translateY(-3px);
+    background-color: #3367d6;
+}
+
+.quote-toggle-count {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #34a853; /* Different color from cart */
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    border: 2px solid white;
+    transition: transform 0.3s ease;
+}
+
+.quote-popup {
+    position: fixed;
+    bottom: 20px; /* Same position as cart popup */
+    right: 20px;
+    width: 350px;
+    max-height: 500px;
+    background-color: var(--card-bg, white);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px var(--shadow-color, rgba(0, 0, 0, 0.2));
+    z-index: 1002; /* Higher z-index than cart popup to appear on top */
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+    border: 1px solid var(--border-color, #eee);
+}
+
+.quote-popup.show,
+.quote-popup[style*="display: flex"] {
+    display: flex !important; /* Force display with !important */
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important; /* Allow interaction when visible */
+    visibility: visible !important;
+}
+
+.quote-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: #4285f4; /* Keep the blue color for quotes */
+    color: white;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.quote-count {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.quote-popup-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: white;
+}
+
+.quote-popup-body {
+    padding: 15px;
+    overflow-y: auto;
+    max-height: 300px;
+    background-color: var(--card-bg, white);
+    color: var(--text-primary, #333);
+}
+
+.quote-popup-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    text-align: center;
+}
+
+.quote-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.quote-item-details {
+    flex: 1;
+}
+
+.quote-item-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.quote-item-price {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.quote-item-actions {
+    display: flex;
+    align-items: center;
+}
+
+.quote-item-quantity {
+    display: flex;
+    align-items: center;
+    margin-right: 0.5rem;
+}
+
+.quote-item-quantity button {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.quote-item-quantity span {
+    margin: 0 0.5rem;
+}
+
+.remove-quote-item {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+}
+
+.quote-popup-footer {
+    padding: 15px;
+    border-top: 1px solid var(--border-color, #eee);
+    background-color: var(--bg-secondary, #f9f9f9);
+}
+
+.quote-popup-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.quote-popup-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.view-quote-btn, .checkout-btn {
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.view-quote-btn {
+    background-color: var(--btn-secondary-bg, #f0f0f0);
+    color: var(--btn-secondary-text, #333);
+    flex: 1;
+    margin-right: 10px;
+    text-decoration: none;
+}
+
+.view-quote-btn:hover {
+    background-color: var(--accent-tertiary, #e0e0e0);
+}
+
+.quote-popup-actions .checkout-btn {
+    background-color: #4285f4; /* Keep blue for quotes */
+    color: white;
+    flex: 1;
+}
+
+.quote-popup-actions .checkout-btn:hover {
+    background-color: #3367d6;
+    opacity: 0.9;
+}
+
+/* Button group styles */
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+/* Add to quote button styles - matching add-to-cart-btn */
+.add-to-quote-btn {
+    padding: 0.75rem;
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: bold;
+    flex: 1;
+}
+
+.add-to-quote-btn:hover:not([disabled]) {
+    background-color: var(--accent-secondary);
+}
+
+.add-to-quote-btn[disabled] {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.add-to-quote-btn.service-btn {
+    background-color: var(--btn-primary-bg);
+}
+
+.add-to-quote-btn.service-btn:hover:not([disabled]) {
+    background-color: var(--accent-secondary);
+}
+
+/* Quotation details page styles */
+.quotation-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.quotation-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.company-info {
+    display: flex;
+    align-items: center;
+}
+
+.company-logo {
+    width: 100px;
+    height: auto;
+    margin-right: 1rem;
+}
+
+.quotation-info {
+    text-align: right;
+}
+
+.info-row {
+    margin-bottom: 0.5rem;
+}
+
+.label {
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.customer-info, .asked-about {
+    margin-bottom: 2rem;
+}
+
+.items-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+}
+
+.items-table th, .items-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.items-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.quotation-totals {
+    text-align: right;
+    margin-bottom: 2rem;
+}
+
+.total-row {
+    margin-bottom: 0.5rem;
+}
+
+.grand-total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eee;
+}
+
+.quotation-footer {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.terms {
+    flex: 1;
+}
+
+.terms ul {
+    padding-left: 1.5rem;
+}
+
+.signature {
+    width: 200px;
+    text-align: center;
+}
+
+.signature-line {
+    border-top: 1px solid #333;
+    margin-bottom: 0.5rem;
+}
+
+.page-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.print-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+}
+
+.download-btn {
+    background-color: #34a853;
+    color: white;
+    border: none;
+}
+
+.pdf-btn {
+    background-color: #ea4335;
+    color: white;
+    border: none;
+}
+
+/* Dark mode specific overrides */
+[data-theme="dark"] .quote-popup {
+    background-color: var(--card-bg, #2a2a2a);
+    border-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .quote-popup-header {
+    background-color: #4285f4; /* Keep blue for quotes */
+}
+
+[data-theme="dark"] .quote-popup-body {
+    background-color: var(--card-bg, #2a2a2a);
+}
+
+[data-theme="dark"] .quote-popup-footer {
+    background-color: var(--bg-secondary, #222);
+    border-top-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .quote-item {
+    border-bottom-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .quote-toggle-count {
+    border-color: var(--bg-primary, #1a1a1a);
+}

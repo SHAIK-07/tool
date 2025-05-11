@@ -1,0 +1,1005 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="quotations-container">
+    <div class="page-header text-center">
+        <h2>Quotation Management</h2>
+        <p>View and manage your quotations</p>
+    </div>
+
+    <div class="quotation-filters">
+        <!-- Search bar on its own line -->
+        <div class="search-row">
+            <div class="search-box">
+                <input type="text" id="quotation-search" placeholder="Search by quotation number or customer name...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+
+        <!-- Filters on a separate line -->
+        <div class="filter-row">
+            <div class="filter-options">
+                <select id="date-filter">
+                    <option value="all">All Dates</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <select id="status-filter">
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="converted">Converted to Invoice</option>
+                </select>
+                <select id="type-filter">
+                    <option value="all">All Types</option>
+                    <option value="product">Product</option>
+                    <option value="service">Service</option>
+                </select>
+                <button id="export-excel-btn" class="export-btn" title="Export to Excel">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </div>
+
+            <!-- Custom date range container -->
+            <div id="custom-date-range" style="display: none;">
+                <input type="date" id="start-date" placeholder="Start Date">
+                <input type="date" id="end-date" placeholder="End Date">
+                <button id="apply-date-range" class="btn primary-btn-sm">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="current-quotations">
+        <h3>Quotation Records <span id="quotation-count" class="count-badge">{{ quotations|length }}</span></h3>
+
+        {% if quotations %}
+        <div class="quotation-table-container">
+            <table class="inventory-table quotation-table">
+                <thead>
+                    <tr>
+                        <th>Quote Number</th>
+                        <th>Date</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Asked About</th>
+                        <th>Total Amount (₹)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quotation in quotations %}
+                    <tr id="row-{{ quotation.quote_number }}" data-quote-number="{{ quotation.quote_number }}">
+                        <td>{{ quotation.quote_number }}</td>
+                        <td>{{ quotation.date.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ quotation.customer_name }}</td>
+                        <td>{{ quotation.customer_phone }}</td>
+                        <td>{{ quotation.asked_about }}</td>
+                        <td>₹{{ "%.2f"|format(quotation.total_amount) }}</td>
+                        <td class="quotation-actions">
+                            <div class="action-buttons">
+                                <a href="/quotation/{{ quotation.id }}" class="view-btn" title="View Quotation">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button onclick="downloadQuotation('{{ quotation.quote_number }}')" class="download-btn" title="Download PDF">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button onclick="confirmDelete('{{ quotation.quote_number }}')" class="delete-btn" title="Delete Quotation">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-quotations">
+            <p>No quotations found.</p>
+            <a href="/" class="btn primary-btn">Continue Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this quotation? This action cannot be undone.</p>
+        <div class="modal-buttons">
+            <button id="cancelDelete" class="btn secondary-btn">Cancel</button>
+            <button id="confirmDelete" class="btn danger-btn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function downloadQuotation(quoteNumber) {
+        // Use download attribute to force download instead of opening in new tab
+        const link = document.createElement('a');
+        link.href = `/download-quotation-pdf/${quoteNumber}`;
+        link.download = `quotation-${quoteNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Delete quotation functionality
+    let quotationToDelete = '';
+    const modal = document.getElementById('deleteModal');
+    const closeBtn = document.querySelector('.close');
+    const cancelBtn = document.getElementById('cancelDelete');
+    const confirmBtn = document.getElementById('confirmDelete');
+
+    function confirmDelete(quoteNumber) {
+        // Set the quotation number to delete
+        quotationToDelete = quoteNumber;
+
+        // Show the modal
+        modal.style.display = 'flex';
+
+        console.log('Opening delete confirmation for quotation:', quoteNumber);
+    }
+
+    // Initialize event listeners when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Close the modal when clicking the close button
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        // Close the modal when clicking the cancel button
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        // Handle the delete confirmation
+        confirmBtn.addEventListener('click', function() {
+            deleteQuotation();
+        });
+
+        // Close the modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Search functionality
+        const searchInput = document.getElementById('quotation-search');
+        const searchBtn = document.getElementById('search-btn');
+
+        searchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                filterQuotations();
+            }
+        });
+
+        searchBtn.addEventListener('click', filterQuotations);
+
+        // Date filter functionality
+        const dateFilter = document.getElementById('date-filter');
+        const customDateRange = document.getElementById('custom-date-range');
+        const applyDateRangeBtn = document.getElementById('apply-date-range');
+
+        dateFilter.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateRange.style.display = 'flex';
+            } else {
+                customDateRange.style.display = 'none';
+                filterQuotations();
+            }
+        });
+
+        applyDateRangeBtn.addEventListener('click', filterQuotations);
+
+        // Status and type filters
+        const statusFilter = document.getElementById('status-filter');
+        const typeFilter = document.getElementById('type-filter');
+
+        statusFilter.addEventListener('change', filterQuotations);
+        typeFilter.addEventListener('change', filterQuotations);
+
+        // Export to Excel functionality
+        const exportBtn = document.getElementById('export-excel-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function() {
+                window.location.href = '/api/quotations/export-excel';
+            });
+        }
+    });
+
+    function filterQuotations() {
+        console.log('Filtering quotations...');
+        const searchTerm = document.getElementById('quotation-search').value.trim().toLowerCase();
+        const dateFilterValue = document.getElementById('date-filter').value;
+        const statusFilterValue = document.getElementById('status-filter').value;
+        const typeFilterValue = document.getElementById('type-filter').value;
+
+        // Get custom date range if selected
+        let startDate = null;
+        let endDate = null;
+        if (dateFilterValue === 'custom') {
+            const startDateInput = document.getElementById('start-date').value;
+            const endDateInput = document.getElementById('end-date').value;
+
+            if (startDateInput) {
+                startDate = new Date(startDateInput);
+                startDate.setHours(0, 0, 0, 0);
+            }
+
+            if (endDateInput) {
+                endDate = new Date(endDateInput);
+                endDate.setHours(23, 59, 59, 999);
+            }
+        }
+
+        // Get all rows in the table
+        const rows = document.querySelectorAll('.quotation-table tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const quoteNumber = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            const dateText = row.querySelector('td:nth-child(2)').textContent;
+            const customerName = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const askedAbout = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+
+            // Parse date from DD-MM-YYYY format
+            const dateParts = dateText.split('-');
+            const rowDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+
+            // Check search term
+            const matchesSearch = quoteNumber.includes(searchTerm) ||
+                                 customerName.includes(searchTerm) ||
+                                 askedAbout.includes(searchTerm);
+
+            // Check date filter
+            let matchesDate = true;
+            if (dateFilterValue === 'today') {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                matchesDate = rowDate.getDate() === today.getDate() &&
+                             rowDate.getMonth() === today.getMonth() &&
+                             rowDate.getFullYear() === today.getFullYear();
+            } else if (dateFilterValue === 'week') {
+                const today = new Date();
+                const firstDayOfWeek = new Date(today);
+                firstDayOfWeek.setDate(today.getDate() - today.getDay());
+                firstDayOfWeek.setHours(0, 0, 0, 0);
+
+                const lastDayOfWeek = new Date(firstDayOfWeek);
+                lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+                lastDayOfWeek.setHours(23, 59, 59, 999);
+
+                matchesDate = rowDate >= firstDayOfWeek && rowDate <= lastDayOfWeek;
+            } else if (dateFilterValue === 'month') {
+                const today = new Date();
+                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                lastDayOfMonth.setHours(23, 59, 59, 999);
+
+                matchesDate = rowDate >= firstDayOfMonth && rowDate <= lastDayOfMonth;
+            } else if (dateFilterValue === 'custom') {
+                if (startDate && endDate) {
+                    matchesDate = rowDate >= startDate && rowDate <= endDate;
+                } else if (startDate) {
+                    matchesDate = rowDate >= startDate;
+                } else if (endDate) {
+                    matchesDate = rowDate <= endDate;
+                }
+            }
+
+            // Check status filter (pending or converted)
+            // This is a placeholder - you'll need to add status information to your table
+            let matchesStatus = true;
+            if (statusFilterValue !== 'all') {
+                // Implement status filtering based on your data structure
+                // For now, we'll assume all match
+            }
+
+            // Check type filter (product or service)
+            let matchesType = true;
+            if (typeFilterValue !== 'all') {
+                // Check if the "Asked About" column contains product or service keywords
+                if (typeFilterValue === 'product') {
+                    matchesType = !askedAbout.includes('service') || askedAbout.includes('product');
+                } else if (typeFilterValue === 'service') {
+                    matchesType = askedAbout.includes('service');
+                }
+            }
+
+            // Show/hide row based on all filters
+            if (matchesSearch && matchesDate && matchesStatus && matchesType) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update the count badge
+        const countBadge = document.getElementById('quotation-count');
+        if (countBadge) {
+            countBadge.textContent = visibleCount;
+        }
+    }
+
+    // Show notification function
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type || 'success'}`;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        // Position in the top middle
+        notification.style.top = '20px';
+        notification.style.left = '50%';
+        notification.style.transform = 'translateX(-50%)';
+
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        // Hide and remove notification after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    function deleteQuotation() {
+        if (!quotationToDelete) {
+            console.error('No quotation to delete');
+            showNotification('Error: No quotation selected for deletion', 'error');
+            return;
+        }
+
+        console.log('Deleting quotation:', quotationToDelete);
+
+        // Close the modal
+        modal.style.display = 'none';
+
+        // Show a notification that we're deleting
+        showNotification('Deleting quotation...', 'info');
+
+        // Store the quotation number locally in case it gets reset
+        const currentQuotation = quotationToDelete;
+
+        fetch(`/api/quotations/delete/${currentQuotation}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('Delete response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Delete response data:', data);
+
+            if (data.status === 'success') {
+                // Remove the row from the table
+                const row = document.getElementById(`row-${currentQuotation}`);
+                if (row) {
+                    row.remove();
+                    console.log('Row removed from table');
+
+                    // Update the count badge
+                    const countBadge = document.getElementById('quotation-count');
+                    if (countBadge) {
+                        const currentCount = parseInt(countBadge.textContent);
+                        countBadge.textContent = currentCount - 1;
+                    }
+                } else {
+                    console.warn('Row not found in table:', currentQuotation);
+                }
+
+                // Show notification
+                showNotification('Quotation deleted successfully', 'success');
+
+                // If no quotations left, refresh the page to show the "No quotations found" message
+                if (document.querySelectorAll('.quotation-table tbody tr').length === 0) {
+                    console.log('No quotations left, reloading page');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            } else {
+                console.error('Error in delete response:', data);
+                showNotification('Error deleting quotation: ' + (data.error || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error deleting quotation', 'error');
+        });
+    }
+</script>
+
+<style>
+    /* Page container */
+    .quotations-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Page header */
+    .page-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .page-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    /* New layout styles */
+    .quotation-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .search-row {
+        width: 100%;
+    }
+
+    .search-row .search-box {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .search-row .search-box input {
+        width: 100%;
+        padding: 12px 15px;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Ensure search input is visible in dark mode */
+    [data-theme="dark"] .search-row .search-box input {
+        color: white;
+        background-color: #333;
+    }
+
+    /* Fix placeholder text color in dark mode */
+    [data-theme="dark"] .search-row .search-box input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search-row .search-box button {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        padding: 0 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .search-row .search-box button:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .filter-row {
+        width: 100%;
+    }
+
+    .filter-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .filter-options select {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        min-width: 180px;
+        font-size: 14px;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Ensure select options are visible in dark mode */
+    [data-theme="dark"] .filter-options select {
+        color: white;
+        background-color: #333;
+        border-color: #555;
+    }
+
+    [data-theme="dark"] .filter-options select option {
+        background-color: #333;
+        color: white;
+    }
+
+    .filter-options .export-btn {
+        padding: 8px 15px;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .filter-options .export-btn:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    /* Custom date range */
+    #custom-date-range {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 12px;
+        background-color: var(--bg-secondary);
+        border-radius: 5px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        width: 100%;
+        flex-wrap: wrap;
+        border: 1px solid var(--border-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    #custom-date-range input[type="date"] {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        flex: 1;
+        min-width: 150px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Ensure date inputs are visible in dark mode */
+    [data-theme="dark"] #custom-date-range {
+        background-color: #222;
+        border-color: #555;
+    }
+
+    [data-theme="dark"] #custom-date-range input[type="date"] {
+        color: white;
+        background-color: #333;
+        border-color: #555;
+    }
+
+    #apply-date-range {
+        padding: 8px 15px;
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    #apply-date-range:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    @media (max-width: 768px) {
+        .filter-options {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-options select,
+        .filter-options button {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        #custom-date-range {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        #custom-date-range input[type="date"] {
+            width: 100%;
+        }
+    }
+
+    /* Quotation records section */
+    .current-quotations {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .current-quotations h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .count-badge {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin-left: 10px;
+    }
+
+    /* Table styles */
+    .quotation-table-container {
+        overflow-x: auto;
+    }
+
+    .quotation-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .quotation-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        text-align: left;
+        padding: 15px;
+        border-bottom: 2px solid #dee2e6;
+        color: #495057;
+        font-size: 0.95rem;
+    }
+
+    .quotation-table td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    .quotation-table tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Action buttons */
+    .quotation-actions {
+        white-space: nowrap;
+        text-align: center;
+        min-width: 150px;
+        padding: 8px 5px !important;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .view-btn, .pdf-btn, .download-btn, .delete-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-btn {
+        background-color: #4285F4;
+    }
+
+    .pdf-btn {
+        background-color: #DB4437;
+    }
+
+    .download-btn {
+        background-color: #0F9D58;
+    }
+
+    .delete-btn {
+        background-color: #DB4437;
+    }
+
+    .view-btn:hover, .pdf-btn:hover, .download-btn:hover, .delete-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Dark theme support */
+    [data-theme="dark"] .filter-container {
+        background-color: var(--card-bg, #2a2a2a);
+        border-color: var(--border-color, #444);
+    }
+
+    [data-theme="dark"] .current-quotations {
+        background-color: var(--card-bg, #2a2a2a);
+        border-color: var(--border-color, #444);
+    }
+
+    [data-theme="dark"] .quotation-table th {
+        background-color: var(--bg-secondary, #333);
+        color: var(--text-primary, #eee);
+        border-color: var(--border-color, #444);
+    }
+
+    [data-theme="dark"] .quotation-table td {
+        border-color: var(--border-color, #444);
+        color: var(--text-primary, #eee);
+    }
+
+    [data-theme="dark"] .quotation-table tr:hover {
+        background-color: var(--accent-tertiary, #3a3a3a);
+    }
+
+    [data-theme="dark"] #quotation-search,
+    [data-theme="dark"] .filter-select {
+        background-color: var(--bg-secondary, #333);
+        color: var(--text-primary, #eee);
+        border-color: var(--border-color, #444);
+    }
+
+    [data-theme="dark"] .modal-content {
+        background-color: var(--card-bg, #2a2a2a);
+        color: var(--text-primary, #eee);
+    }
+
+    [data-theme="dark"] .modal h3 {
+        color: var(--text-primary, #eee);
+    }
+
+    [data-theme="dark"] .modal p {
+        color: var(--text-secondary, #ccc);
+    }
+
+    [data-theme="dark"] .secondary-btn {
+        background-color: var(--btn-secondary-bg, #444);
+        color: var(--btn-secondary-text, #eee);
+        border-color: var(--border-color, #555);
+    }
+
+    [data-theme="dark"] .count-badge {
+        background-color: var(--bg-secondary, #333);
+        color: var(--text-secondary, #ccc);
+    }
+
+    [data-theme="dark"] .no-quotations {
+        background-color: var(--card-bg, #2a2a2a);
+        color: var(--text-secondary, #ccc);
+    }
+
+    /* No quotations message */
+    .no-quotations {
+        padding: 30px;
+        text-align: center;
+    }
+
+    .no-quotations p {
+        margin-bottom: 15px;
+        color: #6c757d;
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        gap: 10px;
+    }
+
+    .pagination-button {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #495057;
+    }
+
+    .pagination-button:hover:not(:disabled) {
+        background-color: #e9ecef;
+    }
+
+    .pagination-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination-track {
+        flex-grow: 1;
+        height: 6px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+        position: relative;
+        max-width: 300px;
+    }
+
+    .pagination-progress {
+        position: absolute;
+        height: 100%;
+        background-color: #4285f4;
+        border-radius: 3px;
+        width: 50%;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 992px) {
+        .filter-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-container {
+            width: 100%;
+        }
+
+        .filter-controls {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filter-controls {
+            flex-direction: column;
+        }
+
+        .filter-controls select {
+            width: 100%;
+        }
+
+        .export-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Notification styles */
+    .notification {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100%);
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1100;
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .notification.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+
+    .notification.error {
+        background-color: #F44336;
+    }
+
+    .notification.info {
+        background-color: #2196F3;
+    }
+
+    .notification.warning {
+        background-color: #FF9800;
+    }
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        position: relative;
+    }
+
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #aaa;
+    }
+
+    .close:hover {
+        color: #333;
+    }
+
+    .modal h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .modal p {
+        margin-bottom: 20px;
+        color: #666;
+    }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .secondary-btn {
+        background-color: #f8f9fa;
+        color: #495057;
+        border: 1px solid #ced4da;
+    }
+
+    .danger-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+</style>
+{% endblock %}
+
+
+
+
+
+
+
+
+

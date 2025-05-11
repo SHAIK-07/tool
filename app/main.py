@@ -23,7 +23,7 @@ from sqlalchemy import func, desc
 from io import BytesIO
 
 # Import core modules
-from app.core.pdf_generator import generate_pdf_invoice
+from app.core.pdf_generator import generate_pdf_invoice, generate_pdf_quotation
 from app.core.excel_generator import export_invoices_to_excel
 
 from app.api import inventory  # Import inventory route module
@@ -32,9 +32,10 @@ from app.api import services  # Import services routes
 from app.api import invoices  # Import invoices routes
 from app.api import sales  # Import sales routes
 from app.api import db_management  # Import database management routes
+from app.api import quotations  # Import quotations routes
 from app.db import crud, database, models
 from app.db.migrate import run_migrations
-from app.core.auth import get_current_user, get_admin_user, SECRET_KEY, ALGORITHM
+from app.core.auth import get_current_user_from_cookie
 
 # Helper function to get current user from cookie is defined below after app initialization
 
@@ -96,8 +97,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Create invoices directory if it doesn't exist
 os.makedirs("invoices", exist_ok=True)
 
+# Create quotations directory if it doesn't exist
+os.makedirs("quotations", exist_ok=True)
+
 # Mount invoices directory as static files
 app.mount("/invoice-files", StaticFiles(directory="invoices"), name="invoices")
+
+# Mount quotations directory as static files
+app.mount("/quotation-files", StaticFiles(directory="quotations"), name="quotations")
 
 # Set up templates
 templates = Jinja2Templates(directory="templates")
@@ -108,6 +115,7 @@ app.include_router(auth.router)
 app.include_router(services.router, tags=["Services"])
 app.include_router(invoices.router, prefix="/api", tags=["Invoices"])
 app.include_router(sales.router, prefix="/api", tags=["Sales"])
+app.include_router(quotations.router, tags=["Quotations"])
 
 @app.delete("/api/services/delete/{service_id}")
 async def delete_service_api(service_id: int, db: Session = Depends(database.get_db)):
@@ -140,35 +148,7 @@ app.include_router(db_management.router, prefix="/api", tags=["Database"])
 # No need to backup database on startup anymore
 
 
-# Helper function to get current user from cookie
-async def get_current_user_from_cookie(
-    request: Request,
-    db: Session = Depends(database.get_db)
-):
-    # Get token from cookie
-    token = request.cookies.get("access_token")
-    if not token:
-        return None
-
-    try:
-        # Remove "Bearer " prefix if present
-        if token.startswith("Bearer "):
-            token = token[7:]
-
-        # Decode the token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            return None
-
-        # Get the user from database
-        user = crud.get_user_by_email(db, email)
-        return user
-    except JWTError:
-        return None
-    except Exception as e:
-        print(f"Error getting user from cookie: {e}")
-        return None
+# Helper function to get current user from cookie is now imported from app.core.auth
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request, db: Session = Depends(database.get_db)):
@@ -379,9 +359,9 @@ async def invoice_page(request: Request, invoice_id: str, db: Session = Depends(
 
 # Authentication and user management routes
 @app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, next: Optional[str] = None):
+async def login_page(request: Request, next: Optional[str] = None, db: Session = Depends(database.get_db)):
     # Check if user is already logged in
-    user = await get_current_user_from_cookie(request)
+    user = await get_current_user_from_cookie(request, db=db)
     if user:
         # If already logged in, redirect to home or next page
         return RedirectResponse(url=next or "/", status_code=303)
