@@ -17,6 +17,26 @@
     <link rel="stylesheet" href="/static/css/modern-search.css?v=1.5">
     <link rel="stylesheet" href="/static/css/quote-popup.css?v=1.0">
     <style>
+        /* Remove all scrollbars from sidebar */
+        .sidebar, .sidebar-nav, .sidebar-nav .nav-links {
+            overflow: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+
+        .sidebar::-webkit-scrollbar,
+        .sidebar-nav::-webkit-scrollbar,
+        .sidebar-nav .nav-links::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        /* Remove scrollbar arrows at bottom */
+        .sidebar:after, .sidebar:before {
+            display: none !important;
+        }
+
         /* Inline cart popup styles to ensure they're applied */
         .cart-toggle-btn {
             position: fixed;
@@ -151,7 +171,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body>
+<body style="overflow-x: hidden;">
     <!-- Sidebar Navigation -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">

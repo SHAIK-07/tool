@@ -20,7 +20,7 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .sidebar {
@@ -36,10 +36,17 @@ body {
     box-shadow: var(--sidebar-shadow);
     transition: var(--sidebar-transition);
     z-index: 1000;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden !important;
     border-right: var(--sidebar-border);
     padding-top: 0.5rem;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sidebar::-webkit-scrollbar {
+    display: none;
+    width: 0 !important;
 }
 
 .sidebar.collapsed {
@@ -141,7 +148,15 @@ body {
 .sidebar-nav {
     flex: 1;
     padding: 0.5rem 0;
-    overflow-y: auto;
+    overflow: hidden !important;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sidebar-nav::-webkit-scrollbar {
+    display: none;
+    width: 0 !important;
 }
 
 .sidebar-nav .nav-links {
@@ -298,6 +313,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .content-wrapper.expanded {
@@ -384,6 +401,16 @@ body {
 
 .mobile-toggle-btn:hover .hamburger-icon span {
     background-color: var(--accent-primary);
+}
+
+/* Hide scrollbar arrows */
+::-webkit-scrollbar-button {
+    display: none !important;
+}
+
+/* Hide scrollbar corner */
+::-webkit-scrollbar-corner {
+    display: none !important;
 }
 
 /* Responsive styles */
