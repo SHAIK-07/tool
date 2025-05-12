@@ -258,10 +258,10 @@ def generate_pdf_invoice(invoice):
                 c.drawString(col1, y_position - 15, item_name)
                 c.drawString(col2, y_position - 15, str(hsn_code))
                 c.drawString(col3, y_position - 15, str(quantity))
-                c.drawString(col4, y_position - 15, f"₹{price:.2f}")
+                c.drawString(col4, y_position - 15, f"Rs.{price:.2f}")
                 c.drawString(col5, y_position - 15, f"{discount}%")
-                c.drawString(col6, y_position - 15, f"{gst_rate}% (₹{gst_amount:.2f})")
-                c.drawString(col7, y_position - 15, f"₹{total:.2f}")
+                c.drawString(col6, y_position - 15, f"{gst_rate}% (Rs.{gst_amount:.2f})")
+                c.drawString(col7, y_position - 15, f"Rs.{total:.2f}")
                 
                 # Move to next row
                 y_position -= 20
@@ -300,11 +300,11 @@ def generate_pdf_invoice(invoice):
                 
                 # Add values
                 c.setFont("Helvetica", 10)
-                c.drawString(width - 150, summary_y - 20, f"₹{subtotal:.2f}")
-                c.drawString(width - 150, summary_y - 40, f"₹{total_discount:.2f}")
-                c.drawString(width - 150, summary_y - 60, f"₹{total_gst:.2f}")
+                c.drawString(width - 150, summary_y - 20, f"Rs.{subtotal:.2f}")
+                c.drawString(width - 150, summary_y - 40, f"Rs.{total_discount:.2f}")
+                c.drawString(width - 150, summary_y - 60, f"Rs.{total_gst:.2f}")
                 c.setFont("Helvetica-Bold", 10)
-                c.drawString(width - 150, summary_y - 80, f"₹{total_amount:.2f}")
+                c.drawString(width - 150, summary_y - 80, f"Rs.{total_amount:.2f}")
                 
                 # Add payment status
                 payment_y = summary_y - 130
@@ -315,7 +315,7 @@ def generate_pdf_invoice(invoice):
                     status_text = "PAID"
                 elif payment_status == "Partially Paid":
                     c.setFillColor(colors.orange)
-                    status_text = f"PARTIALLY PAID (₹{amount_paid:.2f})"
+                    status_text = f"PARTIALLY PAID (Rs.{amount_paid:.2f})"
                 else:
                     c.setFillColor(colors.red)
                     status_text = "UNPAID"
@@ -606,9 +606,9 @@ def generate_pdf_quotation(quotation):
                 
                 c.drawString(col1, y_position - 15, item_name)
                 c.drawString(col2, y_position - 15, str(quantity))
-                c.drawString(col3, y_position - 15, f"₹{price:.2f}")
-                c.drawString(col4, y_position - 15, f"{gst_rate}% (₹{gst_amount:.2f})")
-                c.drawString(col5, y_position - 15, f"₹{total:.2f}")
+                c.drawString(col3, y_position - 15, f"Rs.{price:.2f}")
+                c.drawString(col4, y_position - 15, f"{gst_rate}% (Rs.{gst_amount:.2f})")
+                c.drawString(col5, y_position - 15, f"Rs.{total:.2f}")
                 
                 # Move to next row
                 y_position -= 20
@@ -642,10 +642,10 @@ def generate_pdf_quotation(quotation):
                 
                 # Add values
                 c.setFont("Helvetica", 10)
-                c.drawString(width - 150, summary_y - 20, f"₹{subtotal:.2f}")
-                c.drawString(width - 150, summary_y - 40, f"₹{total_gst:.2f}")
+                c.drawString(width - 150, summary_y - 20, f"Rs.{subtotal:.2f}")
+                c.drawString(width - 150, summary_y - 40, f"Rs.{total_gst:.2f}")
                 c.setFont("Helvetica-Bold", 10)
-                c.drawString(width - 150, summary_y - 60, f"₹{total_amount:.2f}")
+                c.drawString(width - 150, summary_y - 60, f"Rs.{total_amount:.2f}")
                 
                 # Add note
                 note_y = summary_y - 100
