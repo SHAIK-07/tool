@@ -430,17 +430,17 @@ def export_invoices_to_excel(invoices, db: Session, payment_status=None):
 def export_quotations_to_excel(quotations):
     """
     Export quotations to Excel with formatting
-    
+
     Args:
         quotations: List of quotation objects
-        
+
     Returns:
         tuple: (filename, file_path)
     """
     import pandas as pd
     import os
     from datetime import datetime
-    
+
     # Create a DataFrame from the quotations
     data = []
     for q in quotations:
@@ -457,29 +457,29 @@ def export_quotations_to_excel(quotations):
             "Total Amount": q.total_amount,
             "Created At": q.created_at.strftime("%d-%m-%Y %H:%M:%S")
         })
-    
+
     # Create DataFrame
     df = pd.DataFrame(data)
-    
+
     # Generate filename with timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"quotations_{timestamp}.xlsx"
-    
+
     # Create directory if it doesn't exist
     export_dir = os.path.join("static", "exports")
     os.makedirs(export_dir, exist_ok=True)
-    
+
     # Full path to the file
     file_path = os.path.join(export_dir, filename)
-    
+
     # Create Excel file with formatting
     with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
         df.to_excel(writer, sheet_name="Quotations", index=False)
-        
+
         # Get the xlsxwriter workbook and worksheet objects
         workbook = writer.book
         worksheet = writer.sheets["Quotations"]
-        
+
         # Add formatting
         header_format = workbook.add_format({
             'bold': True,
@@ -489,23 +489,23 @@ def export_quotations_to_excel(quotations):
             'align': 'center',
             'valign': 'vcenter'
         })
-        
+
         # Currency format
         currency_format = workbook.add_format({
             'num_format': '₹#,##0.00',
             'align': 'right'
         })
-        
+
         # Date format
         date_format = workbook.add_format({
             'num_format': 'dd-mm-yyyy',
             'align': 'center'
         })
-        
+
         # Apply header format
         for col_num, value in enumerate(df.columns.values):
             worksheet.write(0, col_num, value, header_format)
-        
+
         # Set column widths and formats
         worksheet.set_column('A:A', 15)  # Quote Number
         worksheet.set_column('B:B', 12)  # Date
@@ -518,9 +518,104 @@ def export_quotations_to_excel(quotations):
         worksheet.set_column('I:I', 15, currency_format)  # GST
         worksheet.set_column('J:J', 15, currency_format)  # Total Amount
         worksheet.set_column('K:K', 20)  # Created At
-        
+
         # Add auto-filter
         worksheet.autofilter(0, 0, len(df), len(df.columns) - 1)
-        
+
     return filename, file_path
 
+
+def export_enquiries_to_excel(enquiries):
+    """
+    Export enquiries to Excel with formatting
+
+    Args:
+        enquiries: List of enquiry objects
+
+    Returns:
+        tuple: (filename, file_path)
+    """
+    try:
+        # Create a new workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Enquiries"
+
+        # Define styles
+        header_font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
+        header_fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
+        header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+        # Define borders
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        # Add headers
+        headers = [
+            "Enquiry Number", "Date", "Customer Name", "Phone Number",
+            "Address", "Requirements", "Quotation Given", "Quotation Amount (₹)"
+        ]
+
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+
+        # Add data rows
+        row_num = 2
+        for enquiry in enquiries:
+            # Format date
+            date_str = enquiry.date.strftime('%d-%m-%Y') if hasattr(enquiry.date, 'strftime') else str(enquiry.date)
+
+            # Add enquiry data
+            ws.cell(row=row_num, column=1).value = enquiry.enquiry_number
+            ws.cell(row=row_num, column=2).value = date_str
+            ws.cell(row=row_num, column=3).value = enquiry.customer_name
+            ws.cell(row=row_num, column=4).value = enquiry.phone_no
+            ws.cell(row=row_num, column=5).value = enquiry.address
+            ws.cell(row=row_num, column=6).value = enquiry.requirements
+            ws.cell(row=row_num, column=7).value = "Yes" if enquiry.quotation_given else "No"
+            ws.cell(row=row_num, column=8).value = enquiry.quotation_amount if enquiry.quotation_given else "-"
+
+            # Apply borders to all cells in the row
+            for col_num in range(1, len(headers) + 1):
+                ws.cell(row=row_num, column=col_num).border = thin_border
+
+                # Right-align numeric columns
+                if col_num == 8:
+                    ws.cell(row=row_num, column=col_num).alignment = Alignment(horizontal='right')
+
+            row_num += 1
+
+        # Auto-adjust column widths
+        for col_num, _ in enumerate(headers, 1):
+            column_letter = get_column_letter(col_num)
+            ws.column_dimensions[column_letter].width = 15
+
+        # Make the requirements column wider
+        ws.column_dimensions['F'].width = 40
+        # Make the address column wider
+        ws.column_dimensions['E'].width = 30
+
+        # Generate filename with date
+        current_date = datetime.now().strftime('%Y%m%d')
+        filename = f"Sunmax_Enquiries_{current_date}.xlsx"
+
+        # Create directory for exports if it doesn't exist
+        os.makedirs("exports", exist_ok=True)
+        file_path = os.path.join("exports", filename)
+
+        # Save the workbook to a file
+        wb.save(file_path)
+
+        return filename, file_path
+    except Exception as e:
+        print(f"Error exporting enquiries to Excel: {e}")
+        raise

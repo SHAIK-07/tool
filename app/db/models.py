@@ -161,3 +161,19 @@ class User(Base):
     first_login = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
     last_login = Column(DateTime, nullable=True)
+
+
+class Enquiry(Base):
+    __tablename__ = "enquiries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    enquiry_number = Column(String, unique=True, index=True, nullable=False)
+    date = Column(Date, nullable=False, default=datetime.now().date())
+    customer_name = Column(String, nullable=False)
+    phone_no = Column(String, nullable=False)
+    address = Column(String)
+    requirements = Column(Text)
+    quotation_given = Column(Boolean, default=False)
+    quotation_amount = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

@@ -33,6 +33,7 @@ from app.api import invoices  # Import invoices routes
 from app.api import sales  # Import sales routes
 from app.api import db_management  # Import database management routes
 from app.api import quotations  # Import quotations routes
+from app.api import enquiries  # Import enquiries routes
 from app.db import crud, database, models
 from app.db.migrate import run_migrations
 from app.core.auth import get_current_user_from_cookie
@@ -51,6 +52,10 @@ print("Using local database")
 
 # Initialize the database - this will create tables if they don't exist
 database.init_db()
+
+# Create the enquiries table
+from app.db.create_enquiries_table import create_enquiries_table
+create_enquiries_table()
 
 # Create invoices directory if it doesn't exist
 os.makedirs("invoices", exist_ok=True)
@@ -116,6 +121,7 @@ app.include_router(services.router, tags=["Services"])
 app.include_router(invoices.router, prefix="/api", tags=["Invoices"])
 app.include_router(sales.router, prefix="/api", tags=["Sales"])
 app.include_router(quotations.router, tags=["Quotations"])
+app.include_router(enquiries.router, tags=["Enquiries"])
 
 @app.delete("/api/services/delete/{service_id}")
 async def delete_service_api(service_id: int, db: Session = Depends(database.get_db)):
@@ -1364,6 +1370,31 @@ async def delete_invoice_api(invoice_id: str, db: Session = Depends(database.get
             return JSONResponse(status_code=404, content={"error": "Invoice not found in database"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Error deleting invoice: {str(e)}"})
+
+
+@app.delete("/api/enquiries/delete/{enquiry_id}")
+async def delete_enquiry_api(enquiry_id: int, db: Session = Depends(database.get_db)):
+    """Delete an enquiry directly via API"""
+    try:
+        print(f"Attempting to delete enquiry with ID: {enquiry_id}")
+
+        # Check if the enquiry exists
+        enquiry = crud.get_enquiry(db, enquiry_id)
+        if not enquiry:
+            print(f"Enquiry with ID {enquiry_id} not found")
+            return JSONResponse(status_code=404, content={"success": False, "message": "Enquiry not found"})
+
+        # Delete the enquiry
+        result = crud.delete_enquiry(db, enquiry_id)
+        if result:
+            print(f"Enquiry with ID {enquiry_id} deleted successfully")
+            return JSONResponse(content={"success": True, "message": "Enquiry deleted successfully"})
+        else:
+            print(f"Failed to delete enquiry with ID {enquiry_id}")
+            return JSONResponse(status_code=500, content={"success": False, "message": "Failed to delete enquiry"})
+    except Exception as e:
+        print(f"Error deleting enquiry: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "message": str(e)})
 
 
 @app.delete("/api/inventory/delete/{item_code}")

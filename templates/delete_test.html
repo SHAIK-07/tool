@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Test{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <h1>Delete Test Page</h1>
+    <p>This page is for testing the delete functionality of enquiries.</p>
+
+    <div id="enquiries-container" style="margin-top: 30px;">
+        <h2>Current Enquiries</h2>
+        <div id="loading-message">Loading enquiries...</div>
+        <div id="enquiries-list" style="display: none;"></div>
+    </div>
+
+    <div id="debug-output" style="margin-top: 30px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+        <h3>Debug Output</h3>
+        <pre id="debug-log" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></pre>
+    </div>
+</div>
+
+<script>
+    // Debug logging function
+    function log(message) {
+        const debugLog = document.getElementById('debug-log');
+        const timestamp = new Date().toLocaleTimeString();
+        debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+        console.log(message);
+    }
+
+    // Function to load all enquiries
+    function loadEnquiries() {
+        log('Loading enquiries...');
+        
+        fetch('/api/enquiries/filtered')
+            .then(response => {
+                log(`Response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log(`Loaded ${data.items.length} enquiries`);
+                displayEnquiries(data.items);
+            })
+            .catch(error => {
+                log(`Error loading enquiries: ${error.message}`);
+            });
+    }
+
+    // Function to display enquiries
+    function displayEnquiries(enquiries) {
+        const container = document.getElementById('enquiries-list');
+        const loadingMessage = document.getElementById('loading-message');
+        
+        if (enquiries.length === 0) {
+            container.innerHTML = '<p>No enquiries found.</p>';
+        } else {
+            let html = '<table class="table" style="width: 100%; border-collapse: collapse;">';
+            html += `
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Enquiry Number</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Customer Name</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            enquiries.forEach(enquiry => {
+                html += `
+                    <tr id="row-${enquiry.id}">
+                        <td style="border: 1px solid #ddd; padding: 8px;">${enquiry.id}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${enquiry.enquiry_number}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${enquiry.customer_name}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${enquiry.date}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">
+                            <button onclick="deleteEnquiry(${enquiry.id}, '${enquiry.customer_name}')" 
+                                    style="background-color: #f44336; color: white; border: none; padding: 5px 10px; cursor: pointer;">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        loadingMessage.style.display = 'none';
+        container.style.display = 'block';
+    }
+
+    // Function to delete an enquiry
+    function deleteEnquiry(enquiryId, customerName) {
+        if (!confirm(`Are you sure you want to delete the enquiry from ${customerName}?`)) {
+            return;
+        }
+        
+        log(`Attempting to delete enquiry ID: ${enquiryId}`);
+        
+        // First try the DELETE endpoint
+        const deleteUrl = `/api/enquiry/${enquiryId}`;
+        
+        log(`Sending DELETE request to: ${deleteUrl}`);
+        
+        fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            log(`DELETE response status: ${response.status}`);
+            
+            if (response.ok) {
+                log('DELETE request successful');
+                
+                // Try to parse JSON response
+                return response.json().catch(() => {
+                    return { success: true };
+                });
+            } else {
+                log('DELETE request failed');
+                throw new Error(`Server returned ${response.status}`);
+            }
+        })
+        .then(data => {
+            log(`Response data: ${JSON.stringify(data)}`);
+            
+            if (data.success) {
+                log('Successfully deleted enquiry');
+                
+                // Remove the row from the table
+                const row = document.getElementById(`row-${enquiryId}`);
+                if (row) {
+                    row.remove();
+                    log('Row removed from table');
+                } else {
+                    log('Row not found in table');
+                }
+                
+                alert('Enquiry deleted successfully!');
+            } else {
+                log('Error in response data');
+                alert('Error deleting enquiry: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            log(`Error in DELETE request: ${error.message}`);
+            
+            // Try the POST endpoint as fallback
+            log('Trying POST endpoint as fallback...');
+            
+            const postDeleteUrl = `/api/enquiry/${enquiryId}/delete`;
+            
+            log(`Sending POST request to: ${postDeleteUrl}`);
+            
+            fetch(postDeleteUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                log(`POST response status: ${response.status}`);
+                
+                if (response.redirected) {
+                    log(`Redirected to: ${response.url}`);
+                    window.location.href = response.url;
+                    return;
+                }
+                
+                if (response.ok) {
+                    log('POST request successful');
+                    
+                    // Remove the row from the table
+                    const row = document.getElementById(`row-${enquiryId}`);
+                    if (row) {
+                        row.remove();
+                        log('Row removed from table');
+                    } else {
+                        log('Row not found in table');
+                    }
+                    
+                    alert('Enquiry deleted successfully!');
+                } else {
+                    log('POST request failed');
+                    alert('Error deleting enquiry. Please try again.');
+                }
+            })
+            .catch(fallbackError => {
+                log(`Error in POST request: ${fallbackError.message}`);
+                alert('Error deleting enquiry: ' + fallbackError.message);
+            });
+        });
+    }
+
+    // Load enquiries when the page loads
+    document.addEventListener('DOMContentLoaded', loadEnquiries);
+</script>
+{% endblock %}

@@ -802,3 +802,176 @@ def delete_user(db: Session, user_id: int):
     db.delete(user)
     db.commit()
     return True
+
+
+# Enquiry CRUD operations
+
+def generate_enquiry_number(db: Session) -> str:
+    """Generate a unique enquiry number with format ENQ001, ENQ002, etc."""
+    try:
+        # Get the last enquiry by enquiry_number in descending order
+        last_enquiry = db.query(models.Enquiry).order_by(
+            models.Enquiry.enquiry_number.desc()
+        ).first()
+
+        if last_enquiry and last_enquiry.enquiry_number.startswith("ENQ"):
+            # Extract the numeric part after "ENQ"
+            numeric_part = ''.join(filter(str.isdigit, last_enquiry.enquiry_number))
+            if numeric_part:
+                number = int(numeric_part) + 1
+            else:
+                number = 1
+        else:
+            number = 1
+
+        # Use 3 digits (zfill(3)) to allow for up to 999 enquiries
+        return f"ENQ{str(number).zfill(3)}"
+    except Exception as e:
+        print(f"Error generating enquiry number: {e}")
+        # Fallback to a timestamp-based code if there's an error
+        import time
+        timestamp = int(time.time()) % 10000  # Last 4 digits of timestamp
+        return f"ENQ{timestamp}"
+
+
+def create_enquiry(db: Session, enquiry_data: dict):
+    """Create a new enquiry record"""
+    try:
+        # Generate enquiry number if not provided
+        if "enquiry_number" not in enquiry_data:
+            enquiry_data["enquiry_number"] = generate_enquiry_number(db)
+
+        # Create enquiry record
+        enquiry = models.Enquiry(**enquiry_data)
+        db.add(enquiry)
+        db.commit()
+        db.refresh(enquiry)
+        return enquiry
+    except Exception as e:
+        db.rollback()
+        print(f"Error creating enquiry: {e}")
+        raise
+
+
+def get_all_enquiries(db: Session, skip: int = 0, limit: int = 100):
+    """Get all enquiries with pagination"""
+    return db.query(models.Enquiry).order_by(models.Enquiry.date.desc()).offset(skip).limit(limit).all()
+
+
+def get_enquiry(db: Session, enquiry_id: int):
+    """Get a specific enquiry by ID"""
+    return db.query(models.Enquiry).filter(models.Enquiry.id == enquiry_id).first()
+
+
+def get_enquiry_by_number(db: Session, enquiry_number: str):
+    """Get a specific enquiry by enquiry number"""
+    return db.query(models.Enquiry).filter(models.Enquiry.enquiry_number == enquiry_number).first()
+
+
+def update_enquiry(db: Session, enquiry_id: int, enquiry_data: dict):
+    """Update an enquiry record"""
+    try:
+        enquiry = get_enquiry(db, enquiry_id)
+        if not enquiry:
+            return None
+
+        # Update enquiry attributes
+        for key, value in enquiry_data.items():
+            if hasattr(enquiry, key):
+                setattr(enquiry, key, value)
+
+        db.commit()
+        db.refresh(enquiry)
+        return enquiry
+    except Exception as e:
+        db.rollback()
+        print(f"Error updating enquiry: {e}")
+        raise
+
+
+def delete_enquiry(db: Session, enquiry_id: int):
+    """Delete an enquiry record"""
+    enquiry = get_enquiry(db, enquiry_id)
+    if not enquiry:
+        return False
+
+    try:
+        db.delete(enquiry)
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error deleting enquiry {enquiry_id}: {e}")
+        return False
+
+
+def search_enquiries(db: Session, query: str):
+    """Search for enquiries by customer name, phone number, or enquiry number
+
+    Args:
+        db: Database session
+        query: Search query string
+
+    Returns:
+        List of enquiries matching the search criteria
+    """
+    from sqlalchemy import or_
+
+    # Convert query to lowercase for case-insensitive search
+    search_term = f"%{query}%"
+
+    # Search in relevant columns
+    enquiries = db.query(models.Enquiry).filter(
+        or_(
+            models.Enquiry.enquiry_number.ilike(search_term),
+            models.Enquiry.customer_name.ilike(search_term),
+            models.Enquiry.phone_no.ilike(search_term),
+            models.Enquiry.requirements.ilike(search_term)
+        )
+    ).all()
+
+    return enquiries
+
+def get_paginated_enquiries(db: Session, limit: int = 50, offset: int = 0):
+    """Get paginated enquiries ordered by date descending"""
+    return db.query(models.Enquiry).order_by(models.Enquiry.date.desc()).offset(offset).limit(limit).all()
+
+def get_total_enquiries_count(db: Session):
+    """Get total count of enquiries for pagination"""
+    return db.query(models.Enquiry).count()
+
+def get_filtered_enquiries(db: Session, filters: dict, limit: int = 50, offset: int = 0):
+    """Get filtered and paginated enquiries"""
+    query = db.query(models.Enquiry)
+    
+    if "customer_name" in filters and filters["customer_name"]:
+        query = query.filter(models.Enquiry.customer_name.ilike(f"%{filters['customer_name']}%"))
+    
+    if "date_from" in filters and filters["date_from"]:
+        query = query.filter(models.Enquiry.date >= filters["date_from"])
+    
+    if "date_to" in filters and filters["date_to"]:
+        query = query.filter(models.Enquiry.date <= filters["date_to"])
+    
+    if "quotation_given" in filters:
+        query = query.filter(models.Enquiry.quotation_given == filters["quotation_given"])
+    
+    return query.order_by(models.Enquiry.date.desc()).offset(offset).limit(limit).all()
+
+def get_filtered_enquiries_count(db: Session, filters: dict):
+    """Get count of filtered enquiries"""
+    query = db.query(models.Enquiry)
+    
+    if "customer_name" in filters and filters["customer_name"]:
+        query = query.filter(models.Enquiry.customer_name.ilike(f"%{filters['customer_name']}%"))
+    
+    if "date_from" in filters and filters["date_from"]:
+        query = query.filter(models.Enquiry.date >= filters["date_from"])
+    
+    if "date_to" in filters and filters["date_to"]:
+        query = query.filter(models.Enquiry.date <= filters["date_to"])
+    
+    if "quotation_given" in filters:
+        query = query.filter(models.Enquiry.quotation_given == filters["quotation_given"])
+    
+    return query.count()

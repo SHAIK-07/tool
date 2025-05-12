@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit Enquiry" if edit_mode else "New Enquiry" }} | Sunmax Renewables{% endblock %}
+
+{% block head %}
+<style>
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h2>{{ "Edit Enquiry" if edit_mode else "New Enquiry" }}</h2>
+        <p>{{ "Update enquiry details" if edit_mode else "Create a new customer enquiry" }}</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="form-container">
+        <form method="POST" action="{{ '/enquiry/' + enquiry.id|string + '/edit' if edit_mode else '/enquiry/new' }}">
+            <div class="form-section">
+                <h3>Customer Information</h3>
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" value="{{ enquiry.date if edit_mode else today }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer_name">Customer Name:</label>
+                    <input type="text" id="customer_name" name="customer_name" value="{{ enquiry.customer_name if edit_mode else '' }}" required placeholder="Full name of the customer">
+                </div>
+                <div class="form-group">
+                    <label for="phone_no">Phone Number:</label>
+                    <input type="text" id="phone_no" name="phone_no" value="{{ enquiry.phone_no if edit_mode else '' }}" required placeholder="Customer's contact number">
+                </div>
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <textarea id="address" name="address" rows="3" placeholder="Customer's address">{{ enquiry.address if edit_mode else '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Enquiry Details</h3>
+                <div class="form-group">
+                    <label for="requirements">Requirements:</label>
+                    <textarea id="requirements" name="requirements" rows="5" placeholder="Customer's requirements or notes about the enquiry">{{ enquiry.requirements if edit_mode else '' }}</textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="quotation_given" name="quotation_given" {% if edit_mode and enquiry.quotation_given %}checked{% endif %} onchange="toggleQuotationAmount()">
+                    <label for="quotation_given">Quotation Given</label>
+                </div>
+                <div class="form-group" id="quotation_amount_group" {% if not edit_mode or not enquiry.quotation_given %}style="display: none;"{% endif %}>
+                    <label for="quotation_amount">Quotation Amount (₹):</label>
+                    <input type="number" id="quotation_amount" name="quotation_amount" value="{{ enquiry.quotation_amount if edit_mode and enquiry.quotation_given else '' }}" step="0.01" min="0" placeholder="Amount quoted to the customer">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="/enquiries" class="cancel-btn">Cancel</a>
+                <button type="submit" class="submit-btn">{{ "Update Enquiry" if edit_mode else "Create Enquiry" }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    // Function to toggle the quotation amount field based on checkbox
+    function toggleQuotationAmount() {
+        const quotationGiven = document.getElementById('quotation_given').checked;
+        const quotationAmountGroup = document.getElementById('quotation_amount_group');
+        
+        if (quotationGiven) {
+            quotationAmountGroup.style.display = 'block';
+        } else {
+            quotationAmountGroup.style.display = 'none';
+            document.getElementById('quotation_amount').value = '';
+        }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleQuotationAmount();
+    });
+</script>
+
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+    }
+
+    .form-section h3 {
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        font-size: 18px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="date"],
+    .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+    }
+
+    .checkbox-group label {
+        margin-bottom: 0;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .cancel-btn {
+        padding: 10px 20px;
+        background-color: #f1f1f1;
+        color: #333;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .submit-btn {
+        padding: 10px 20px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .cancel-btn:hover {
+        background-color: #e0e0e0;
+    }
+
+    .submit-btn:hover {
+        background-color: var(--primary-color-dark);
+    }
+</style>
+{% endblock %}
