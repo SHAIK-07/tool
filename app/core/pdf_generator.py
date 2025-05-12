@@ -275,20 +275,25 @@ def generate_pdf_invoice(invoice):
                     total_discount = invoice.get('total_discount', 0)
                     discounted_subtotal = invoice.get('discounted_subtotal', 0)
                     total_gst = invoice.get('total_gst', 0)
-                    total_amount = invoice.get('total', 0)
+                    total_amount = invoice.get('total_amount', invoice.get('total', 0))
+                    amount_paid = invoice.get('amount_paid', 0)
+                    balance_due = total_amount - amount_paid
+                
                 else:
                     subtotal = getattr(invoice, 'subtotal', 0)
                     total_discount = getattr(invoice, 'total_discount', 0)
                     discounted_subtotal = getattr(invoice, 'discounted_subtotal', 0)
                     total_gst = getattr(invoice, 'total_gst', 0)
-                    total_amount = getattr(invoice, 'total', 0)
+                    total_amount = getattr(invoice, 'total_amount', getattr(invoice, 'total', 0))
+                    amount_paid = getattr(invoice, 'amount_paid', 0)
+                    balance_due = total_amount - amount_paid
                 
                 # Add summary box
                 summary_y = y_position - 20
                 c.setFillColor(light_gray)
-                c.rect(width - 250, summary_y - 100, 210, 100, fill=1, stroke=0)
+                c.rect(width - 250, summary_y - 120, 210, 120, fill=1, stroke=0)
                 c.setStrokeColor(colors.black)
-                c.rect(width - 250, summary_y - 100, 210, 100, fill=0, stroke=1)
+                c.rect(width - 250, summary_y - 120, 210, 120, fill=0, stroke=1)
                 
                 # Add summary details
                 c.setFillColor(colors.black)
@@ -297,6 +302,8 @@ def generate_pdf_invoice(invoice):
                 c.drawString(width - 240, summary_y - 40, "Discount:")
                 c.drawString(width - 240, summary_y - 60, "GST Amount:")
                 c.drawString(width - 240, summary_y - 80, "Total Amount:")
+                c.drawString(width - 240, summary_y - 100, "Amount Paid:")
+                c.drawString(width - 240, summary_y - 120, "Balance Due:")
                 
                 # Add values
                 c.setFont("Helvetica", 10)
@@ -305,9 +312,18 @@ def generate_pdf_invoice(invoice):
                 c.drawString(width - 150, summary_y - 60, f"Rs.{total_gst:.2f}")
                 c.setFont("Helvetica-Bold", 10)
                 c.drawString(width - 150, summary_y - 80, f"Rs.{total_amount:.2f}")
+                c.drawString(width - 150, summary_y - 100, f"Rs.{amount_paid:.2f}")
+                
+                # Add balance due color
+                if balance_due <= 0:
+                    c.setFillColor(green_color)
+                else:
+                    c.setFillColor(colors.red)
+                    c.drawString(width - 150, summary_y - 120, f"Rs.{balance_due:.2f}")
+                    c.setFillColor(colors.black)
                 
                 # Add payment status
-                payment_y = summary_y - 130
+                payment_y = summary_y - 150
                 c.setFont("Helvetica-Bold", 12)
                 
                 if payment_status == "Fully Paid":
@@ -315,7 +331,7 @@ def generate_pdf_invoice(invoice):
                     status_text = "PAID"
                 elif payment_status == "Partially Paid":
                     c.setFillColor(colors.orange)
-                    status_text = f"PARTIALLY PAID (Rs.{amount_paid:.2f})"
+                    status_text = f"PARTIALLY (Rs.{amount_paid:.2f})"
                 else:
                     c.setFillColor(colors.red)
                     status_text = "UNPAID"
