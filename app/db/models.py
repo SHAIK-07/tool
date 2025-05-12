@@ -177,3 +177,38 @@ class Enquiry(Base):
     quotation_amount = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class Customer(Base):
+    __tablename__ = "customers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_code = Column(String, unique=True, index=True, nullable=False)
+    date = Column(Date, nullable=False, default=datetime.now().date())
+    customer_name = Column(String, nullable=False)
+    phone_no = Column(String, nullable=False)
+    address = Column(String)
+    product_description = Column(Text)
+    payment_method = Column(String)
+    payment_status = Column(String, default="Unpaid")  # Unpaid, Partially Paid, Fully Paid
+    total_amount = Column(Float, nullable=False)
+    amount_paid = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # Relationship with customer payments
+    payments = relationship("CustomerPayment", back_populates="customer", cascade="all, delete-orphan")
+
+
+class CustomerPayment(Base):
+    __tablename__ = "customer_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    payment_date = Column(DateTime, default=datetime.now)
+    amount = Column(Float, nullable=False)
+    payment_method = Column(String, nullable=False)
+    notes = Column(String)
+
+    # Relationship with customer
+    customer = relationship("Customer", back_populates="payments")

@@ -427,6 +427,112 @@ def export_invoices_to_excel(invoices, db: Session, payment_status=None):
         raise
 
 
+def export_customers_to_excel(customers, status_filter=None):
+    """
+    Export customer records to Excel file
+
+    Args:
+        customers: List of customer records
+        status_filter: Optional filter for payment status
+
+    Returns:
+        Tuple of (filename, file_path)
+    """
+    try:
+        # Create a new workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Customers"
+
+        # Define styles
+        header_font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
+        header_fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
+        header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+        # Define borders
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        # Add headers
+        headers = [
+            "Customer Code", "Date", "Customer Name", "Phone Number", "Address",
+            "Product Description", "Payment Method", "Payment Status",
+            "Total Amount (₹)", "Amount Paid (₹)", "Balance Due (₹)"
+        ]
+
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+
+        # Add data rows
+        row_num = 2
+        for customer in customers:
+            # Calculate balance due
+            total_amount = customer.total_amount if hasattr(customer, 'total_amount') else 0
+            amount_paid = customer.amount_paid if hasattr(customer, 'amount_paid') else 0
+            balance_due = total_amount - amount_paid
+
+            # Format date
+            date_str = customer.date.strftime('%d-%m-%Y') if hasattr(customer.date, 'strftime') else str(customer.date)
+
+            # Add customer data
+            ws.cell(row=row_num, column=1).value = customer.customer_code
+            ws.cell(row=row_num, column=2).value = date_str
+            ws.cell(row=row_num, column=3).value = customer.customer_name
+            ws.cell(row=row_num, column=4).value = customer.phone_no
+            ws.cell(row=row_num, column=5).value = customer.address if hasattr(customer, 'address') else ""
+            ws.cell(row=row_num, column=6).value = customer.product_description if hasattr(customer, 'product_description') else ""
+            ws.cell(row=row_num, column=7).value = customer.payment_method if hasattr(customer, 'payment_method') else ""
+            ws.cell(row=row_num, column=8).value = customer.payment_status
+            ws.cell(row=row_num, column=9).value = total_amount
+            ws.cell(row=row_num, column=10).value = amount_paid
+            ws.cell(row=row_num, column=11).value = balance_due
+
+            # Apply borders to all cells in the row
+            for col_num in range(1, len(headers) + 1):
+                ws.cell(row=row_num, column=col_num).border = thin_border
+
+                # Right-align numeric columns
+                if col_num in [9, 10, 11]:
+                    ws.cell(row=row_num, column=col_num).alignment = Alignment(horizontal='right')
+
+            row_num += 1
+
+        # Auto-adjust column widths
+        for col_num, _ in enumerate(headers, 1):
+            column_letter = get_column_letter(col_num)
+            ws.column_dimensions[column_letter].width = 15
+
+        # Make the address and product description columns wider
+        ws.column_dimensions['E'].width = 30
+        ws.column_dimensions['F'].width = 30
+
+        # Generate filename with date
+        current_date = datetime.now().strftime('%Y%m%d')
+        status_suffix = f"_{status_filter}" if status_filter and status_filter != "all" else ""
+        filename = f"Sunmax_Customers{status_suffix}_{current_date}.xlsx"
+
+        # Create directory for exports if it doesn't exist
+        os.makedirs("exports", exist_ok=True)
+        file_path = os.path.join("exports", filename)
+
+        # Save the workbook to a file
+        wb.save(file_path)
+
+        return filename, file_path
+    except Exception as e:
+        print(f"Error exporting customers to Excel: {e}")
+        raise
+
+
 def export_quotations_to_excel(quotations):
     """
     Export quotations to Excel with formatting

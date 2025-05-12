@@ -54,6 +54,23 @@ def generate_service_code(db: Session) -> str:
         return f"SRV001"
 
 
+def generate_customer_code(db: Session) -> str:
+    """Generate a unique customer code with format CUST001, CUST002, etc."""
+    try:
+        last_customer = db.query(models.Customer).order_by(
+            models.Customer.customer_code.desc()
+        ).first()
+        if last_customer and last_customer.customer_code.startswith("CUST"):
+            number = int(last_customer.customer_code[4:]) + 1
+        else:
+            number = 1
+        return f"CUST{str(number).zfill(3)}"
+    except Exception as e:
+        print(f"Error generating customer code: {e}")
+        # Fallback to a default number if there's an error
+        return f"CUST001"
+
+
 def create_item(db: Session, item_data: dict):
     item = models.InventoryItem(**item_data)
     db.add(item)
@@ -905,6 +922,178 @@ def delete_enquiry(db: Session, enquiry_id: int):
         return False
 
 
+# Customer CRUD operations
+def create_customer(db: Session, customer_data: dict):
+    """Create a new customer record"""
+    try:
+        # Generate a unique customer code
+        customer_code = generate_customer_code(db)
+        
+        # Create customer object
+        customer = models.Customer(
+            customer_code=customer_code,
+            date=customer_data.get("date", datetime.now().date()),
+            customer_name=customer_data.get("customer_name", ""),
+            phone_no=customer_data.get("phone_no", ""),
+            address=customer_data.get("address", ""),
+            product_description=customer_data.get("product_description", ""),
+            payment_method=customer_data.get("payment_method", ""),
+            payment_status=customer_data.get("payment_status", "Unpaid"),
+            total_amount=customer_data.get("total_amount", 0),
+            amount_paid=customer_data.get("amount_paid", 0),
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+        
+        # If there's an initial payment, create a payment record
+        initial_amount = customer_data.get("amount_paid", 0)
+        if initial_amount > 0:
+            payment = models.CustomerPayment(
+                customer_id=customer.id,
+                payment_date=datetime.now(),
+                amount=initial_amount,
+                payment_method=customer_data.get("payment_method", "Cash"),
+                notes="Initial payment"
+            )
+            db.add(payment)
+            db.commit()
+        
+        return customer
+    except Exception as e:
+        db.rollback()
+        print(f"Error creating customer: {e}")
+        raise
+
+
+def get_all_customers(db: Session, skip: int = 0, limit: int = 100):
+    """Get all customers with pagination"""
+    return db.query(models.Customer).order_by(models.Customer.date.desc()).offset(skip).limit(limit).all()
+
+
+def get_customer(db: Session, customer_id: int):
+    """Get a specific customer by ID"""
+    return db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+
+
+def get_customer_by_code(db: Session, customer_code: str):
+    """Get a specific customer by customer code"""
+    return db.query(models.Customer).filter(models.Customer.customer_code == customer_code).first()
+
+
+def update_customer(db: Session, customer_id: int, customer_data: dict):
+    """Update a customer record"""
+    try:
+        customer = get_customer(db, customer_id)
+        if not customer:
+            return None
+
+        # Update customer attributes
+        for key, value in customer_data.items():
+            if hasattr(customer, key):
+                setattr(customer, key, value)
+
+        # Update the updated_at timestamp
+        customer.updated_at = datetime.now()
+
+        db.commit()
+        db.refresh(customer)
+        return customer
+    except Exception as e:
+        db.rollback()
+        print(f"Error updating customer: {e}")
+        raise
+
+
+def delete_customer(db: Session, customer_id: int):
+    """Delete a customer record"""
+    customer = get_customer(db, customer_id)
+    if not customer:
+        return False
+
+    try:
+        # Delete all customer payments first
+        db.query(models.CustomerPayment).filter(
+            models.CustomerPayment.customer_id == customer_id
+        ).delete()
+
+        # Delete the customer
+        db.delete(customer)
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        print(f"Error deleting customer {customer_id}: {e}")
+        return False
+
+
+def add_customer_payment(db: Session, customer_id: int, payment_data: dict):
+    """Add a payment to a customer record"""
+    try:
+        customer = get_customer(db, customer_id)
+        if not customer:
+            return None
+
+        # Create payment record
+        payment = models.CustomerPayment(
+            customer_id=customer_id,
+            payment_date=payment_data.get("payment_date", datetime.now()),
+            amount=payment_data.get("amount", 0),
+            payment_method=payment_data.get("payment_method", ""),
+            notes=payment_data.get("notes", "")
+        )
+        db.add(payment)
+
+        # Update customer's amount_paid
+        customer.amount_paid += payment_data.get("amount", 0)
+
+        # Update payment status based on amount paid
+        if customer.amount_paid >= customer.total_amount:
+            customer.payment_status = "Fully Paid"
+        elif customer.amount_paid > 0:
+            customer.payment_status = "Partially Paid"
+        else:
+            customer.payment_status = "Unpaid"
+
+        # Update the updated_at timestamp
+        customer.updated_at = datetime.now()
+
+        db.commit()
+        db.refresh(payment)
+        return payment
+    except Exception as e:
+        db.rollback()
+        print(f"Error adding payment to customer {customer_id}: {e}")
+        raise
+
+
+def get_customer_payments(db: Session, customer_id: int):
+    """Get all payments for a specific customer"""
+    return db.query(models.CustomerPayment).filter(
+        models.CustomerPayment.customer_id == customer_id
+    ).order_by(models.CustomerPayment.payment_date.desc()).all()
+
+
+def search_customers(db: Session, query: str):
+    """Search for customers by name, code, or phone number"""
+    from sqlalchemy import or_
+
+    search_term = f"%{query}%"
+
+    customers = db.query(models.Customer).filter(
+        or_(
+            models.Customer.customer_code.ilike(search_term),
+            models.Customer.customer_name.ilike(search_term),
+            models.Customer.phone_no.ilike(search_term)
+        )
+    ).all()
+
+    return customers
+
+
 def search_enquiries(db: Session, query: str):
     """Search for enquiries by customer name, phone number, or enquiry number
 
@@ -943,35 +1132,35 @@ def get_total_enquiries_count(db: Session):
 def get_filtered_enquiries(db: Session, filters: dict, limit: int = 50, offset: int = 0):
     """Get filtered and paginated enquiries"""
     query = db.query(models.Enquiry)
-    
+
     if "customer_name" in filters and filters["customer_name"]:
         query = query.filter(models.Enquiry.customer_name.ilike(f"%{filters['customer_name']}%"))
-    
+
     if "date_from" in filters and filters["date_from"]:
         query = query.filter(models.Enquiry.date >= filters["date_from"])
-    
+
     if "date_to" in filters and filters["date_to"]:
         query = query.filter(models.Enquiry.date <= filters["date_to"])
-    
+
     if "quotation_given" in filters:
         query = query.filter(models.Enquiry.quotation_given == filters["quotation_given"])
-    
+
     return query.order_by(models.Enquiry.date.desc()).offset(offset).limit(limit).all()
 
 def get_filtered_enquiries_count(db: Session, filters: dict):
     """Get count of filtered enquiries"""
     query = db.query(models.Enquiry)
-    
+
     if "customer_name" in filters and filters["customer_name"]:
         query = query.filter(models.Enquiry.customer_name.ilike(f"%{filters['customer_name']}%"))
-    
+
     if "date_from" in filters and filters["date_from"]:
         query = query.filter(models.Enquiry.date >= filters["date_from"])
-    
+
     if "date_to" in filters and filters["date_to"]:
         query = query.filter(models.Enquiry.date <= filters["date_to"])
-    
+
     if "quotation_given" in filters:
         query = query.filter(models.Enquiry.quotation_given == filters["quotation_given"])
-    
+
     return query.count()

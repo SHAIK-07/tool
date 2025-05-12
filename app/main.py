@@ -34,6 +34,7 @@ from app.api import sales  # Import sales routes
 from app.api import db_management  # Import database management routes
 from app.api import quotations  # Import quotations routes
 from app.api import enquiries  # Import enquiries routes
+from app.api import customers  # Import customers routes
 from app.db import crud, database, models
 from app.db.migrate import run_migrations
 from app.core.auth import get_current_user_from_cookie
@@ -56,6 +57,10 @@ database.init_db()
 # Create the enquiries table
 from app.db.create_enquiries_table import create_enquiries_table
 create_enquiries_table()
+
+# Create the customers table
+from app.db.create_customers_table import create_customers_table
+create_customers_table()
 
 # Create invoices directory if it doesn't exist
 os.makedirs("invoices", exist_ok=True)
@@ -122,6 +127,7 @@ app.include_router(invoices.router, prefix="/api", tags=["Invoices"])
 app.include_router(sales.router, prefix="/api", tags=["Sales"])
 app.include_router(quotations.router, tags=["Quotations"])
 app.include_router(enquiries.router, tags=["Enquiries"])
+app.include_router(customers.router, tags=["Customers"])
 
 @app.delete("/api/services/delete/{service_id}")
 async def delete_service_api(service_id: int, db: Session = Depends(database.get_db)):
@@ -1430,5 +1436,66 @@ async def delete_inventory_item(item_code: str, db: Session = Depends(database.g
     except Exception as e:
         print(f"Error deleting inventory item: {e}")
         return JSONResponse(status_code=500, content={"success": False, "message": str(e)})
+
+@app.post("/customer/{customer_id}/delete")
+async def delete_customer_route(
+    request: Request,
+    customer_id: int,
+    db: Session = Depends(database.get_db)
+):
+    """Delete a customer record"""
+    try:
+        print(f"[MAIN.PY] Received request to delete customer ID: {customer_id}")
+        
+        # Get current user from cookie
+        from app.core.auth import get_current_user_from_cookie
+        user = await get_current_user_from_cookie(request, db)
+        
+        # Check if user is authenticated
+        if not user:
+            print(f"[MAIN.PY] User not authenticated")
+            return JSONResponse(
+                status_code=401,
+                content={"success": False, "message": "Authentication required"}
+            )
+        
+        print(f"[MAIN.PY] User authenticated: {user.username}")
+        
+        # Get the customer
+        from app.db import crud
+        customer = crud.get_customer(db, customer_id)
+        
+        if not customer:
+            print(f"[MAIN.PY] Customer ID {customer_id} not found")
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "Customer not found"}
+            )
+        
+        print(f"[MAIN.PY] Found customer: {customer.customer_name} (ID: {customer_id})")
+        
+        # Use the crud function to delete the customer
+        result = crud.delete_customer(db, customer_id)
+        
+        if result:
+            print(f"[MAIN.PY] Successfully deleted customer ID: {customer_id}")
+            return JSONResponse(
+                content={"success": True, "message": "Customer deleted successfully"}
+            )
+        else:
+            print(f"[MAIN.PY] Failed to delete customer ID: {customer_id}")
+            return JSONResponse(
+                status_code=500,
+                content={"success": False, "message": "Failed to delete customer"}
+            )
+    except Exception as e:
+        print(f"[MAIN.PY] Error deleting customer: {e}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Error deleting customer: {str(e)}"}
+        )
+
 
 
