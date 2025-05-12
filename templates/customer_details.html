@@ -368,7 +368,7 @@
 </script>
 <div class="stock-container">
     <div class="inventory-header">
-        <h2>Customer Details</h2>
+        <h2>Payment Details</h2>
         <div class="action-buttons">
             <a href="/customers" class="btn secondary-btn"><i class="fas fa-arrow-left"></i> Back to Customers</a>
 
@@ -378,7 +378,17 @@
                 <i class="fas fa-exclamation-triangle"></i> Direct Delete
             </button>
             <!-- Test button with hardcoded ID for troubleshooting -->
-
+            <!-- Add this button group to the customer details page, likely near the top of the page -->
+            <div class="customer-actions">
+                <div class="customer-buttons">
+                    <button type="button" class="action-btn pdf" title="View PDF" onclick="viewCustomerPdf({{ customer.id }})">
+                            <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button type="button" class="action-btn download" title="Download PDF" onclick="downloadCustomerPdf({{ customer.id }})">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -426,15 +436,15 @@
                     <h3>Payment Summary</h3>
                     <div class="summary-row">
                         <div class="summary-label">Total Amount:</div>
-                        <div class="summary-value">₹{{ "%.2f"|format(customer.total_amount) }}</div>
+                        <div class="summary-value">Rs.{{ "%.2f"|format(customer.total_amount) }}</div>
                     </div>
                     <div class="summary-row">
                         <div class="summary-label">Amount Paid:</div>
-                        <div class="summary-value">₹{{ "%.2f"|format(customer.amount_paid) }}</div>
+                        <div class="summary-value">Rs.{{ "%.2f"|format(customer.amount_paid) }}</div>
                     </div>
                     <div class="summary-row total-row">
                         <div class="summary-label">Balance Due:</div>
-                        <div class="summary-value">₹{{ "%.2f"|format(customer.total_amount - customer.amount_paid) }}</div>
+                        <div class="summary-value">Rs.{{ "%.2f"|format(customer.total_amount - customer.amount_paid) }}</div>
                     </div>
                     <div class="summary-row">
                         <div class="summary-label">Status:</div>
@@ -476,7 +486,7 @@
             </div>
             <div class="modern-form-row">
                 <div class="modern-form-group">
-                    <label for="payment-amount">Amount (₹)</label>
+                    <label for="payment-amount">Amount (Rs.)</label>
                     <div class="modern-input-container">
                         <i class="fas fa-rupee-sign input-icon"></i>
                         <input type="number" id="payment-amount" name="payment-amount" class="modern-input" step="0.01" min="0.01" placeholder="Enter amount" required>
@@ -533,7 +543,7 @@
                     {% for payment in payments %}
                     <tr>
                         <td>{{ payment.payment_date.strftime('%d-%m-%Y') if payment.payment_date.strftime else payment.payment_date }}</td>
-                        <td>₹{{ payment.amount }}</td>
+                        <td>Rs.{{ payment.amount }}</td>
                         <td>{{ payment.payment_method }}</td>
                         <td>{{ payment.notes or 'N/A' }}</td>
                     </tr>
@@ -752,6 +762,41 @@
 
     .modern-input-container {
         position: relative;
+        width: 100%;
+    }
+
+    .modern-input-container input[type="date"] {
+        padding-right: 30px; /* Increase right padding to make room for the calendar icon */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        margin: 0;
+        padding: 0;
+        cursor: pointer;
+        opacity: 0.8;
+    }
+
+    [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+
+
+    .modern-input-container .input-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+    }
+
+    .modern-input-container input {
+        padding-left: 35px;
     }
 
     .input-icon {
@@ -1044,11 +1089,11 @@
                     const statusElement = document.querySelector('.payment-summary .status-badge');
 
                     if (amountPaidElement) {
-                        amountPaidElement.textContent = `₹${data.customer.amount_paid}`;
+                        amountPaidElement.textContent = `Rs.${data.customer.amount_paid}`;
                     }
 
                     if (remainingElement) {
-                        remainingElement.textContent = `₹${data.customer.remaining_amount}`;
+                        remainingElement.textContent = `Rs.${data.customer.remaining_amount}`;
                     }
 
                     if (statusElement) {
@@ -1086,7 +1131,7 @@
                             <tbody>
                                 <tr>
                                     <td>${formattedPaymentDate}</td>
-                                    <td>₹${paymentData.amount}</td>
+                                    <td>Rs.${paymentData.amount}</td>
                                     <td>${paymentData.payment_method}</td>
                                     <td>${paymentData.notes || 'N/A'}</td>
                                 </tr>
@@ -1099,7 +1144,7 @@
                         const newRow = document.createElement('tr');
                         newRow.innerHTML = `
                             <td>${formattedPaymentDate}</td>
-                            <td>₹${paymentData.amount}</td>
+                            <td>Rs.${paymentData.amount}</td>
                             <td>${paymentData.payment_method}</td>
                             <td>${paymentData.notes || 'N/A'}</td>
                         `;
@@ -1202,8 +1247,27 @@
             statusSelect.value = 'Partially Paid';
         }
     });
+
+    function viewCustomerPdf(customerId) {
+        window.open(`/customer-pdf/${customerId}`, '_blank');
+    }
+
+    function downloadCustomerPdf(customerId) {
+        window.location.href = `/download-customer-pdf/${customerId}`;
+    }
+
+
+
 </script>
 {% endblock %}
+
+
+
+
+
+
+
+
 
 <!-- Delete Confirmation Modal -->
 <div id="delete-modal" class="modal" style="display: none;">
@@ -1872,5 +1936,6 @@
         justify-content: center;
     }
 </style>
+
 
 

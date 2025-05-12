@@ -1164,3 +1164,19 @@ def get_filtered_enquiries_count(db: Session, filters: dict):
         query = query.filter(models.Enquiry.quotation_given == filters["quotation_given"])
 
     return query.count()
+
+
+
+def get_customer(db: Session, customer_id: int):
+    """Get a customer by ID"""
+    customer = db.query(models.Customer).filter(models.Customer.id == customer_id).first()
+    if not customer:
+        return None
+    return customer
+
+
+def get_customer_payments(db: Session, customer_id: int):
+    """Get all payments for a specific customer"""
+    return db.query(models.CustomerPayment).filter(
+        models.CustomerPayment.customer_id == customer_id
+    ).order_by(models.CustomerPayment.payment_date.desc()).all()

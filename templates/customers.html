@@ -703,37 +703,53 @@
     /* Action buttons */
     .action-btn-group {
         display: flex;
-        gap: 8px;
+        flex-wrap: nowrap;
         justify-content: center;
+        gap: 5px;
+        min-width: 180px; /* Ensure enough space for all buttons */
     }
-
+    
     .action-btn {
         width: 32px;
         height: 32px;
-        border-radius: 4px;
-        display: flex;
+        border-radius: 50%;
+        display: inline-flex !important; /* Force display as flex */
         align-items: center;
         justify-content: center;
-        color: white;
+        color: white !important;
         border: none;
         cursor: pointer;
         transition: all 0.2s ease;
-        font-size: 14px;
-        box-shadow: var(--standard-shadow);
+        margin: 0 2px;
+        flex-shrink: 0; /* Prevent buttons from shrinking */
+        visibility: visible !important; /* Force visibility */
+        opacity: 1 !important; /* Force opacity */
     }
-
+    
+    /* Specific button colors */
     .action-btn.view {
-        background-color: var(--btn-primary-bg);
+        background-color: var(--accent-tertiary, #007bff);
     }
-
+    
+    .action-btn.edit {
+        background-color: var(--accent-tertiary, #007bff);
+    }
+    
+    .action-btn.pdf {
+        background-color: var(--info-color, #17a2b8);
+    }
+    
+    .action-btn.download {
+        background-color: var(--success-color, #28a745);
+    }
+    
     .action-btn.delete {
-        background-color: var(--danger-color);
+        background-color: var(--danger-color, #dc3545);
     }
-
+    
     .action-btn:hover {
         transform: translateY(-2px);
-        box-shadow: var(--medium-shadow);
-        opacity: 0.9;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     .action-btn.view:hover {
@@ -1287,25 +1303,51 @@
                 </thead>
                 <tbody>
                     {% for customer in customers %}
-                    <tr>
+                    <tr id="row-{{ customer.id }}" data-customer-id="{{ customer.id }}">
                         <td>{{ customer.customer_code }}</td>
                         <td>{{ customer.date.strftime('%d-%m-%Y') if customer.date.strftime else customer.date }}</td>
                         <td>{{ customer.customer_name }}</td>
                         <td>{{ customer.phone_no }}</td>
-                        <td>₹{{ customer.total_amount }}</td>
-                        <td>₹{{ customer.amount_paid }}</td>
                         <td>
-                            <span class="status-badge {% if customer.payment_status == 'Fully Paid' %}status-paid{% elif customer.payment_status == 'Partially Paid' %}status-partial{% else %}status-unpaid{% endif %}">
+                            <span class="view-content">₹{{ customer.total_amount }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="total-amount-{{ customer.id }}" value="{{ customer.total_amount }}" step="0.01">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">₹{{ customer.amount_paid }}</span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="number" class="edit-input" id="amount-paid-{{ customer.id }}" value="{{ customer.amount_paid }}" step="0.01">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content status-badge {% if customer.payment_status == 'Fully Paid' %}status-paid{% elif customer.payment_status == 'Partially Paid' %}status-partial{% else %}status-unpaid{% endif %}">
                                 {{ customer.payment_status }}
                             </span>
+                            <div class="edit-content" style="display: none;">
+                                <select class="edit-input" id="payment-status-{{ customer.id }}">
+                                    <option value="Fully Paid" {% if customer.payment_status == 'Fully Paid' %}selected{% endif %}>Fully Paid</option>
+                                    <option value="Partially Paid" {% if customer.payment_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                                    <option value="Unpaid" {% if customer.payment_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                                </select>
+                            </div>
                         </td>
                         <td>
                             <div class="action-btn-group">
                                 <a href="/customer/{{ customer.id }}" class="action-btn view" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <button class="action-btn delete" title="Delete Customer"
-                                        onclick="showDeleteModal('{{ customer.id }}', '{{ customer.customer_name }}')">
+                                <button type="button" class="action-btn edit" title="Edit Payment" onclick="toggleEditMode({{ customer.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                        
+                                <button type="button" class="action-btn save" title="Save Changes" onclick="saveCustomerChanges({{ customer.id }})" style="display: none; background-color: #28a745;">
+                                    <i class="fas fa-save"></i>
+                                </button>
+                                <button type="button" class="action-btn cancel" title="Cancel" onclick="cancelEdit({{ customer.id }})" style="display: none; background-color: #6c757d;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button type="button" class="action-btn delete" title="Delete Customer" onclick="showDeleteModal('{{ customer.id }}', '{{ customer.customer_name }}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -1719,14 +1761,245 @@
             });
         }
     }
+
+    function toggleEditMode(customerId) {
+        const row = document.querySelector(`tr[data-customer-id="${customerId}"]`);
+        
+        // Toggle visibility of view/edit content
+        row.querySelectorAll('.view-content').forEach(el => el.style.display = 'none');
+        row.querySelectorAll('.edit-content').forEach(el => el.style.display = 'block');
+        
+        // Toggle visibility of action buttons
+        row.querySelector('.action-btn.edit').style.display = 'none';
+        row.querySelector('.action-btn.save').style.display = 'flex';
+        row.querySelector('.action-btn.cancel').style.display = 'flex';
+        
+        // Auto-update payment status based on amounts
+        const totalAmountInput = document.getElementById(`total-amount-${customerId}`);
+        const amountPaidInput = document.getElementById(`amount-paid-${customerId}`);
+        const statusSelect = document.getElementById(`payment-status-${customerId}`);
+        
+        function updatePaymentStatus() {
+            const totalAmount = parseFloat(totalAmountInput.value) || 0;
+            const amountPaid = parseFloat(amountPaidInput.value) || 0;
+            
+            if (amountPaid <= 0) {
+                statusSelect.value = 'Unpaid';
+            } else if (amountPaid >= totalAmount) {
+                statusSelect.value = 'Fully Paid';
+            } else {
+                statusSelect.value = 'Partially Paid';
+            }
+        }
+        
+        totalAmountInput.addEventListener('input', updatePaymentStatus);
+        amountPaidInput.addEventListener('input', updatePaymentStatus);
+    }
+    
+    function cancelEdit(customerId) {
+        const row = document.querySelector(`tr[data-customer-id="${customerId}"]`);
+        
+        // Restore view mode
+        row.querySelectorAll('.view-content').forEach(el => el.style.display = 'block');
+        row.querySelectorAll('.edit-content').forEach(el => el.style.display = 'none');
+        
+        // Restore action buttons
+        row.querySelector('.action-btn.edit').style.display = 'flex';
+        row.querySelector('.action-btn.save').style.display = 'none';
+        row.querySelector('.action-btn.cancel').style.display = 'none';
+    }
+    
+    function saveCustomerChanges(customerId) {
+        const totalAmount = document.getElementById(`total-amount-${customerId}`).value;
+        const amountPaid = document.getElementById(`amount-paid-${customerId}`).value;
+        const paymentStatus = document.getElementById(`payment-status-${customerId}`).value;
+        
+        // Show loading state
+        const saveBtn = document.querySelector(`tr[data-customer-id="${customerId}"] .action-btn.save`);
+        const originalHTML = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        saveBtn.disabled = true;
+        
+        // Send update to server - use the correct URL format
+        fetch(`/customers/${customerId}/update-payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                total_amount: parseFloat(totalAmount),
+                amount_paid: parseFloat(amountPaid),
+                payment_status: paymentStatus
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Error updating payment details');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update the displayed values
+                const row = document.querySelector(`tr[data-customer-id="${customerId}"]`);
+                row.querySelector('td:nth-child(5) .view-content').textContent = `₹${totalAmount}`;
+                row.querySelector('td:nth-child(6) .view-content').textContent = `₹${amountPaid}`;
+                
+                const statusBadge = row.querySelector('td:nth-child(7) .view-content');
+                statusBadge.textContent = paymentStatus;
+                statusBadge.className = `view-content status-badge ${
+                    paymentStatus === 'Fully Paid' ? 'status-paid' : 
+                    paymentStatus === 'Partially Paid' ? 'status-partial' : 
+                    'status-unpaid'
+                }`;
+                
+                // Exit edit mode
+                cancelEdit(customerId);
+                
+                // Show success notification
+                showNotification('Payment details updated successfully', 'success');
+            } else {
+                showNotification('Error updating payment details', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification(error.message || 'Error updating payment details', 'error');
+        })
+        .finally(() => {
+            // Restore button state
+            saveBtn.innerHTML = originalHTML;
+            saveBtn.disabled = false;
+        });
+    }
+    
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => notification.classList.add('show'), 10);
+        
+        // Hide and remove after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Add these functions for PDF viewing and downloading
+    
 </script>
 {% endblock %}
 
-
-
-
-
-
+<style>
+    .edit-input {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+    }
+    
+    .action-btn.edit {
+        background-color: var(--accent-tertiary);
+    }
+    
+    .action-btn.save {
+        background-color: var(--success-color);
+    }
+    
+    .action-btn.cancel {
+        background-color: var(--text-secondary);
+    }
+    
+    /* Notification styles */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .notification.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    
+    .notification.success {
+        border-left: 4px solid #28a745;
+    }
+    
+    .notification.error {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .notification i {
+        font-size: 18px;
+    }
+    
+    .notification.success i {
+        color: #28a745;
+    }
+    
+    .notification.error i {
+        color: #dc3545;
+    }
+    
+    /* Add styles for PDF and download buttons */
+    .action-btn.pdf {
+        background-color: var(--info-color, #17a2b8);
+    }
+    
+    .action-btn.download {
+        background-color: var(--success-color, #28a745);
+    }
+    
+    /* Ensure all action buttons have consistent styling */
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0 2px;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .action-btn-group {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+</style>
 
 
 
