@@ -371,14 +371,14 @@
         <h2>Customer Details</h2>
         <div class="action-buttons">
             <a href="/customers" class="btn secondary-btn"><i class="fas fa-arrow-left"></i> Back to Customers</a>
-            
+
             <!-- Simple direct delete button -->
             <button type="button" class="btn danger-btn" style="background-color: #ff4500;"
                     onclick="directDeleteCustomer({{ customer.id }})">
                 <i class="fas fa-exclamation-triangle"></i> Direct Delete
             </button>
             <!-- Test button with hardcoded ID for troubleshooting -->
-            
+
         </div>
     </div>
 
@@ -458,43 +458,57 @@
     </div>
 
     <!-- Add Payment Section -->
-    <div class="form-container">
-        <h3 class="section-title">
-            <i class="fas fa-plus-circle"></i> Add Payment
-        </h3>
-        <form id="add-payment-form" class="payment-form">
-            <div class="form-row">
-                <div class="form-group">
+    <div class="modern-form-container">
+        <div class="modern-form-header">
+            <div class="modern-form-title">
+                <i class="fas fa-plus-circle"></i> Add Payment
+            </div>
+        </div>
+        <form id="add-payment-form" class="modern-payment-form">
+            <div class="modern-form-row">
+                <div class="modern-form-group">
                     <label for="payment-date">Payment Date</label>
-                    <input type="date" id="payment-date" name="payment-date" required>
+                    <div class="modern-input-container">
+                        <i class="fas fa-calendar input-icon"></i>
+                        <input type="date" id="payment-date" name="payment-date" class="modern-input" required>
+                    </div>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
+            <div class="modern-form-row">
+                <div class="modern-form-group">
                     <label for="payment-amount">Amount (₹)</label>
-                    <input type="number" id="payment-amount" name="payment-amount" step="0.01" min="0.01" required>
+                    <div class="modern-input-container">
+                        <i class="fas fa-rupee-sign input-icon"></i>
+                        <input type="number" id="payment-amount" name="payment-amount" class="modern-input" step="0.01" min="0.01" placeholder="Enter amount" required>
+                    </div>
                 </div>
-                <div class="form-group">
+                <div class="modern-form-group">
                     <label for="payment-method">Payment Method</label>
-                    <select id="payment-method" name="payment-method" required>
-                        <option value="Cash">Cash</option>
-                        <option value="UPI">UPI</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Credit Card">Credit Card</option>
-                        <option value="Debit Card">Debit Card</option>
-                        <option value="Cheque">Cheque</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <div class="modern-input-container">
+                        <i class="fas fa-credit-card input-icon"></i>
+                        <select id="payment-method" name="payment-method" class="modern-select" required>
+                            <option value="Cash">Cash</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group full-width">
+            <div class="modern-form-row">
+                <div class="modern-form-group full-width">
                     <label for="payment-notes">Notes (Optional)</label>
-                    <textarea id="payment-notes" name="payment-notes" rows="3"></textarea>
+                    <div class="modern-input-container">
+                        <i class="fas fa-sticky-note input-icon textarea-icon"></i>
+                        <textarea id="payment-notes" name="payment-notes" class="modern-textarea" rows="3" placeholder="Add any additional notes here"></textarea>
+                    </div>
                 </div>
             </div>
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
+            <div class="modern-form-actions">
+                <button type="submit" class="modern-submit-btn">
                     <i class="fas fa-plus"></i> Add Payment
                 </button>
             </div>
@@ -594,6 +608,10 @@
 </div>
 
 <style>
+    :root {
+        --accent-primary-rgb: 13, 110, 253; /* RGB values for the accent-primary color */
+    }
+
     .customer-details-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -676,6 +694,133 @@
         color: #dc3545;
     }
 
+    /* Modern Form Styles */
+    .modern-form-container {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .modern-form-container:hover {
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+
+    .modern-form-header {
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        padding: 1.5rem;
+        color: white;
+    }
+
+    .modern-form-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modern-payment-form {
+        padding: 1.5rem;
+    }
+
+    .modern-form-row {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .modern-form-group {
+        flex: 1;
+    }
+
+    .modern-form-group.full-width {
+        width: 100%;
+    }
+
+    .modern-form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .modern-input-container {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        opacity: 0.7;
+    }
+
+    .textarea-icon {
+        top: 1.2rem;
+    }
+
+    .modern-input, .modern-select, .modern-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        transition: all 0.3s ease;
+    }
+
+    .modern-textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .modern-input:focus, .modern-select:focus, .modern-textarea:focus {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.2);
+        outline: none;
+    }
+
+    .modern-form-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+
+    .modern-submit-btn {
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modern-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .modern-submit-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Original form styles kept for compatibility */
     .payment-form {
         margin-top: 1rem;
     }

@@ -48,8 +48,8 @@ DB_PATH = os.path.join(DB_FOLDER, "sunmax.db")  # Local database path
 # Ensure the database folder exists
 os.makedirs(DB_FOLDER, exist_ok=True)
 
-# Initialize database directly without cloud storage
-print("Using local database")
+# Set debug mode for verbose logging (comment this out to reduce logs)
+# os.environ['DEBUG'] = 'true'
 
 # Initialize the database - this will create tables if they don't exist
 database.init_db()
@@ -61,6 +61,47 @@ create_enquiries_table()
 # Create the customers table
 from app.db.create_customers_table import create_customers_table
 create_customers_table()
+
+# Ensure the top user account exists
+try:
+    # Create a temporary session to ensure top user exists
+    from sqlalchemy.orm import Session
+    from app.db.database import SessionLocal
+    from app.db import crud
+    from app.core.auth import get_password_hash
+
+    # Top user credentials
+    TOP_USER_EMAIL = "contactsunmax@gmail.com"
+    TOP_USER_PASSWORD = "Sunmax@123"
+    TOP_USER_NAME = "Sunmax Administrator"
+    TOP_USER_ROLE = "top_user"
+
+    db = SessionLocal()
+    try:
+        # Check if top user exists
+        top_user = crud.get_user_by_email(db, TOP_USER_EMAIL)
+
+        if not top_user:
+            # Create top user
+            print(f"Creating top user account: {TOP_USER_EMAIL}")
+
+            # Create user data
+            user_data = {
+                "email": TOP_USER_EMAIL,
+                "password": TOP_USER_PASSWORD,
+                "name": TOP_USER_NAME,
+                "role": TOP_USER_ROLE,
+                "first_login": False  # Don't require password change
+            }
+
+            # Create the user
+            crud.create_user(db, user_data)
+            print(f"Top user account created successfully")
+    finally:
+        db.close()
+except Exception as e:
+    print(f"Error ensuring top user exists: {e}")
+    print("Application will continue, but top user may not be available")
 
 # Create invoices directory if it doesn't exist
 os.makedirs("invoices", exist_ok=True)
@@ -974,6 +1015,120 @@ async def insights_page(request: Request, db: Session = Depends(database.get_db)
     inventory_value_labels = list(category_values.keys())
     inventory_value_data = [round(category_values[category], 2) for category in inventory_value_labels]
 
+    # Get customer statistics
+    customers = crud.get_all_customers(db, limit=1000)
+
+    # Calculate customer statistics
+    total_customers = len(customers)
+    total_receivable = sum(customer.total_amount - customer.amount_paid for customer in customers)
+
+    # Count customers by payment status
+    fully_paid_count = sum(1 for customer in customers if customer.payment_status == "Fully Paid")
+    partially_paid_count = sum(1 for customer in customers if customer.payment_status == "Partially Paid")
+    unpaid_count = sum(1 for customer in customers if customer.payment_status == "Unpaid")
+
+    # Calculate percentage of fully paid customers
+    fully_paid_percentage = (fully_paid_count / total_customers * 100) if total_customers > 0 else 0
+
+    # Count new customers this month
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    new_customers_this_month = sum(
+        1 for customer in customers
+        if customer.created_at.month == current_month and customer.created_at.year == current_year
+    )
+
+    # Prepare customer growth data (monthly)
+    monthly_customer_growth = {month: 0 for month in range(1, 13)}
+    for customer in customers:
+        if customer.created_at.year == current_year:
+            monthly_customer_growth[customer.created_at.month] += 1
+
+    customer_growth_labels = list(calendar.month_name)[1:]  # Get month names
+    customer_growth_data = [monthly_customer_growth[month] for month in range(1, 13)]
+
+    # Prepare customer source distribution data (placeholder - add source field to customer model)
+    customer_source_labels = ["Direct", "Referral", "Website", "Social Media", "Advertisement", "Other"]
+    customer_source_data = [
+        sum(1 for customer in customers if getattr(customer, 'source', 'Direct') == 'Direct'),
+        sum(1 for customer in customers if getattr(customer, 'source', '') == 'Referral'),
+        sum(1 for customer in customers if getattr(customer, 'source', '') == 'Website'),
+        sum(1 for customer in customers if getattr(customer, 'source', '') == 'Social Media'),
+        sum(1 for customer in customers if getattr(customer, 'source', '') == 'Advertisement'),
+        sum(1 for customer in customers if getattr(customer, 'source', '') not in ['Direct', 'Referral', 'Website', 'Social Media', 'Advertisement'])
+    ]
+
+    # Get enquiry statistics
+    enquiries = crud.get_all_enquiries(db, limit=1000)
+
+    # Calculate enquiry statistics
+    total_enquiries = len(enquiries)
+
+    # Count enquiries by status (using quotation_given as a proxy for status)
+    open_count = sum(1 for enquiry in enquiries if not enquiry.quotation_given)
+    in_progress_count = 0  # Placeholder - add status field to enquiry model
+    converted_count = sum(1 for enquiry in enquiries if enquiry.quotation_given)
+    closed_count = 0  # Placeholder - add status field to enquiry model
+
+    # Calculate conversion rate
+    conversion_rate = (converted_count / total_enquiries * 100) if total_enquiries > 0 else 0
+
+    # Prepare enquiry trend data (monthly)
+    monthly_enquiry_trend = {month: 0 for month in range(1, 13)}
+    for enquiry in enquiries:
+        if enquiry.created_at.year == current_year:
+            monthly_enquiry_trend[enquiry.created_at.month] += 1
+
+    enquiry_trend_labels = list(calendar.month_name)[1:]  # Get month names
+    enquiry_trend_data = [monthly_enquiry_trend[month] for month in range(1, 13)]
+
+    # Prepare conversion rate data (monthly)
+    monthly_conversion_rates = []
+    for month in range(1, 13):
+        month_enquiries = sum(1 for enquiry in enquiries
+                             if enquiry.created_at.month == month and enquiry.created_at.year == current_year)
+        month_conversions = sum(1 for enquiry in enquiries
+                               if enquiry.created_at.month == month and enquiry.created_at.year == current_year
+                               and enquiry.quotation_given)
+
+        if month_enquiries > 0:
+            rate = (month_conversions / month_enquiries) * 100
+        else:
+            rate = 0
+        monthly_conversion_rates.append(round(rate, 1))
+
+    conversion_rate_labels = list(calendar.month_name)[1:]  # Get month names
+    conversion_rate_data = monthly_conversion_rates
+
+    # Calculate average response time (placeholder - add response_time field to enquiry model)
+    avg_response_time = "24 hours"  # Placeholder
+
+    # Count open enquiries
+    open_enquiries = sum(1 for enquiry in enquiries if not enquiry.quotation_given)
+
+    # Create customer stats dictionary
+    customer_stats = {
+        "total_customers": total_customers,
+        "total_receivable": total_receivable,
+        "fully_paid_percentage": fully_paid_percentage,
+        "new_customers_this_month": new_customers_this_month,
+        "fully_paid_count": fully_paid_count,
+        "partially_paid_count": partially_paid_count,
+        "unpaid_count": unpaid_count
+    }
+
+    # Create enquiry stats dictionary
+    enquiry_stats = {
+        "total_enquiries": total_enquiries,
+        "conversion_rate": conversion_rate,
+        "avg_response_time": avg_response_time,
+        "open_enquiries": open_enquiries,
+        "open_count": open_count,
+        "in_progress_count": in_progress_count,
+        "converted_count": converted_count,
+        "closed_count": closed_count
+    }
+
     return templates.TemplateResponse(
         "insights.html",
         {
@@ -985,7 +1140,7 @@ async def insights_page(request: Request, db: Session = Depends(database.get_db)
             "categories": len(categories),
             "low_stock_items": low_stock_items,
             "low_stock_count": len(low_stock_items),
-            # Chart data
+            # Chart data for inventory
             "sales_trend_labels": sales_trend_labels,
             "sales_trend_data": sales_trend_data,
             "category_distribution_labels": category_distribution_labels,
@@ -993,7 +1148,19 @@ async def insights_page(request: Request, db: Session = Depends(database.get_db)
             "payment_method_labels": payment_method_labels,
             "payment_method_data": payment_method_data,
             "inventory_value_labels": inventory_value_labels,
-            "inventory_value_data": inventory_value_data
+            "inventory_value_data": inventory_value_data,
+            # Customer statistics
+            "customer_stats": customer_stats,
+            "customer_growth_labels": customer_growth_labels,
+            "customer_growth_data": customer_growth_data,
+            "customer_source_labels": customer_source_labels,
+            "customer_source_data": customer_source_data,
+            # Enquiry statistics
+            "enquiry_stats": enquiry_stats,
+            "enquiry_trend_labels": enquiry_trend_labels,
+            "enquiry_trend_data": enquiry_trend_data,
+            "conversion_rate_labels": conversion_rate_labels,
+            "conversion_rate_data": conversion_rate_data
         }
     )
 
@@ -1446,11 +1613,11 @@ async def delete_customer_route(
     """Delete a customer record"""
     try:
         print(f"[MAIN.PY] Received request to delete customer ID: {customer_id}")
-        
+
         # Get current user from cookie
         from app.core.auth import get_current_user_from_cookie
         user = await get_current_user_from_cookie(request, db)
-        
+
         # Check if user is authenticated
         if not user:
             print(f"[MAIN.PY] User not authenticated")
@@ -1458,25 +1625,25 @@ async def delete_customer_route(
                 status_code=401,
                 content={"success": False, "message": "Authentication required"}
             )
-        
+
         print(f"[MAIN.PY] User authenticated: {user.username}")
-        
+
         # Get the customer
         from app.db import crud
         customer = crud.get_customer(db, customer_id)
-        
+
         if not customer:
             print(f"[MAIN.PY] Customer ID {customer_id} not found")
             return JSONResponse(
                 status_code=404,
                 content={"success": False, "message": "Customer not found"}
             )
-        
+
         print(f"[MAIN.PY] Found customer: {customer.customer_name} (ID: {customer_id})")
-        
+
         # Use the crud function to delete the customer
         result = crud.delete_customer(db, customer_id)
-        
+
         if result:
             print(f"[MAIN.PY] Successfully deleted customer ID: {customer_id}")
             return JSONResponse(

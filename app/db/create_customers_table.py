@@ -20,7 +20,6 @@ def create_customers_table():
         # Check if the customers table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='customers'")
         if not cursor.fetchone():
-            print("Creating customers table...")
             # Create the customers table
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS customers (
@@ -43,7 +42,6 @@ def create_customers_table():
         # Check if the customer_payments table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='customer_payments'")
         if not cursor.fetchone():
-            print("Creating customer_payments table...")
             # Create the customer_payments table
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS customer_payments (
@@ -60,7 +58,10 @@ def create_customers_table():
         # Commit the changes and close the connection
         conn.commit()
         conn.close()
-        print("Customers tables created successfully")
+
+        # Only print in debug mode
+        if os.environ.get('DEBUG', '').lower() in ('true', '1', 't'):
+            print("Customers tables created successfully")
     except Exception as e:
         print(f"Error creating customers tables: {e}")
 

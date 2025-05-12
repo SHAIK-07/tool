@@ -20,27 +20,22 @@ def create_enquiries_table():
         # Check if the table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='enquiries'")
         if cursor.fetchone():
-            print("Enquiries table already exists.")
-            
-            # Check if the table has the required columns
+            # Table exists, check if it has the required columns
             cursor.execute("PRAGMA table_info(enquiries)")
             columns = [column[1] for column in cursor.fetchall()]
-            
+
             required_columns = [
-                "id", "enquiry_number", "date", "customer_name", "phone_no", 
+                "id", "enquiry_number", "date", "customer_name", "phone_no",
                 "address", "requirements", "quotation_given", "quotation_amount",
                 "created_at", "updated_at"
             ]
-            
+
             missing_columns = [col for col in required_columns if col not in columns]
-            
+
             if missing_columns:
-                print(f"Missing columns in enquiries table: {missing_columns}")
-                print("Recreating the table...")
-                
                 # Rename the existing table
                 cursor.execute("ALTER TABLE enquiries RENAME TO enquiries_old")
-                
+
                 # Create the new table with all required columns
                 create_table_sql = """
                 CREATE TABLE enquiries (
@@ -58,22 +53,16 @@ def create_enquiries_table():
                 )
                 """
                 cursor.execute(create_table_sql)
-                
+
                 # Copy data from old table to new table (only for columns that exist in both)
                 common_columns = [col for col in columns if col in required_columns]
                 if common_columns:
                     columns_str = ", ".join(common_columns)
                     cursor.execute(f"INSERT INTO enquiries ({columns_str}) SELECT {columns_str} FROM enquiries_old")
-                
+
                 # Drop the old table
                 cursor.execute("DROP TABLE enquiries_old")
-                
-                print("Table recreated successfully.")
-            else:
-                print("Enquiries table has all required columns.")
         else:
-            print("Creating enquiries table...")
-            
             # Create the table
             create_table_sql = """
             CREATE TABLE enquiries (
@@ -91,15 +80,16 @@ def create_enquiries_table():
             )
             """
             cursor.execute(create_table_sql)
-            print("Enquiries table created successfully.")
 
         # Commit the changes
         conn.commit()
-        
+
         # Close the connection
         conn.close()
-        
-        print("Enquiries table setup completed.")
+
+        # Only print in debug mode
+        if os.environ.get('DEBUG', '').lower() in ('true', '1', 't'):
+            print("Enquiries table setup completed.")
         return True
     except Exception as e:
         print(f"Error creating enquiries table: {e}")

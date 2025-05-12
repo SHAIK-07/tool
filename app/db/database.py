@@ -42,21 +42,20 @@ def init_db():
     # Import models here to avoid circular imports
     # We need to import models to ensure they are registered with the Base
     import app.db.models  # noqa
-    from sqlalchemy import inspect
 
     try:
         # Simply create tables if they don't exist
         # This is a safe operation that won't affect existing data
         Base.metadata.create_all(bind=engine, checkfirst=True)
 
-        # Check if we have tables (only log in debug mode)
+        # Only print in debug mode
         if os.environ.get('DEBUG', '').lower() in ('true', '1', 't'):
+            from sqlalchemy import inspect
             inspector = inspect(engine)
             tables = inspector.get_table_names()
+            print(f"Using SQLite database")
             if tables:
-                print(f"Database initialized with {len(tables)} tables: {', '.join(tables)}")
-            else:
-                print("No tables found in database. Tables have been created.")
+                print(f"Database initialized with {len(tables)} tables")
 
     except Exception as e:
         print(f"Error initializing database: {e}")

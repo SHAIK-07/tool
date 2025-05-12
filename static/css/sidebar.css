@@ -20,7 +20,7 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overflow-x: hidden; /* Only hide horizontal overflow, allow vertical scrolling */
 }
 
 .sidebar {
@@ -313,8 +313,10 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    overflow-y: auto;
+    overflow-y: auto !important; /* Force vertical scrolling */
     overflow-x: hidden;
+    height: auto !important; /* Allow content to determine height */
+    max-height: none !important; /* Remove any max-height limitation */
 }
 
 .content-wrapper.expanded {
@@ -328,6 +330,8 @@ body {
     padding: 1.5rem 2rem;
     margin-top: 0.5rem;
     width: 100%;
+    overflow-y: auto !important; /* Enable vertical scrolling */
+    height: auto !important; /* Allow content to determine height */
 }
 
 /* Footer adjustments */

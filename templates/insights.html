@@ -6,11 +6,11 @@
 <style>
     /* Improved section spacing */
     .insights-section {
-        margin-bottom: 25px;
+        margin-bottom: 40px;
     }
 
     .section-header {
-        margin-bottom: 15px;
+        margin-bottom: 25px;
     }
 
     .section-header h3 {
@@ -46,13 +46,18 @@
     /* Chart container styling */
     .chart-container {
         background-color: var(--bg-secondary);
-        border-radius: 8px;
-        box-shadow: 0 2px 10px var(--shadow-color);
-        padding: 15px;
-        margin-bottom: 15px;
-        height: 250px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px var(--shadow-color);
+        padding: 20px;
+        margin-bottom: 25px;
+        height: 300px;
         position: relative;
-        transition: background-color 0.3s ease;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .chart-container:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px var(--shadow-color);
     }
 
     [data-theme="dark"] .chart-container {
@@ -64,7 +69,8 @@
         .insights-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 25px;
+            margin-bottom: 30px;
         }
     }
 
@@ -121,36 +127,68 @@
     </div>
 
     <style>
-        /* Compact stat cards */
+        /* Enhanced stat cards */
         .stat-card {
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             background-color: var(--bg-secondary);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4e73df, #36b9cc);
         }
 
         .stat-icon {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
+            font-size: 2rem;
+            margin-bottom: 15px;
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4e73df 0%, #36b9cc 100%);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .stat-number, .stat-product {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #4e73df;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         .stat-label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
             color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .stat-description {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
+            line-height: 1.4;
+            padding: 0 10px;
         }
 
         .stats-container {
@@ -281,23 +319,23 @@
     </div>
 
     <style>
-        .inventory-stats-grid, .kpi-stats-grid {
+        .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, auto);
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
         @media (min-width: 992px) {
-            .inventory-stats-grid, .kpi-stats-grid {
+            .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid {
                 grid-template-columns: repeat(4, 1fr);
                 grid-template-rows: repeat(1, auto);
             }
         }
 
         @media (max-width: 768px) {
-            .inventory-stats-grid, .kpi-stats-grid {
+            .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid {
                 grid-template-columns: 1fr;
                 grid-template-rows: repeat(4, auto);
             }
@@ -428,6 +466,116 @@
             background-color: #dddddd;
         }
     </style>
+
+    <!-- Customer Insights Section -->
+    <div class="insights-section">
+        <div class="section-header">
+            <h3>Customer Insights</h3>
+            <p>Customer growth and payment analytics</p>
+        </div>
+
+        <div class="customer-stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number">{{ customer_stats.total_customers }}</div>
+                <div class="stat-label">Total Customers</div>
+                <div class="stat-description">Total number of customers in the system</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">💸</div>
+                <div class="stat-number">₹{{ customer_stats.total_receivable|round(2) }}</div>
+                <div class="stat-label">Total Receivable</div>
+                <div class="stat-description">Total amount pending from customers</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-number">{{ customer_stats.fully_paid_percentage|round(1) }}%</div>
+                <div class="stat-label">Fully Paid</div>
+                <div class="stat-description">Percentage of customers with fully paid status</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔄</div>
+                <div class="stat-number">{{ customer_stats.new_customers_this_month }}</div>
+                <div class="stat-label">New This Month</div>
+                <div class="stat-description">New customers added in the current month</div>
+            </div>
+        </div>
+
+        <div class="insights-grid">
+            <!-- Customer Growth Chart -->
+            <div class="chart-container">
+                <canvas id="customerGrowthChart"></canvas>
+            </div>
+
+            <!-- Payment Status Distribution -->
+            <div class="chart-container">
+                <canvas id="paymentStatusChart"></canvas>
+            </div>
+
+            <!-- Customer Source Distribution -->
+            <div class="chart-container">
+                <canvas id="customerSourceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enquiry Insights Section -->
+    <div class="insights-section">
+        <div class="section-header">
+            <h3>Enquiry Analytics</h3>
+            <p>Enquiry trends and conversion metrics</p>
+        </div>
+
+        <div class="enquiry-stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-number">{{ enquiry_stats.total_enquiries }}</div>
+                <div class="stat-label">Total Enquiries</div>
+                <div class="stat-description">Total number of enquiries received</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-number">{{ enquiry_stats.conversion_rate|round(1) }}%</div>
+                <div class="stat-label">Conversion Rate</div>
+                <div class="stat-description">Percentage of enquiries converted to customers</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-number">{{ enquiry_stats.avg_response_time }}</div>
+                <div class="stat-label">Avg. Response Time</div>
+                <div class="stat-description">Average time to respond to enquiries</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🔍</div>
+                <div class="stat-number">{{ enquiry_stats.open_enquiries }}</div>
+                <div class="stat-label">Open Enquiries</div>
+                <div class="stat-description">Enquiries that need follow-up</div>
+            </div>
+        </div>
+
+        <div class="insights-grid">
+            <!-- Enquiry Trend Chart -->
+            <div class="chart-container">
+                <canvas id="enquiryTrendChart"></canvas>
+            </div>
+
+            <!-- Enquiry Status Distribution -->
+            <div class="chart-container">
+                <canvas id="enquiryStatusChart"></canvas>
+            </div>
+
+            <!-- Enquiry to Customer Conversion -->
+            <div class="chart-container">
+                <canvas id="conversionRateChart"></canvas>
+            </div>
+        </div>
+    </div>
 
     <!-- Top Performers Section -->
     <div class="insights-section">
@@ -989,8 +1137,456 @@
             }
         }
 
+        // Customer Growth Chart
+        const customerGrowthCtx = document.getElementById('customerGrowthChart').getContext('2d');
+        const customerGrowthChart = new Chart(customerGrowthCtx, {
+            type: 'line',
+            data: {
+                labels: {{ customer_growth_labels|tojson }},
+                datasets: [{
+                    label: 'New Customers',
+                    data: {{ customer_growth_data|tojson }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Customers',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Month',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Customer Growth Over Time',
+                        color: themeColors.textColor,
+                        font: {
+                            size: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: themeColors.tooltipBackgroundColor,
+                        titleColor: themeColors.tooltipTextColor,
+                        bodyColor: themeColors.tooltipTextColor
+                    }
+                }
+            }
+        });
+
+        // Payment Status Distribution Chart
+        const paymentStatusCtx = document.getElementById('paymentStatusChart').getContext('2d');
+        const paymentStatusChart = new Chart(paymentStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Fully Paid', 'Partially Paid', 'Unpaid'],
+                datasets: [{
+                    data: [
+                        {{ customer_stats.fully_paid_count }},
+                        {{ customer_stats.partially_paid_count }},
+                        {{ customer_stats.unpaid_count }}
+                    ],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',  // Green for Fully Paid
+                        'rgba(255, 193, 7, 0.7)',  // Yellow for Partially Paid
+                        'rgba(220, 53, 69, 0.7)'   // Red for Unpaid
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: themeColors.textColor,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Payment Status Distribution',
+                        color: themeColors.textColor,
+                        font: {
+                            size: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: themeColors.tooltipBackgroundColor,
+                        titleColor: themeColors.tooltipTextColor,
+                        bodyColor: themeColors.tooltipTextColor
+                    }
+                }
+            }
+        });
+
+        // Customer Source Distribution Chart
+        const customerSourceCtx = document.getElementById('customerSourceChart').getContext('2d');
+        const customerSourceChart = new Chart(customerSourceCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ customer_source_labels|tojson }},
+                datasets: [{
+                    label: 'Number of Customers',
+                    data: {{ customer_source_data|tojson }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Customers',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Source',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Customer Acquisition Channels',
+                        color: themeColors.textColor,
+                        font: {
+                            size: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: themeColors.tooltipBackgroundColor,
+                        titleColor: themeColors.tooltipTextColor,
+                        bodyColor: themeColors.tooltipTextColor
+                    }
+                }
+            }
+        });
+
+        // Enquiry Trend Chart
+        const enquiryTrendCtx = document.getElementById('enquiryTrendChart').getContext('2d');
+        const enquiryTrendChart = new Chart(enquiryTrendCtx, {
+            type: 'line',
+            data: {
+                labels: {{ enquiry_trend_labels|tojson }},
+                datasets: [{
+                    label: 'New Enquiries',
+                    data: {{ enquiry_trend_data|tojson }},
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Enquiries',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Month',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Enquiry Trend Over Time',
+                        color: themeColors.textColor,
+                        font: {
+                            size: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: themeColors.tooltipBackgroundColor,
+                        titleColor: themeColors.tooltipTextColor,
+                        bodyColor: themeColors.tooltipTextColor
+                    }
+                }
+            }
+        });
+
+        // Enquiry Status Distribution Chart
+        const enquiryStatusCtx = document.getElementById('enquiryStatusChart').getContext('2d');
+        const enquiryStatusChart = new Chart(enquiryStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'In Progress', 'Converted', 'Closed'],
+                datasets: [{
+                    data: [
+                        {{ enquiry_stats.open_count }},
+                        {{ enquiry_stats.in_progress_count }},
+                        {{ enquiry_stats.converted_count }},
+                        {{ enquiry_stats.closed_count }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 193, 7, 0.7)',  // Yellow for Open
+                        'rgba(54, 162, 235, 0.7)',  // Blue for In Progress
+                        'rgba(40, 167, 69, 0.7)',   // Green for Converted
+                        'rgba(108, 117, 125, 0.7)'  // Gray for Closed
+                    ],
+                    borderColor: [
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(108, 117, 125, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: themeColors.textColor,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Enquiry Status Distribution',
+                        color: themeColors.textColor,
+                        font: {
+                            size: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: themeColors.tooltipBackgroundColor,
+                        titleColor: themeColors.tooltipTextColor,
+                        bodyColor: themeColors.tooltipTextColor
+                    }
+                }
+            }
+        });
+
+        // Conversion Rate Chart
+        const conversionRateCtx = document.getElementById('conversionRateChart').getContext('2d');
+        const conversionRateChart = new Chart(conversionRateCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ conversion_rate_labels|tojson }},
+                datasets: [{
+                    label: 'Conversion Rate (%)',
+                    data: {{ conversion_rate_data|tojson }},
+                    backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Conversion Rate (%)',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Month',
+                            color: themeColors.textColor
+                        },
+                        ticks: {
+                            color: themeColors.textColor
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Enquiry to Customer Conversion Rate',
+                        color: themeColors.textColor,
+                        font: {
+                            size: 14
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: themeColors.tooltipBackgroundColor,
+                        titleColor: themeColors.tooltipTextColor,
+                        bodyColor: themeColors.tooltipTextColor
+                    }
+                }
+            }
+        });
+
         // Initialize chart colors based on current theme
         updateChartColors();
+
+        // Update the updateChartColors function to include our new charts
+        function updateChartColors() {
+            const themeColors = getThemeColors();
+
+            // Update existing charts
+            // ... (existing code)
+
+            // Update Customer Growth Chart
+            if (customerGrowthChart) {
+                customerGrowthChart.options.scales.y.ticks.color = themeColors.textColor;
+                customerGrowthChart.options.scales.x.ticks.color = themeColors.textColor;
+                customerGrowthChart.options.scales.y.title.color = themeColors.textColor;
+                customerGrowthChart.options.scales.x.title.color = themeColors.textColor;
+                customerGrowthChart.options.plugins.title.color = themeColors.textColor;
+                customerGrowthChart.options.plugins.tooltip.backgroundColor = themeColors.tooltipBackgroundColor;
+                customerGrowthChart.options.plugins.tooltip.titleColor = themeColors.tooltipTextColor;
+                customerGrowthChart.options.plugins.tooltip.bodyColor = themeColors.tooltipTextColor;
+                customerGrowthChart.update();
+            }
+
+            // Update Payment Status Chart
+            if (paymentStatusChart) {
+                paymentStatusChart.options.plugins.legend.labels.color = themeColors.textColor;
+                paymentStatusChart.options.plugins.title.color = themeColors.textColor;
+                paymentStatusChart.options.plugins.tooltip.backgroundColor = themeColors.tooltipBackgroundColor;
+                paymentStatusChart.options.plugins.tooltip.titleColor = themeColors.tooltipTextColor;
+                paymentStatusChart.options.plugins.tooltip.bodyColor = themeColors.tooltipTextColor;
+                paymentStatusChart.update();
+            }
+
+            // Update Customer Source Chart
+            if (customerSourceChart) {
+                customerSourceChart.options.scales.y.ticks.color = themeColors.textColor;
+                customerSourceChart.options.scales.x.ticks.color = themeColors.textColor;
+                customerSourceChart.options.scales.y.title.color = themeColors.textColor;
+                customerSourceChart.options.scales.x.title.color = themeColors.textColor;
+                customerSourceChart.options.plugins.title.color = themeColors.textColor;
+                customerSourceChart.options.plugins.tooltip.backgroundColor = themeColors.tooltipBackgroundColor;
+                customerSourceChart.options.plugins.tooltip.titleColor = themeColors.tooltipTextColor;
+                customerSourceChart.options.plugins.tooltip.bodyColor = themeColors.tooltipTextColor;
+                customerSourceChart.update();
+            }
+
+            // Update Enquiry Trend Chart
+            if (enquiryTrendChart) {
+                enquiryTrendChart.options.scales.y.ticks.color = themeColors.textColor;
+                enquiryTrendChart.options.scales.x.ticks.color = themeColors.textColor;
+                enquiryTrendChart.options.scales.y.title.color = themeColors.textColor;
+                enquiryTrendChart.options.scales.x.title.color = themeColors.textColor;
+                enquiryTrendChart.options.plugins.title.color = themeColors.textColor;
+                enquiryTrendChart.options.plugins.tooltip.backgroundColor = themeColors.tooltipBackgroundColor;
+                enquiryTrendChart.options.plugins.tooltip.titleColor = themeColors.tooltipTextColor;
+                enquiryTrendChart.options.plugins.tooltip.bodyColor = themeColors.tooltipTextColor;
+                enquiryTrendChart.update();
+            }
+
+            // Update Enquiry Status Chart
+            if (enquiryStatusChart) {
+                enquiryStatusChart.options.plugins.legend.labels.color = themeColors.textColor;
+                enquiryStatusChart.options.plugins.title.color = themeColors.textColor;
+                enquiryStatusChart.options.plugins.tooltip.backgroundColor = themeColors.tooltipBackgroundColor;
+                enquiryStatusChart.options.plugins.tooltip.titleColor = themeColors.tooltipTextColor;
+                enquiryStatusChart.options.plugins.tooltip.bodyColor = themeColors.tooltipTextColor;
+                enquiryStatusChart.update();
+            }
+
+            // Update Conversion Rate Chart
+            if (conversionRateChart) {
+                conversionRateChart.options.scales.y.ticks.color = themeColors.textColor;
+                conversionRateChart.options.scales.x.ticks.color = themeColors.textColor;
+                conversionRateChart.options.scales.y.title.color = themeColors.textColor;
+                conversionRateChart.options.scales.x.title.color = themeColors.textColor;
+                conversionRateChart.options.plugins.title.color = themeColors.textColor;
+                conversionRateChart.options.plugins.tooltip.backgroundColor = themeColors.tooltipBackgroundColor;
+                conversionRateChart.options.plugins.tooltip.titleColor = themeColors.tooltipTextColor;
+                conversionRateChart.options.plugins.tooltip.bodyColor = themeColors.tooltipTextColor;
+                conversionRateChart.update();
+            }
+        }
     });
 </script>
 {% endblock %}

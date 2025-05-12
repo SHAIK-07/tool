@@ -8,7 +8,8 @@
     .customer-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 20px;
+        overflow-y: visible; /* Allow content to overflow and be scrollable */
+        height: auto; /* Allow content to determine height */
     }
 
     .page-header {
@@ -29,12 +30,254 @@
         font-size: 14px;
     }
 
+    /* Form section */
+    .form-section {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: var(--standard-shadow);
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--text-primary);
+        font-size: 1.2rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-field label {
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .form-field input,
+    .form-field select {
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+    }
+
+    .add-btn {
+        background-color: var(--btn-primary-bg);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        width: 100%;
+        margin-top: 10px;
+        transition: all 0.2s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .add-btn:hover {
+        background-color: var(--btn-primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--medium-shadow);
+    }
+
+    /* Current inventory section */
+    .current-inventory {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        box-shadow: var(--standard-shadow);
+        padding: 20px;
+    }
+
+    .inventory-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .inventory-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 15px;
+    }
+
+    .count-badge {
+        display: inline-block;
+        background-color: var(--btn-primary-bg);
+        color: white;
+        font-size: 0.8rem;
+        font-weight: normal;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+
+    .export-btn {
+        background-color: var(--btn-primary-bg);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+    }
+
+    .export-btn:hover {
+        background-color: var(--btn-primary-hover);
+    }
+
+    /* Search panel */
+    .search-panel {
+        background-color: var(--bg-tertiary);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .search-container {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .search-container input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+    }
+
+    .btn.primary {
+        background-color: var(--btn-primary-bg);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn.primary:hover {
+        background-color: var(--btn-primary-hover);
+    }
+
+    .filter-select {
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+    }
+
+    /* Inventory info */
+    .inventory-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: var(--bg-tertiary);
+        border-radius: 5px;
+    }
+
+    .inventory-count {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    /* Inventory table */
+    .inventory-table-container {
+        width: 100%;
+        margin: 0 auto 1rem;
+        position: relative;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: var(--standard-shadow);
+        overflow: hidden;
+    }
+
+    .inventory-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
+
+    .inventory-table th,
+    .inventory-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .inventory-table th {
+        background-color: var(--btn-primary-bg);
+        color: white;
+        font-weight: bold;
+        padding: 0.6rem 0.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .inventory-table tr {
+        background-color: var(--card-bg);
+    }
+
+    .inventory-table tr:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .inventory-table tr:hover {
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+
+    /* No inventory message */
+    .no-inventory {
+        text-align: center;
+        padding: 30px;
+        color: var(--text-secondary);
+        background-color: rgba(0, 0, 0, 0.02);
+        border-radius: 8px;
+        border: 1px dashed var(--border-color);
+    }
+
     /* Customer Filters Styling */
     .customer-filters {
         display: flex;
         flex-direction: column;
         gap: 15px;
         margin-bottom: 20px;
+        background-color: var(--bg-tertiary);
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: var(--standard-shadow);
     }
 
     .search-row {
@@ -48,8 +291,8 @@
         border: 1px solid var(--border-color);
         border-radius: 4px;
         overflow: hidden;
-        box-shadow: 0 2px 4px var(--shadow-color);
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: var(--standard-shadow);
+        transition: var(--box-transition), border-color 0.3s ease;
     }
 
     .search-row .search-box input {
@@ -58,9 +301,9 @@
         border: none;
         outline: none;
         font-size: 16px;
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
-        transition: background-color 0.3s ease, color 0.3s ease;
+        background-color: var(--input-bg);
+        color: var(--input-text);
+        transition: var(--standard-transition);
     }
 
     /* Ensure search input is visible in dark mode */
@@ -80,7 +323,7 @@
         border: none;
         padding: 0 20px;
         cursor: pointer;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition: var(--standard-transition);
     }
 
     .search-row .search-box button:hover {
@@ -104,11 +347,11 @@
         padding: 8px 12px;
         border: 1px solid var(--border-color);
         border-radius: 4px;
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
+        background-color: var(--input-bg);
+        color: var(--input-text);
         min-width: 180px;
         font-size: 14px;
-        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        transition: var(--standard-transition), border-color 0.3s ease;
     }
 
     /* Ensure select options are visible in dark mode */
@@ -135,12 +378,15 @@
         display: flex;
         align-items: center;
         gap: 5px;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition: var(--all-transitions);
+        box-shadow: var(--standard-shadow);
     }
 
     .filter-options .export-btn:hover,
     .filter-options .filter-btn:hover {
         background-color: var(--accent-secondary);
+        transform: translateY(-2px);
+        box-shadow: var(--medium-shadow);
     }
 
     /* Count Badge Styling */
@@ -163,73 +409,74 @@
         padding: 2rem;
         border-radius: 10px;
         box-shadow: 0 4px 8px var(--shadow-color);
+        margin-bottom: 2rem;
         transition: background-color 0.3s ease, box-shadow 0.3s ease;
         border: 1px solid var(--border-color);
-        margin-bottom: 2rem;
     }
 
     .customer-form-container h3 {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: var(--text-primary);
         margin-bottom: 1.5rem;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        text-align: center;
+        font-size: 1.5rem;
+        transition: color 0.3s ease;
     }
 
     .form-row {
         display: flex;
-        gap: 20px;
-        margin-bottom: 15px;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .form-group {
         flex: 1;
     }
 
-    .form-group label {
+    form label {
         display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
     }
 
-    .form-control {
+    form input,
+    form select,
+    form textarea {
         width: 100%;
-        padding: 10px 12px;
+        padding: 0.75rem;
         border: 1px solid var(--border-color);
-        border-radius: 6px;
-        font-size: 14px;
+        border-radius: 5px;
+        font-size: 1rem;
         background-color: var(--input-bg);
         color: var(--input-text);
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .form-control:focus {
+    form input:focus,
+    form select:focus,
+    form textarea:focus {
         border-color: var(--accent-primary);
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
         outline: none;
+        box-shadow: 0 0 0 2px var(--shadow-color);
     }
 
     .submit-btn {
+        margin-top: 1.5rem;
+        padding: 0.75rem;
         background-color: var(--btn-primary-bg);
         color: var(--btn-primary-text);
         border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
+        width: 100%;
+        border-radius: 5px;
+        font-size: 1rem;
         cursor: pointer;
-        font-weight: 500;
-        margin-top: 10px;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        font-weight: bold;
     }
 
     .submit-btn:hover {
-        background-color: #0b5ed7;
-        transform: translateY(-2px);
+        background-color: var(--accent-secondary);
     }
 
     /* Current Customers Styles */
@@ -237,8 +484,8 @@
         background-color: var(--card-bg);
         padding: 2rem;
         border-radius: 10px;
-        box-shadow: 0 4px 8px var(--shadow-color);
-        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: var(--medium-shadow);
+        transition: var(--box-transition);
         border: 1px solid var(--border-color);
     }
 
@@ -355,10 +602,20 @@
         transform: translateY(-2px);
     }
 
+    .inventory-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: var(--card-bg);
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
     .customer-count {
         font-size: 0.9rem;
         color: var(--text-secondary);
-        margin: 10px 0;
     }
 
     /* Table styles */
@@ -368,7 +625,7 @@
         position: relative;
         border: 1px solid var(--border-color);
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: var(--standard-shadow);
         overflow: hidden;
     }
 
@@ -377,6 +634,9 @@
         border-collapse: collapse;
         table-layout: auto;
         margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        border-radius: 5px;
+        overflow: hidden;
     }
 
     .customer-table th, .customer-table td {
@@ -412,7 +672,7 @@
     }
 
     .customer-table tr:hover {
-        background-color: rgba(13, 110, 253, 0.05);
+        background-color: rgba(76, 175, 80, 0.05);
     }
 
     /* Status badges */
@@ -441,20 +701,13 @@
     }
 
     /* Action buttons */
-    .customer-actions {
-        white-space: nowrap;
-        text-align: center;
-        min-width: 100px;
-        padding: 8px 5px !important;
-    }
-
-    .action-buttons {
+    .action-btn-group {
         display: flex;
         gap: 8px;
         justify-content: center;
     }
 
-    .view-btn, .pdf-btn, .download-btn, .edit-btn, .delete-btn {
+    .action-btn {
         width: 32px;
         height: 32px;
         border-radius: 4px;
@@ -466,34 +719,52 @@
         cursor: pointer;
         transition: all 0.2s ease;
         font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--standard-shadow);
     }
 
-    .view-btn {
-        background-color: #4285F4;
+    .action-btn.view {
+        background-color: var(--btn-primary-bg);
+    }
+
+    .action-btn.delete {
+        background-color: var(--danger-color);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--medium-shadow);
+        opacity: 0.9;
+    }
+
+    .action-btn.view:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .action-btn.delete:hover {
+        background-color: #dc3545;
     }
 
     .pdf-btn {
-        background-color: #DB4437;
+        background-color: var(--danger-color);
     }
 
     .download-btn {
-        background-color: #0F9D58;
+        background-color: var(--success-color);
     }
 
     .edit-btn {
-        background-color: #F4B400;
-        color: #212529;
+        background-color: var(--accent-tertiary);
+        color: var(--text-primary);
     }
 
     .delete-btn {
-        background-color: #DB4437;
+        background-color: var(--danger-color);
     }
 
     .view-btn:hover, .pdf-btn:hover, .download-btn:hover, .edit-btn:hover, .delete-btn:hover {
         opacity: 0.9;
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--medium-shadow);
     }
 
     /* Text color classes */
@@ -512,6 +783,77 @@
         font-weight: 500;
     }
 
+    /* Customer form container */
+    .customer-form-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        padding: 25px;
+        margin-bottom: 30px;
+        max-width: 900px;
+    }
+
+    .customer-form-container h3 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-field {
+        margin-bottom: 0;
+    }
+
+    .form-field label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background-color: #fff;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-field textarea {
+        height: 100px;
+        resize: vertical;
+    }
+
+    .add-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        width: auto;
+        margin-top: 15px;
+        transition: background-color 0.2s;
+        font-size: 1rem;
+    }
+
+    .add-btn:hover {
+        background-color: #333;
+    }
+
     /* Pagination */
     .pagination-controls {
         display: flex;
@@ -526,32 +868,35 @@
 
     .pagination {
         display: flex;
-        gap: 5px;
+        align-items: center;
+        gap: 10px;
     }
 
     .page-link {
         padding: 8px 12px;
-        border: 1px solid var(--border-color);
-        background-color: var(--btn-secondary-bg);
-        color: var(--btn-secondary-text);
+        background-color: var(--btn-primary-bg);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
         text-decoration: none;
-        border-radius: 6px;
-        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
     }
 
     .page-link:hover {
-        background-color: var(--accent-tertiary);
+        background-color: var(--btn-primary-hover);
     }
 
     .page-link.active {
-        background-color: var(--btn-primary-bg);
+        background-color: var(--accent-secondary);
         color: white;
-        border-color: var(--btn-primary-bg);
     }
 
     .page-link.disabled {
-        color: var(--text-muted);
+        background-color: #ccc;
         cursor: not-allowed;
+        opacity: 0.7;
         pointer-events: none;
     }
 
@@ -569,32 +914,39 @@
     .items-per-page select {
         padding: 6px 10px;
         border: 1px solid var(--border-color);
-        border-radius: 6px;
+        border-radius: 4px;
         background-color: var(--input-bg);
         color: var(--input-text);
     }
 
     /* Success and error messages */
     .success-message {
-        background-color: #d4edda;
-        color: #155724;
-        padding: 10px 15px;
-        border-radius: 6px;
-        margin-top: 15px;
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background-color: var(--success-color);
+        color: white;
+        border-radius: 5px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        opacity: 0.9;
+        transition: background-color 0.3s ease;
+    }
+
+    .success-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
     }
 
     .error-message {
-        background-color: #f8d7da;
-        color: #721c24;
-        padding: 10px 15px;
-        border-radius: 6px;
-        margin-top: 15px;
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background-color: var(--danger-color);
+        color: white;
+        border-radius: 5px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        opacity: 0.9;
+        transition: background-color 0.3s ease;
     }
 
     /* Modal styles */
@@ -606,43 +958,92 @@
         top: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0,0,0,0.4);
-        align-items: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
         justify-content: center;
+        align-items: center;
+    }
+
+    .modal.hidden {
+        display: none !important;
     }
 
     .modal-content {
-        background-color: #fefefe;
-        padding: 20px;
-        border-radius: 5px;
-        width: 400px;
-        max-width: 80%;
+        background-color: var(--modal-bg);
+        margin: 0 auto;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 600px;
+        position: relative;
+        box-shadow: var(--modal-shadow);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .modal-header {
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+        position: relative;
+        transition: border-color 0.3s ease;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+        transition: color 0.3s ease;
     }
 
     .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 1.5rem;
         cursor: pointer;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
     }
 
-    .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
+    .close:hover {
+        color: var(--text-primary);
     }
 
-    .modal-buttons {
+    .modal-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
+        gap: 1rem;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1rem;
+        margin-top: 1.5rem;
+        transition: border-color 0.3s ease;
     }
 
-    .danger-btn {
-        background-color: #dc3545;
+    .cancel-btn {
+        padding: 0.75rem 1.5rem;
+        background-color: var(--text-muted);
         color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .cancel-btn:hover {
+        opacity: 0.9;
+    }
+
+    .delete-confirm-btn {
+        padding: 0.75rem 1.5rem;
+        background-color: var(--danger-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-weight: bold;
+    }
+
+    .delete-confirm-btn:hover {
+        opacity: 0.9;
     }
 
     /* No data message */
@@ -654,25 +1055,117 @@
         border-radius: 8px;
         border: 1px dashed var(--border-color);
     }
+
+    /* Custom popup styles */
+    .custom-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .custom-popup.show {
+        opacity: 1;
+    }
+
+    .popup-content {
+        background-color: var(--modal-bg);
+        border-radius: 8px;
+        box-shadow: var(--large-shadow);
+        width: 90%;
+        max-width: 500px;
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+        overflow: hidden;
+    }
+
+    .custom-popup.show .popup-content {
+        transform: translateY(0);
+    }
+
+    .popup-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--btn-primary-bg);
+        color: white;
+    }
+
+    .popup-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    .popup-body {
+        padding: 1.5rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .popup-message {
+        color: var(--text-primary);
+    }
+
+    .popup-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .popup-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: var(--all-transitions);
+    }
+
+    .popup-btn.confirm {
+        background-color: var(--btn-primary-bg);
+        color: white;
+    }
+
+    .popup-btn.confirm:hover {
+        background-color: var(--accent-secondary);
+    }
+
+    .popup-btn.cancel {
+        background-color: var(--text-muted);
+        color: white;
+    }
+
+    .popup-btn.cancel:hover {
+        opacity: 0.9;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="customer-container">
-    <!-- Add Customer Form Card -->
-    <div class="customer-form-container">
-        <div class="page-header">
-            <h2>Add New Customer</h2>
-            <p>Add new customers and track payment status</p>
-        </div>
+    <div class="page-header">
+        <h2>Customer Management</h2>
+        <p>Add new customers and track payment status</p>
+    </div>
 
-        <form action="/customer/new" method="post" id="add-customer-form">
+    <div class="customer-form-container">
+        <h3>Add New Customer</h3>
+
+        <form id="add-customer-form">
             <div class="form-row">
                 <div class="form-group">
                     <label for="date">Date:</label>
                     <input type="date" id="date" name="date" class="form-control" required value="{{ today }}">
                 </div>
-
                 <div class="form-group">
                     <label for="customer_name">Customer Name:</label>
                     <input type="text" id="customer_name" name="customer_name" class="form-control" required placeholder="Enter customer name">
@@ -684,7 +1177,6 @@
                     <label for="phone_no">Phone Number:</label>
                     <input type="text" id="phone_no" name="phone_no" class="form-control" required placeholder="Enter phone number">
                 </div>
-
                 <div class="form-group">
                     <label for="address">Address:</label>
                     <input type="text" id="address" name="address" class="form-control" placeholder="Enter address">
@@ -694,9 +1186,8 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="product_description">Product Description:</label>
-                    <input type="text" id="product_description" name="product_description" class="form-control" placeholder="Enter product description">
+                    <textarea id="product_description" name="product_description" class="form-control" placeholder="Enter product description"></textarea>
                 </div>
-
                 <div class="form-group">
                     <label for="payment_method">Payment Method:</label>
                     <select id="payment_method" name="payment_method" class="form-control">
@@ -704,9 +1195,7 @@
                         <option value="UPI">UPI</option>
                         <option value="Bank Transfer">Bank Transfer</option>
                         <option value="Credit Card">Credit Card</option>
-                        <option value="Debit Card">Debit Card</option>
                         <option value="Cheque">Cheque</option>
-                        <option value="Other">Other</option>
                     </select>
                 </div>
             </div>
@@ -720,90 +1209,70 @@
                         <option value="Fully Paid">Fully Paid</option>
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label for="total_amount">Total Amount:</label>
-                    <input type="number" id="total_amount" name="total_amount" class="form-control" step="0.01" required placeholder="Enter total amount">
+                    <input type="number" id="total_amount" name="total_amount" class="form-control" required placeholder="Enter total amount">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label for="amount_paid">Amount Paid:</label>
-                    <input type="number" id="amount_paid" name="amount_paid" class="form-control" step="0.01" value="0.00" placeholder="Enter amount paid">
+                    <input type="number" id="amount_paid" name="amount_paid" class="form-control" value="0.00">
                 </div>
                 <div class="form-group">
-                    <!-- Empty group for alignment -->
+                    <!-- Empty field to maintain grid layout -->
                 </div>
             </div>
 
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-user-plus"></i> Add Customer
+            <button type="button" id="add-customer-btn" class="submit-btn">
+                Add Customer to System
             </button>
         </form>
 
         {% if message %}
         <div class="success-message">
-            <i class="fas fa-check-circle"></i>
+            <i class="success-icon">✓</i>
             <p>{{ message }}</p>
         </div>
         {% endif %}
 
         {% if error %}
         <div class="error-message">
-            <i class="fas fa-exclamation-circle"></i>
+            <i class="error-icon">✗</i>
             <p>{{ error }}</p>
         </div>
         {% endif %}
     </div>
 
-    <!-- Current Customers Card -->
-    <div class="current-customers">
-    <div class="page-header">
-        <h2>Customer Management</h2>
-        <p>View and manage your customers</p>
-    </div>
+    <!-- Current Customers Section -->
+    <div class="current-inventory">
+        <h3>Current Customers <span class="count-badge">{{ customers|length }}</span></h3>
 
-    <div class="customer-filters">
-        <!-- Search bar on its own line -->
-        <div class="search-row">
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="Search by customer name, phone or code..." value="{{ search_query }}">
-                <button id="search-btn"><i class="fas fa-search"></i></button>
+        <!-- Search and filter controls -->
+        <div class="inventory-table-container">
+            <div class="search-filter-row">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search by customer name, phone or code..." value="{{ search_query }}">
+                    <button class="search-btn" id="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="filter-options">
+                    <select id="status-filter" class="filter-select">
+                        <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Statuses</option>
+                        <option value="Fully Paid" {% if current_status == 'Fully Paid' %}selected{% endif %}>Fully Paid</option>
+                        <option value="Partially Paid" {% if current_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
+                        <option value="Unpaid" {% if current_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                    </select>
+                    <button id="export-excel-btn" class="export-btn" onclick="exportCustomersToExcel()">
+                        <i class="fas fa-file-export"></i> Export to Excel
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- Filters on a separate line -->
-        <div class="filter-row">
-            <div class="filter-options">
-                <select id="status-filter" class="filter-select">
-                    <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Statuses</option>
-                    <option value="Fully Paid" {% if current_status == 'Fully Paid' %}selected{% endif %}>Fully Paid</option>
-                    <option value="Partially Paid" {% if current_status == 'Partially Paid' %}selected{% endif %}>Partially Paid</option>
-                    <option value="Unpaid" {% if current_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
-                </select>
-                <button id="apply-filters-btn" class="filter-btn">
-                    <i class="fas fa-filter"></i> Apply Filters
-                </button>
-                <a href="/api/customers/export-excel" id="export-excel-btn" class="export-btn" title="Export to Excel">
-                    <i class="fas fa-file-excel"></i> Export to Excel
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-        <h3>Customer Records <span id="customer-count" class="count-badge">{{ customers|length }}</span></h3>
-
-        {% if customers %}
-        <div class="inventory-info">
-            <div class="customer-count">
-                Showing {{ customers|length }} of {{ total_customers }} customers (Page {{ page }} of {{ total_pages }})
-            </div>
-        </div>
-
-        <div class="customer-table-container">
-            <table class="inventory-table customer-table">
+            {% if customers %}
+            <table class="inventory-table">
                 <thead>
                     <tr>
                         <th>Code</th>
@@ -818,73 +1287,96 @@
                 </thead>
                 <tbody>
                     {% for customer in customers %}
-                    <tr id="row-{{ customer.id }}" data-customer-id="{{ customer.id }}">
+                    <tr>
                         <td>{{ customer.customer_code }}</td>
                         <td>{{ customer.date.strftime('%d-%m-%Y') if customer.date.strftime else customer.date }}</td>
                         <td>{{ customer.customer_name }}</td>
                         <td>{{ customer.phone_no }}</td>
                         <td>₹{{ customer.total_amount }}</td>
                         <td>₹{{ customer.amount_paid }}</td>
-                        <td class="{% if customer.payment_status == 'Fully Paid' %}text-success{% elif customer.payment_status == 'Partially Paid' %}text-warning{% else %}text-danger{% endif %}">
-                            {{ customer.payment_status }}
+                        <td>
+                            <span class="status-badge {% if customer.payment_status == 'Fully Paid' %}status-paid{% elif customer.payment_status == 'Partially Paid' %}status-partial{% else %}status-unpaid{% endif %}">
+                                {{ customer.payment_status }}
+                            </span>
                         </td>
-                        <td class="customer-actions">
-                            <div class="action-buttons">
-                                <a href="/customer/{{ customer.id }}" class="view-btn" title="View Customer">
+                        <td>
+                            <div class="action-btn-group">
+                                <a href="/customer/{{ customer.id }}" class="action-btn view" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                <button class="action-btn delete" title="Delete Customer"
+                                        onclick="showDeleteModal('{{ customer.id }}', '{{ customer.customer_name }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
 
-        <!-- Pagination -->
-        <div class="pagination-controls">
-            <div class="pagination">
-                <a href="/customers?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
-                   class="page-link {% if page == 1 %}disabled{% endif %}">First</a>
-                <a href="/customers?page={{ page - 1 }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
-                   class="page-link {% if page == 1 %}disabled{% endif %}">Previous</a>
+            <!-- Pagination controls -->
+            <div class="pagination-controls">
+                <div class="pagination">
+                    <a href="/customers?page=1&status={{ current_status }}&search={{ search_query }}" class="page-btn {% if page == 1 %}disabled{% endif %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="/customers?page={{ page-1 }}&status={{ current_status }}&search={{ search_query }}" class="page-btn {% if page == 1 %}disabled{% endif %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
 
-                <a href="/customers?page={{ page }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
-                   class="page-link active">{{ page }}</a>
+                    {% set start_page = page - 2 if page > 2 else 1 %}
+                    {% set end_page = page + 2 if page + 2 < total_pages else total_pages %}
 
-                <a href="/customers?page={{ page + 1 }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
-                   class="page-link {% if page == total_pages %}disabled{% endif %}">Next</a>
-                <a href="/customers?page={{ total_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_status != 'all' %}&status={{ current_status }}{% endif %}"
-                   class="page-link {% if page == total_pages %}disabled{% endif %}">Last</a>
+                    {% for p in range(start_page, end_page + 1) %}
+                    <a href="/customers?page={{ p }}&status={{ current_status }}&search={{ search_query }}" class="page-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+                    {% endfor %}
+
+                    <a href="/customers?page={{ page+1 }}&status={{ current_status }}&search={{ search_query }}" class="page-btn {% if page == total_pages %}disabled{% endif %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="/customers?page={{ total_pages }}&status={{ current_status }}&search={{ search_query }}" class="page-btn {% if page == total_pages %}disabled{% endif %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </div>
+
+                <div class="items-per-page">
+                    <form class="items-per-page-form" action="/customers" method="get">
+                        <label for="limit">Items per page:</label>
+                        <select id="limit" name="limit" onchange="this.form.submit()">
+                            <option value="10" {% if limit == 10 %}selected{% endif %}>10</option>
+                            <option value="25" {% if limit == 25 %}selected{% endif %}>25</option>
+                            <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+                            <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
+                        </select>
+                        <input type="hidden" name="page" value="1">
+                        <input type="hidden" name="status" value="{{ current_status }}">
+                        <input type="hidden" name="search" value="{{ search_query }}">
+                    </form>
+                </div>
             </div>
-            <div class="items-per-page">
-                <label for="items-per-page">Items per page:</label>
-                <select id="items-per-page" onchange="changeItemsPerPage(this.value)">
-                    <option value="10" {% if limit == 10 %}selected{% endif %}>10</option>
-                    <option value="25" {% if limit == 25 %}selected{% endif %}>25</option>
-                    <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
-                    <option value="100" {% if limit == 100 %}selected{% endif %}>100</option>
-                </select>
+            {% else %}
+            <div class="no-inventory">
+                <p>No customers found. Add your first customer using the form above.</p>
             </div>
+            {% endif %}
         </div>
-        {% else %}
-        <div class="no-data-message">
-            <p>No customers found. Add your first customer using the form above.</p>
-        </div>
-        {% endif %}
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="delete-modal" class="modal" style="display: none;">
+<div id="delete-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
             <h3>Confirm Delete</h3>
             <span class="close" onclick="closeDeleteModal()">&times;</span>
         </div>
-        <p id="delete-message">Are you sure you want to delete this customer?</p>
-        <div class="modal-actions">
-            <button onclick="closeDeleteModal()" class="cancel-btn">Cancel</button>
+        <div class="modal-body">
+            <p>Are you sure you want to delete <span id="delete-customer-name"></span>?</p>
+            <p class="warning-text">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
             <button id="confirm-delete-btn" class="delete-confirm-btn">Delete</button>
         </div>
     </div>
@@ -896,6 +1388,9 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = today;
 
+        // Add item form submission handler
+        document.getElementById('add-customer-btn').addEventListener('click', addNewCustomer);
+
         // Auto-fill amount paid when payment status changes
         const paymentStatusSelect = document.getElementById('payment_status');
         const totalAmountInput = document.getElementById('total_amount');
@@ -906,9 +1401,21 @@
             if (paymentStatusSelect.value === 'Fully Paid' && totalAmountInput.value) {
                 // If status is "Fully Paid", set amount paid equal to total amount
                 amountPaidInput.value = totalAmountInput.value;
+
+                // Show a visual feedback
+                amountPaidInput.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                setTimeout(() => {
+                    amountPaidInput.style.backgroundColor = '';
+                }, 1000);
             } else if (paymentStatusSelect.value === 'Unpaid') {
                 // If status is "Unpaid", set amount paid to 0
                 amountPaidInput.value = '0.00';
+
+                // Show a visual feedback
+                amountPaidInput.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                setTimeout(() => {
+                    amountPaidInput.style.backgroundColor = '';
+                }, 1000);
             }
         }
 
@@ -920,26 +1427,114 @@
             }
         });
 
-        // Initialize customer count badge
-        document.getElementById('customer-count').textContent = '{{ customers|length }}';
+        // Customer count badge is now handled by the template
+
+        // Handle form submission on Enter key
+        document.getElementById('add-customer-form').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addNewCustomer();
+            }
+        });
+
+        // Function to add a new customer using AJAX
+        function addNewCustomer() {
+            // Show loading state
+            const addButton = document.getElementById('add-customer-btn');
+            const originalButtonText = addButton.innerHTML;
+
+            // Validate form fields
+            const customerName = document.getElementById('customer_name').value.trim();
+            const phoneNo = document.getElementById('phone_no').value.trim();
+            const totalAmount = document.getElementById('total_amount').value.trim();
+            const date = document.getElementById('date').value.trim();
+
+            // Check required fields
+            if (!customerName) {
+                showCustomPopup('Error', 'Customer name is required', 'Close');
+                document.getElementById('customer_name').focus();
+                return;
+            }
+
+            if (!phoneNo) {
+                showCustomPopup('Error', 'Phone number is required', 'Close');
+                document.getElementById('phone_no').focus();
+                return;
+            }
+
+            if (!totalAmount || isNaN(parseFloat(totalAmount)) || parseFloat(totalAmount) <= 0) {
+                showCustomPopup('Error', 'Please enter a valid total amount', 'Close');
+                document.getElementById('total_amount').focus();
+                return;
+            }
+
+            if (!date) {
+                showCustomPopup('Error', 'Date is required', 'Close');
+                document.getElementById('date').focus();
+                return;
+            }
+
+            // Show loading state after validation passes
+            addButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            addButton.disabled = true;
+
+            // Get form data
+            const form = document.getElementById('add-customer-form');
+            const formData = new FormData(form);
+
+            // Send AJAX request
+            fetch('/customer/new', {
+                method: 'POST',
+                body: formData,
+                redirect: 'manual' // Don't automatically follow redirects
+            })
+            .then(response => {
+                // Reset button state
+                addButton.innerHTML = originalButtonText;
+                addButton.disabled = false;
+
+                if (response.ok || response.type === 'opaqueredirect') {
+                    // Show success message using custom popup
+                    showCustomPopup('Success', 'Customer added successfully!', 'OK', function() {
+                        // Reset the form
+                        form.reset();
+                        document.getElementById('date').value = new Date().toISOString().split('T')[0]; // Set today's date
+
+                        // Refresh the page to show the new customer
+                        window.location.href = '/customers?message=Customer+created+successfully';
+                    });
+                } else {
+                    // Try to get error message from response
+                    return response.text().then(text => {
+                        try {
+                            // Try to parse as JSON
+                            const data = JSON.parse(text);
+                            throw new Error(data.message || data.error || 'Error adding customer');
+                        } catch (e) {
+                            // If not JSON, use the text or a default message
+                            throw new Error(text || 'Error adding customer. Please try again.');
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                // Reset button state
+                addButton.innerHTML = originalButtonText;
+                addButton.disabled = false;
+
+                // Show error message
+                showCustomPopup('Error', error.message || 'Error adding customer. Please try again.', 'Close');
+            });
+        }
 
         // Search button click handler
         document.getElementById('search-btn').addEventListener('click', function() {
             applyFilters();
         });
 
-        // Apply filters button click handler
-        document.getElementById('apply-filters-btn').addEventListener('click', function() {
-            applyFilters();
-        });
-
-        // Export to Excel button click handler
-        document.getElementById('export-excel-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const searchValue = document.getElementById('search-input').value;
-            const statusFilter = document.getElementById('status-filter').value;
-            window.location.href = `/api/customers/export-excel?search=${encodeURIComponent(searchValue)}&status=${encodeURIComponent(statusFilter)}`;
-        });
+        // Apply filters button click handler - removed since we're using the inventory style
 
         // Handle Enter key in search input
         document.getElementById('search-input').addEventListener('keypress', function(e) {
@@ -962,15 +1557,17 @@
         }
     });
 
-    // Function to handle items per page change
+    // This function is no longer needed as we're using form submission
+    // for items per page change, keeping it for backward compatibility
     function changeItemsPerPage(value) {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('limit', value);
+        urlParams.set('page', 1); // Reset to first page when changing limit
         window.location.href = `/customers?${urlParams.toString()}`;
     }
 
     // Functions for delete modal
-    function confirmDeleteCustomer(customerId, customerName) {
+    function showDeleteModal(customerId, customerName) {
         // Set the customer name in the modal
         document.getElementById('delete-customer-name').textContent = customerName;
 
@@ -980,21 +1577,23 @@
         };
 
         // Show the modal
-        document.getElementById('delete-modal').style.display = 'block';
+        const modal = document.getElementById('delete-modal');
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
     }
 
     function closeDeleteModal() {
-        document.getElementById('delete-modal').style.display = 'none';
+        const modal = document.getElementById('delete-modal');
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
     }
 
     function deleteCustomer(customerId) {
         // Show loading state
         const confirmBtn = document.getElementById('confirm-delete-btn');
         const originalText = confirmBtn.textContent;
-        confirmBtn.textContent = 'Deleting...';
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
         confirmBtn.disabled = true;
-
-        console.log(`Deleting customer with ID: ${customerId}`);
 
         // Send delete request to the API
         fetch(`/api/customers/${customerId}`, {
@@ -1003,17 +1602,17 @@
                 'Content-Type': 'application/json',
             }
         })
-        .then(response => {
-            console.log(`Response status: ${response.status}`);
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Response data:', data);
             if (data.success) {
-                // Reload the page to show updated list
-                window.location.reload();
+                // Show success message using custom popup
+                showCustomPopup('Success', 'Customer deleted successfully', 'OK', function() {
+                    // Reload the page to show updated list
+                    window.location.reload();
+                });
             } else {
-                alert(`Error: ${data.message || 'Failed to delete customer'}`);
+                // Show error message
+                showCustomPopup('Error', data.message || 'Failed to delete customer', 'Close');
                 confirmBtn.textContent = originalText;
                 confirmBtn.disabled = false;
                 closeDeleteModal();
@@ -1021,14 +1620,114 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while deleting the customer');
+
+            // Show error message
+            showCustomPopup('Error', 'An error occurred while deleting the customer', 'Close');
             confirmBtn.textContent = originalText;
             confirmBtn.disabled = false;
             closeDeleteModal();
         });
     }
+
+    // Function to export customers to Excel
+    function exportCustomersToExcel() {
+        // Show loading state
+        const exportButton = document.getElementById('export-excel-btn');
+        const originalButtonText = exportButton.innerHTML;
+        exportButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+        exportButton.disabled = true;
+
+        // Get current filters
+        const searchValue = document.getElementById('search-input').value;
+        const statusFilter = document.getElementById('status-filter').value;
+
+        // Create a download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = `/api/customers/export-excel?search=${encodeURIComponent(searchValue)}&status=${encodeURIComponent(statusFilter)}`;
+        downloadLink.target = '_blank';
+
+        // Append to body, click, and remove
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        // Reset button state after a short delay
+        setTimeout(() => {
+            exportButton.innerHTML = originalButtonText;
+            exportButton.disabled = false;
+        }, 2000);
+    }
+
+    // Show a custom popup
+    function showCustomPopup(title, message, buttonText, callback, cancelButtonText) {
+        // Create popup elements
+        const popup = document.createElement('div');
+        popup.className = 'custom-popup';
+
+        // Determine if we need a cancel button
+        const cancelButton = cancelButtonText ?
+            `<button class="popup-btn cancel">${cancelButtonText}</button>` : '';
+
+        popup.innerHTML = `
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h3>${title}</h3>
+                </div>
+                <div class="popup-body">
+                    <div class="popup-message">${message}</div>
+                </div>
+                <div class="popup-footer">
+                    ${cancelButton}
+                    <button class="popup-btn confirm">${buttonText}</button>
+                </div>
+            </div>
+        `;
+
+        // Add to body
+        document.body.appendChild(popup);
+
+        // Show popup with animation
+        setTimeout(() => {
+            popup.classList.add('show');
+        }, 10);
+
+        // Function to close the popup
+        const closePopup = (runCallback) => {
+            popup.classList.remove('show');
+
+            setTimeout(() => {
+                document.body.removeChild(popup);
+
+                // Call callback if provided and requested
+                if (runCallback && typeof callback === 'function') {
+                    callback();
+                }
+            }, 300);
+        };
+
+        // Add event listener to confirm button
+        const confirmButton = popup.querySelector('.popup-btn.confirm');
+        confirmButton.addEventListener('click', function() {
+            closePopup(true); // Close and run callback
+        });
+
+        // Add event listener to cancel button if it exists
+        if (cancelButtonText) {
+            const cancelBtn = popup.querySelector('.popup-btn.cancel');
+            cancelBtn.addEventListener('click', function() {
+                closePopup(false); // Close without running callback
+            });
+        }
+    }
 </script>
 {% endblock %}
+
+
+
+
+
+
+
 
 
 

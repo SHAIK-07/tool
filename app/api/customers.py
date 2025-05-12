@@ -149,16 +149,36 @@ async def create_new_customer(
         if not user:
             return RedirectResponse(url="/login?next=/customers", status_code=303)
 
-        # Convert date string to date object
-        customer_date = datetime.strptime(date, "%Y-%m-%d").date()
+        # Validate customer name
+        if not customer_name or len(customer_name.strip()) == 0:
+            return RedirectResponse(url="/customers?error=Customer+name+is+required", status_code=303)
 
-        # Validate amount_paid against total_amount
-        amount_paid_value = float(amount_paid)
-        total_amount_value = float(total_amount)
+        # Validate phone number
+        if not phone_no or len(phone_no.strip()) == 0:
+            return RedirectResponse(url="/customers?error=Phone+number+is+required", status_code=303)
 
-        # Ensure amount_paid doesn't exceed total_amount
-        if amount_paid_value > total_amount_value:
-            amount_paid_value = total_amount_value
+        # Parse date
+        try:
+            customer_date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            return RedirectResponse(url="/customers?error=Invalid+date+format.+Please+use+YYYY-MM-DD", status_code=303)
+
+        # Parse numeric values
+        try:
+            total_amount_value = float(total_amount)
+            if total_amount_value <= 0:
+                return RedirectResponse(url="/customers?error=Total+amount+must+be+greater+than+zero", status_code=303)
+        except ValueError:
+            return RedirectResponse(url="/customers?error=Invalid+total+amount+value", status_code=303)
+
+        try:
+            amount_paid_value = float(amount_paid)
+            if amount_paid_value < 0:
+                return RedirectResponse(url="/customers?error=Amount+paid+cannot+be+negative", status_code=303)
+            if amount_paid_value > total_amount_value:
+                amount_paid_value = total_amount_value  # Auto-correct amount paid
+        except ValueError:
+            return RedirectResponse(url="/customers?error=Invalid+amount+paid+value", status_code=303)
 
         # Set payment status based on amount paid
         if amount_paid_value >= total_amount_value:
@@ -190,7 +210,15 @@ async def create_new_customer(
         print(f"Error creating customer: {e}")
         import traceback
         traceback.print_exc()
-        return RedirectResponse(url=f"/customers?error=Error+creating+customer:+{str(e)}", status_code=303)
+
+        # Provide a more user-friendly error message
+        error_message = str(e)
+        if "UNIQUE constraint failed" in error_message and "customer_code" in error_message:
+            error_message = "A customer with this code already exists. Please try again."
+        elif "not a valid date" in error_message.lower():
+            error_message = "Invalid date format. Please use YYYY-MM-DD."
+
+        return RedirectResponse(url=f"/customers?error=Error+creating+customer:+{error_message}", status_code=303)
 
 
 @router.get("/customer/{customer_id}", response_class=HTMLResponse)
