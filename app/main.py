@@ -196,7 +196,7 @@ async def delete_service_api(service_id: int, db: Session = Depends(database.get
         return JSONResponse(status_code=500, content={"success": False, "message": str(e)})
 
 # Include the database management router
-app.include_router(db_management.router, prefix="/api", tags=["Database"])
+app.include_router(db_management.router, prefix="", tags=["Database"])
 
 # No need to backup database on startup anymore
 

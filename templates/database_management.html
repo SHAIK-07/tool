@@ -24,6 +24,7 @@
                                 <tr>
                                     <th>Table Name</th>
                                     <th>Records</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -31,6 +32,15 @@
                                 <tr>
                                     <td>{{ table }}</td>
                                     <td class="text-center">{{ count }}</td>
+                                    <td class="text-center">
+                                        <div class="action-buttons">
+                                            {% if count > 0 %}
+                                            <button class="action-btn delete" title="Delete All Records" onclick="confirmClearTable('{{ table }}', {{ count }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -50,6 +60,68 @@
             </div>
         </div>
 
+        <!-- Document Storage Information -->
+        <div class="card-container">
+            <div class="db-card">
+                <div class="db-card-header">
+                    <h3><i class="fas fa-folder-open"></i> Document Storage Information</h3>
+                </div>
+                <div class="db-card-body">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Folder</th>
+                                    <th>Files</th>
+                                    <th>Total Size</th>
+                                    <th>Last Modified</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for folder in storage_folders %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-folder"></i> {{ folder.name }}
+                                        <span class="folder-description">{{ folder.description }}</span>
+                                    </td>
+                                    <td class="text-center">{{ folder.file_count }}</td>
+                                    <td class="text-center">{{ folder.total_size }}</td>
+                                    <td class="text-center">{{ folder.last_modified }}</td>
+                                    <td class="text-center">
+                                        <div class="action-buttons">
+                                            <a href="/browse-folder/{{ folder.name }}" class="action-btn view" title="Browse Files">
+                                                <i class="fas fa-search"></i>
+                                            </a>
+                                            {% if folder.file_count > 0 %}
+                                            <a href="/download-folder/{{ folder.name }}" class="action-btn download" title="Download All Files">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            <button class="action-btn delete" title="Delete All Files" onclick="confirmDeleteAllFiles('{{ folder.name }}', {{ folder.file_count }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="storage-info">
+                        <div class="info-item">
+                            <span class="info-label">Total Document Storage:</span>
+                            <span class="info-value">{{ total_storage_size }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Total Files:</span>
+                            <span class="info-value">{{ total_file_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Download Database -->
         <div class="card-container">
             <div class="db-card">
@@ -59,7 +131,7 @@
                 <div class="db-card-body">
                     <p>Download the current database from the application. This contains all your inventory, services, invoices, and other data.</p>
                     <div class="action-buttons">
-                        <a href="/api/download-database" class="primary-btn">
+                        <a href="/download-database" class="primary-btn">
                             <i class="fas fa-download"></i> Download Current Database
                         </a>
                     </div>
@@ -75,7 +147,7 @@
                 </div>
                 <div class="db-card-body">
                     <p>Upload a database file to replace the current application database. This is useful before deployments or to restore from a backup.</p>
-                    <form action="/api/upload-database" method="post" enctype="multipart/form-data" class="upload-form">
+                    <form action="/upload-database" method="post" enctype="multipart/form-data" class="upload-form">
                         <div class="form-group">
                             <label for="database_file">Select Database File</label>
                             <input type="file" class="form-control" id="database_file" name="database_file" accept=".db" required>
@@ -285,6 +357,46 @@
         margin-right: 0.5rem;
     }
 
+    .folder-description {
+        font-size: 0.85em;
+        color: #666;
+        display: block;
+        margin-top: 3px;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        background-color: #f5f5f5;
+        color: #333;
+        margin: 0 2px;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+        background-color: #e0e0e0;
+    }
+
+    .action-btn.view:hover {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .action-btn.download:hover {
+        background-color: #e8f5e9;
+        color: #388e3c;
+    }
+
+    .storage-info {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+
     @media (max-width: 767px) {
         .db-info {
             flex-direction: column;
@@ -295,4 +407,321 @@
         }
     }
 </style>
+<!-- Delete All Files Modal -->
+<div id="delete-files-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Delete All Files</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete all files in the <strong id="delete-folder-name"></strong> folder?</p>
+            <p>This will permanently delete <strong id="delete-file-count"></strong> files. This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-delete-files" class="secondary-btn">Cancel</button>
+            <button id="confirm-delete-files" class="danger-btn">Delete All Files</button>
+        </div>
+    </div>
+</div>
+
+<!-- Clear Table Modal -->
+<div id="clear-table-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirm Clear Table</h3>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to clear all records from the <strong id="clear-table-name"></strong> table?</p>
+            <p>This will permanently delete <strong id="clear-record-count"></strong> records. This action cannot be undone.</p>
+            {% if user and user.role == 'top_user' %}
+            <p><strong>Note:</strong> If clearing the users table, the top user account will be preserved.</p>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-clear-table" class="secondary-btn">Cancel</button>
+            <button id="confirm-clear-table" class="danger-btn">Clear Table</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Delete All Files functionality
+    const deleteFilesModal = document.getElementById('delete-files-modal');
+    const clearTableModal = document.getElementById('clear-table-modal');
+    const closeBtns = document.querySelectorAll('.close');
+    const cancelDeleteFilesBtn = document.getElementById('cancel-delete-files');
+    const confirmDeleteFilesBtn = document.getElementById('confirm-delete-files');
+    const cancelClearTableBtn = document.getElementById('cancel-clear-table');
+    const confirmClearTableBtn = document.getElementById('confirm-clear-table');
+
+    let folderToDelete = '';
+    let tableToDelete = '';
+
+    function confirmDeleteAllFiles(folderName, fileCount) {
+        folderToDelete = folderName;
+
+        // Set the folder name and file count in the modal
+        document.getElementById('delete-folder-name').textContent = folderName;
+        document.getElementById('delete-file-count').textContent = fileCount;
+
+        // Show the modal
+        deleteFilesModal.style.display = 'flex';
+    }
+
+    function confirmClearTable(tableName, recordCount) {
+        tableToDelete = tableName;
+
+        // Set the table name and record count in the modal
+        document.getElementById('clear-table-name').textContent = tableName;
+        document.getElementById('clear-record-count').textContent = recordCount;
+
+        // Show the modal
+        clearTableModal.style.display = 'flex';
+    }
+
+    function closeModal(modal) {
+        modal.style.display = 'none';
+    }
+
+    // Close button event listeners
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            closeModal(btn.closest('.modal'));
+        });
+    });
+
+    cancelDeleteFilesBtn.addEventListener('click', () => {
+        closeModal(deleteFilesModal);
+    });
+
+    cancelClearTableBtn.addEventListener('click', () => {
+        closeModal(clearTableModal);
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === deleteFilesModal) {
+            closeModal(deleteFilesModal);
+        }
+        if (event.target === clearTableModal) {
+            closeModal(clearTableModal);
+        }
+    });
+
+    // Delete all files in a folder
+    confirmDeleteFilesBtn.addEventListener('click', async () => {
+        try {
+            // Show loading state
+            confirmDeleteFilesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            confirmDeleteFilesBtn.disabled = true;
+
+            // Send delete request
+            const response = await fetch(`/delete-all-files/${folderToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+
+                // Show success message
+                alert(result.message || 'Files deleted successfully');
+
+                // Close the modal
+                closeModal(deleteFilesModal);
+
+                // Reload the page to refresh all data
+                window.location.reload();
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.detail || 'Failed to delete files'}`);
+
+                // Reset button
+                confirmDeleteFilesBtn.innerHTML = 'Delete All Files';
+                confirmDeleteFilesBtn.disabled = false;
+            }
+        } catch (error) {
+            alert(`Error: ${error.message || 'Failed to delete files'}`);
+
+            // Reset button
+            confirmDeleteFilesBtn.innerHTML = 'Delete All Files';
+            confirmDeleteFilesBtn.disabled = false;
+        }
+    });
+
+    // Clear all records from a table
+    confirmClearTableBtn.addEventListener('click', async () => {
+        try {
+            // Show loading state
+            confirmClearTableBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+            confirmClearTableBtn.disabled = true;
+
+            // Send delete request
+            const response = await fetch(`/clear-table/${tableToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+
+                // Show success message
+                alert(result.message || 'Table cleared successfully');
+
+                // Close the modal
+                closeModal(clearTableModal);
+
+                // Reload the page to refresh all data
+                window.location.reload();
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.detail || 'Failed to clear table'}`);
+
+                // Reset button
+                confirmClearTableBtn.innerHTML = 'Clear Table';
+                confirmClearTableBtn.disabled = false;
+            }
+        } catch (error) {
+            alert(`Error: ${error.message || 'Failed to clear table'}`);
+
+            // Reset button
+            confirmClearTableBtn.innerHTML = 'Clear Table';
+            confirmClearTableBtn.disabled = false;
+        }
+    });
+</script>
+
+<style>
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .close {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .close:hover {
+        color: var(--text-primary);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .danger-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .danger-btn:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    .secondary-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        background-color: var(--btn-secondary-bg, #6c757d);
+        color: var(--btn-secondary-text, white);
+    }
+
+    .secondary-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .action-btn.delete {
+        background-color: #ffebee;
+        color: #d32f2f;
+    }
+
+    .action-btn.delete:hover {
+        background-color: #ffcdd2;
+        color: #b71c1c;
+    }
+</style>
 {% endblock %}
+

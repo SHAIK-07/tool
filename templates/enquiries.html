@@ -61,6 +61,49 @@
     .notification-close:hover {
         color: #333;
     }
+
+    .quotation-file-link {
+        color: #4a6cf7;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .quotation-file-link:hover {
+        color: #2a4cd7;
+    }
+
+    .no-file {
+        color: #999;
+        font-style: italic;
+        font-size: 0.9em;
+    }
+
+    .current-file {
+        margin-top: 5px;
+        font-size: 0.85em;
+        color: #666;
+    }
+
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .download-btn:hover {
+        background-color: #218838;
+        color: white;
+    }
 </style>
 {% endblock %}
 
@@ -78,7 +121,7 @@
             <p>Enter customer details and requirements to create a new enquiry</p>
         </div>
 
-        <form id="add-enquiry-form" method="POST" action="/enquiry/new">
+        <form id="add-enquiry-form" method="POST" action="/enquiry/new" enctype="multipart/form-data">
             <div class="form-row">
                 <div class="form-group">
                     <label for="date">Date:</label>
@@ -112,13 +155,21 @@
 
             <div class="form-row">
                 <div class="form-group checkbox-group">
-                    <input type="checkbox" id="quotation_given" name="quotation_given" onchange="toggleQuotationAmount()">
+                    <input type="checkbox" id="quotation_given" name="quotation_given" onchange="toggleQuotationFields()">
                     <label for="quotation_given">Quotation Given</label>
                 </div>
 
                 <div class="form-group" id="quotation_amount_group" style="display: none;">
                     <label for="quotation_amount">Quotation Amount (₹):</label>
                     <input type="number" id="quotation_amount" name="quotation_amount" step="0.01" min="0" value="0" placeholder="Enter amount">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" id="quotation_file_group" style="display: none;">
+                    <label for="quotation_file">Upload Quotation File:</label>
+                    <input type="file" id="quotation_file" name="quotation_file" accept=".pdf,.xls,.xlsx">
+                    <small class="form-text">Upload PDF or Excel file (max 5MB)</small>
                 </div>
             </div>
 
@@ -247,6 +298,7 @@
                         <th>Requirements</th>
                         <th>Quotation Given</th>
                         <th>Amount (₹)</th>
+                        <th>Quotation File</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -292,9 +344,30 @@
                             </div>
                         </td>
                         <td>
-                            <span class="view-content">{{ "₹" + "%.2f"|format(enquiry.quotation_amount) if enquiry.quotation_given and enquiry.quotation_amount else "-" }}</span>
+                            <span class="view-content">
+                                {{ "₹" + "%.2f"|format(enquiry.quotation_amount) if enquiry.quotation_given and enquiry.quotation_amount else "-" }}
+                            </span>
                             <div class="edit-content" style="display: none;">
                                 <input type="number" class="edit-input" id="quotation-amount-{{ enquiry.id }}" value="{{ enquiry.quotation_amount if enquiry.quotation_amount else '' }}" step="0.01" min="0">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="view-content">
+                                {% if enquiry.quotation_given and enquiry.quotation_file_path %}
+                                <a href="/download-quotation/{{ enquiry.quotation_file_path }}" class="quotation-file-link" title="Download Quotation File" target="_blank">
+                                    <i class="fas fa-file-download"></i> {{ enquiry.quotation_file_path|truncate(20, True) }}
+                                </a>
+                                {% else %}
+                                <span class="no-file">No file</span>
+                                {% endif %}
+                            </span>
+                            <div class="edit-content" style="display: none;">
+                                <input type="file" class="edit-input" id="quotation-file-{{ enquiry.id }}" accept=".pdf,.xls,.xlsx">
+                                {% if enquiry.quotation_file_path %}
+                                <div class="current-file">
+                                    <small>Current: {{ enquiry.quotation_file_path|truncate(20, True) }}</small>
+                                </div>
+                                {% endif %}
                             </div>
                         </td>
                         <td class="enquiry-actions">
@@ -305,6 +378,11 @@
                                 <button class="delete-btn" onclick="confirmDeleteEnquiry('{{ enquiry.id }}', '{{ enquiry.customer_name }}')" title="Delete Enquiry">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                                {% if enquiry.quotation_given and enquiry.quotation_file_path %}
+                                <a href="/download-quotation/{{ enquiry.quotation_file_path }}" class="download-btn" title="Download Quotation File" target="_blank">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                {% endif %}
                             </div>
                             <div class="edit-content" style="display: none;">
                                 <button class="save-btn" onclick="saveEnquiryChanges('{{ enquiry.id }}')" title="Save Changes">
@@ -515,22 +593,29 @@
     let currentCustomerName = null;
     let isEditMode = false;
 
-    // Function to toggle the quotation amount field based on checkbox
-    function toggleQuotationAmount() {
+    // Function to toggle the quotation fields based on checkbox
+    function toggleQuotationFields() {
         const quotationGiven = document.getElementById('quotation_given').checked;
         const quotationAmountGroup = document.getElementById('quotation_amount_group');
         const quotationAmountInput = document.getElementById('quotation_amount');
+        const quotationFileGroup = document.getElementById('quotation_file_group');
 
         if (quotationGiven) {
             quotationAmountGroup.style.display = 'block';
+            quotationFileGroup.style.display = 'block';
             // If the value is 0 or empty, set it to a default value
             if (!quotationAmountInput.value || quotationAmountInput.value === '0') {
                 quotationAmountInput.value = '0';
             }
         } else {
             quotationAmountGroup.style.display = 'none';
+            quotationFileGroup.style.display = 'none';
             // Set to 0 instead of empty string to avoid parsing issues
             quotationAmountInput.value = '0';
+            // Clear file input
+            if (document.getElementById('quotation_file')) {
+                document.getElementById('quotation_file').value = '';
+            }
         }
     }
 
@@ -989,16 +1074,21 @@
             return;
         }
 
-        // Create data object
-        const data = {
-            customer_name: customerName,
-            phone_no: phoneNo,
-            address: '', // Adding empty address field since it's expected by the backend
-            requirements: requirements,
-            quotation_given: quotationGiven,
-            quotation_amount: quotationGiven ? quotationAmount : '0',
-            date: date
-        };
+        // Create form data for file upload
+        const formData = new FormData();
+        formData.append('customer_name', customerName);
+        formData.append('phone_no', phoneNo);
+        formData.append('address', ''); // Adding empty address field since it's expected by the backend
+        formData.append('requirements', requirements);
+        formData.append('quotation_given', quotationGiven);
+        formData.append('quotation_amount', quotationGiven ? quotationAmount : '0');
+        formData.append('date', date);
+
+        // Add file if one is selected
+        const fileInput = document.getElementById(`quotation-file-${enquiryId}`);
+        if (fileInput && fileInput.files.length > 0) {
+            formData.append('quotation_file', fileInput.files[0]);
+        }
 
         // Show loading state
         const saveButton = document.querySelector(`#row-${enquiryId} .save-btn`);
@@ -1006,13 +1096,10 @@
         saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         saveButton.disabled = true;
 
-        // Send AJAX request
+        // Send AJAX request to update the enquiry
         fetch(`/enquiry/${enquiryId}/edit`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams(data)
+            body: formData
         })
         .then(response => {
             // If the response is a redirect, follow it

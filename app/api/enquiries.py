@@ -7,11 +7,16 @@ from datetime import datetime, date, timedelta
 import json
 import os
 import csv
+import shutil
 from io import StringIO
 
 from app.db import crud, database, models
 from app.schemas import enquiry as enquiry_schemas
 from app.core.auth import get_current_user_from_cookie  # Import once at the top
+
+# Define quotations folder path
+QUOTATIONS_FOLDER = "quotations"
+os.makedirs(QUOTATIONS_FOLDER, exist_ok=True)
 
 router = APIRouter(tags=["Enquiries"])
 templates = Jinja2Templates(directory="templates")
@@ -197,6 +202,7 @@ async def create_new_enquiry(
     quotation_given: bool = Form(False),
     quotation_amount: Optional[float] = Form(0.0),
     date: str = Form(...),
+    quotation_file: UploadFile = File(None),
     db: Session = Depends(database.get_db),
 ):
     """Create a new enquiry record"""
@@ -230,6 +236,21 @@ async def create_new_enquiry(
                 }
             )
 
+        # Handle quotation file upload if quotation is given
+        quotation_file_path = None
+        if quotation_given and quotation_file and quotation_file.filename:
+            # Create a unique filename
+            file_extension = quotation_file.filename.split('.')[-1]
+            unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{quotation_file.filename}"
+            file_path = os.path.join(QUOTATIONS_FOLDER, unique_filename)
+
+            # Save the file
+            with open(file_path, "wb") as buffer:
+                content = await quotation_file.read()
+                buffer.write(content)
+
+            quotation_file_path = unique_filename
+
         # Create enquiry data dictionary
         enquiry_data = {
             "customer_name": customer_name,
@@ -238,6 +259,7 @@ async def create_new_enquiry(
             "requirements": requirements or "",  # Ensure requirements is not None
             "quotation_given": quotation_given,
             "quotation_amount": float(quotation_amount) if quotation_given else None,
+            "quotation_file_path": quotation_file_path,
             "date": date_obj
         }
 
@@ -271,6 +293,7 @@ async def update_enquiry(
     quotation_given: bool = Form(False),
     quotation_amount: Optional[float] = Form(0.0),
     date: str = Form(...),
+    quotation_file: UploadFile = File(None),
     db: Session = Depends(database.get_db)
 ):
     """Update an enquiry record"""
@@ -281,6 +304,15 @@ async def update_enquiry(
         # Redirect to login if not authenticated
         if not user:
             return RedirectResponse(url=f"/login?next=/enquiry/{enquiry_id}/edit", status_code=303)
+
+        # Get existing enquiry to check if we need to update the file
+        existing_enquiry = crud.get_enquiry(db, enquiry_id)
+        if not existing_enquiry:
+            return templates.TemplateResponse(
+                "error.html",
+                {"request": request, "error_message": "Enquiry not found", "user": user},
+                status_code=404
+            )
 
         # Convert date string to date object
         try:
@@ -300,10 +332,44 @@ async def update_enquiry(
                         "address": address,
                         "requirements": requirements,
                         "quotation_given": quotation_given,
-                        "quotation_amount": quotation_amount
+                        "quotation_amount": quotation_amount,
+                        "quotation_file_path": existing_enquiry.quotation_file_path
                     }
                 }
             )
+
+        # Handle quotation file upload if quotation is given
+        quotation_file_path = existing_enquiry.quotation_file_path
+        if quotation_given and quotation_file and quotation_file.filename:
+            # Create a unique filename
+            file_extension = quotation_file.filename.split('.')[-1]
+            unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{quotation_file.filename}"
+            file_path = os.path.join(QUOTATIONS_FOLDER, unique_filename)
+
+            # Save the file
+            with open(file_path, "wb") as buffer:
+                content = await quotation_file.read()
+                buffer.write(content)
+
+            # Delete old file if it exists
+            if existing_enquiry.quotation_file_path:
+                old_file_path = os.path.join(QUOTATIONS_FOLDER, existing_enquiry.quotation_file_path)
+                if os.path.exists(old_file_path):
+                    try:
+                        os.remove(old_file_path)
+                    except Exception as e:
+                        print(f"Error deleting old file: {e}")
+
+            quotation_file_path = unique_filename
+        elif not quotation_given and existing_enquiry.quotation_file_path:
+            # If quotation is no longer given, delete the file
+            old_file_path = os.path.join(QUOTATIONS_FOLDER, existing_enquiry.quotation_file_path)
+            if os.path.exists(old_file_path):
+                try:
+                    os.remove(old_file_path)
+                except Exception as e:
+                    print(f"Error deleting old file: {e}")
+            quotation_file_path = None
 
         # Create enquiry data dictionary
         enquiry_data = {
@@ -313,6 +379,7 @@ async def update_enquiry(
             "requirements": requirements or "",  # Ensure requirements is not None
             "quotation_given": quotation_given,
             "quotation_amount": float(quotation_amount) if quotation_given else None,
+            "quotation_file_path": quotation_file_path,
             "date": date_obj
         }
 
@@ -739,6 +806,45 @@ async def download_enquiry_template():
         print(f"Error creating enquiry template: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+
+@router.get("/download-quotation/{filename}")
+async def download_quotation_file(
+    request: Request,
+    filename: str,
+    db: Session = Depends(database.get_db)
+):
+    """Download a quotation file"""
+    try:
+        # Get current user from cookie
+        user = await get_current_user_from_cookie(request, db)
+
+        # Redirect to login if not authenticated
+        if not user:
+            return RedirectResponse(url="/login", status_code=303)
+
+        # Construct the file path
+        file_path = os.path.join(QUOTATIONS_FOLDER, filename)
+
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return templates.TemplateResponse(
+                "error.html",
+                {"request": request, "error_message": "File not found", "user": user},
+                status_code=404
+            )
+
+        # Return the file
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type="application/octet-stream"
+        )
+    except Exception as e:
+        print(f"Error downloading quotation file: {e}")
+        return templates.TemplateResponse(
+            "error.html",
+            {"request": request, "error_message": f"Error downloading file: {str(e)}", "user": user}
+        )
 
 @router.get("/api/enquiries/filtered")
 async def api_get_filtered_enquiries(

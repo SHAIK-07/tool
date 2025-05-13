@@ -48,6 +48,7 @@ def create_enquiries_table():
                     requirements TEXT,
                     quotation_given BOOLEAN DEFAULT 0,
                     quotation_amount REAL,
+                    quotation_file_path TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
@@ -75,6 +76,7 @@ def create_enquiries_table():
                 requirements TEXT,
                 quotation_given BOOLEAN DEFAULT 0,
                 quotation_amount REAL,
+                quotation_file_path TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )

@@ -10,6 +10,7 @@ class EnquiryBase(BaseModel):
     requirements: Optional[str] = None
     quotation_given: bool = False
     quotation_amount: Optional[float] = None
+    quotation_file_path: Optional[str] = None
 
 
 class EnquiryCreate(EnquiryBase):
@@ -23,6 +24,7 @@ class EnquiryUpdate(BaseModel):
     requirements: Optional[str] = None
     quotation_given: Optional[bool] = None
     quotation_amount: Optional[float] = None
+    quotation_file_path: Optional[str] = None
 
 
 class Enquiry(EnquiryBase):

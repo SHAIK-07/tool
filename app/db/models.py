@@ -175,6 +175,7 @@ class Enquiry(Base):
     requirements = Column(Text)
     quotation_given = Column(Boolean, default=False)
     quotation_amount = Column(Float, nullable=True)
+    quotation_file_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
