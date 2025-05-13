@@ -82,6 +82,8 @@ The Sunmax Renewables Management System is a comprehensive business management a
 
 ## Installation
 
+### Option 1: Standard Installation
+
 1. Clone the repository:
    ```
    git clone https://github.com/your-organization/sunmax-renewables.git
@@ -116,6 +118,29 @@ The Sunmax Renewables Management System is a comprehensive business management a
    ```
 
 7. Access the application at http://localhost:8000
+
+### Option 2: Docker Installation
+
+For easy deployment, you can use Docker:
+
+1. Pull the Docker image:
+   ```
+   docker pull yourusername/sunmax-renewables:latest
+   ```
+
+2. Run the container:
+   ```
+   docker run -p 8080:8080 -d \
+     -v ~/sunmax-data/db:/app/db \
+     -v ~/sunmax-data/invoices:/app/invoices \
+     -v ~/sunmax-data/exports:/app/exports \
+     --name sunmax-renewables \
+     yourusername/sunmax-renewables:latest
+   ```
+
+3. Access the application at http://localhost:8080
+
+For detailed Docker instructions, including how to build and push the image, see [docker_instructions.md](docker_instructions.md).
 
 ## Usage
 
