@@ -337,8 +337,8 @@ Since these directories contain important business data but are not stored in Gi
 Please follow the coding standards and include appropriate tests for new features.
 
 ## Demo Video
+[Demo Video](https://www.linkedin.com/posts/shaik-hidaythulla_aiassisteddevelopment-softwaredevelopment-activity-7327935840645464064-TD6z?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEyF3F8BG29hhzPFUzK484jVQWqnvaw-A60)
 
-https://github.com/yourusername/sunmax-renewables/assets/123456789/abcdef12-3456-7890-abcd-ef1234567890
 
 This demonstration video provides a walkthrough of the main features of the Sunmax Renewables Management System, including:
 
@@ -350,10 +350,4 @@ This demonstration video provides a walkthrough of the main features of the Sunm
 - Document storage functionality
 - User management and permissions
 
-**Note**: To add this video to your GitHub README:
-1. Upload the video file (`Recording 2025-05-13 110433`) to a GitHub issue or discussion in your repository
-2. Copy the generated markdown link that GitHub provides
-3. Replace the URL above with the actual GitHub-hosted video URL
-4. The video will be properly embedded and playable directly in the README
 
-Duration: Approximately 10 minutes
