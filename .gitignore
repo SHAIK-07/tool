@@ -43,3 +43,9 @@ Thumbs.db
 
 # Local database
 sunmax.db
+exports/
+invoices/
+quotations/
+customers/
+services/
+payments/
