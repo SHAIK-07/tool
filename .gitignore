@@ -43,9 +43,37 @@ Thumbs.db
 
 # Local database
 sunmax.db
+db/*.db
+db/backups/
+
+# Business data folders - excluded from GitHub
 exports/
 invoices/
 quotations/
 customers/
 services/
 payments/
+documents/
+uploads/
+temp/
+
+# Backup files
+*.bak
+*.backup
+invoices_backup/
+quotations_backup/
+customers_backup/
+services_backup/
+payments_backup/
+documents_backup/
+uploads_backup/
+temp_backup/
+db
+invoices
+quotations
+customers
+services
+payments
+documents
+uploads
+temp

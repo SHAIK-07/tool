@@ -104,12 +104,18 @@ The Sunmax Renewables Management System is a comprehensive business management a
    python init_db.py
    ```
 
-5. Start the application:
+5. Create necessary directories:
+   ```
+   python setup_directories.py
+   ```
+   This script creates all required directories that are excluded from Git.
+
+6. Start the application:
    ```
    python -m app.main
    ```
 
-6. Access the application at http://localhost:8000
+7. Access the application at http://localhost:8000
 
 ## Usage
 
@@ -296,6 +302,30 @@ PDF templates can be customized in the templates directory.
 3. **File Upload Problems**
    - Verify that the upload directories exist and are writable
    - Check file size limits in the configuration
+
+## Version Control & GitHub
+
+### .gitignore Configuration
+
+The project is configured to exclude certain directories from version control to avoid storing sensitive business data in GitHub:
+
+- `invoices/`: Contains generated PDF invoices
+- `quotations/`: Stores quotation files uploaded by users
+- `customers/`: Customer-related documents
+- `services/`: Service-related files
+- `payments/`: Payment records and receipts
+- `documents/`: General document storage
+- `db/`: Database files and backups
+
+These directories are listed in the `.gitignore` file to ensure they are not tracked by Git. When deploying the application, you'll need to create these directories manually or have the application create them at runtime.
+
+### Data Backup
+
+Since these directories contain important business data but are not stored in Git, it's essential to implement a regular backup strategy:
+
+1. Set up automated backups of these directories
+2. Store backups securely in an off-site location
+3. Test backup restoration periodically
 
 ## Contributing
 
