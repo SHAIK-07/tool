@@ -17,50 +17,24 @@
     <link rel="stylesheet" href="/static/css/modern-search.css?v=1.5">
     <link rel="stylesheet" href="/static/css/quote-popup.css?v=1.0">
     <style>
-        /* Enable vertical scrolling for sidebar */
-        .sidebar {
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            height: 100vh !important;
+        /* Remove all scrollbars from sidebar */
+        .sidebar, .sidebar-nav, .sidebar-nav .nav-links {
+            overflow: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
         }
 
-        .sidebar-nav {
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            flex: 1 !important;
-            max-height: calc(100vh - 120px) !important; /* Account for header and footer */
-        }
-
-        .sidebar-nav .nav-links {
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-            padding-bottom: 20px !important;
-        }
-
-        /* Style scrollbar for better appearance */
         .sidebar::-webkit-scrollbar,
         .sidebar-nav::-webkit-scrollbar,
         .sidebar-nav .nav-links::-webkit-scrollbar {
-            width: 6px !important;
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
         }
 
-        .sidebar::-webkit-scrollbar-track,
-        .sidebar-nav::-webkit-scrollbar-track,
-        .sidebar-nav .nav-links::-webkit-scrollbar-track {
-            background: var(--bg-secondary) !important;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb,
-        .sidebar-nav::-webkit-scrollbar-thumb,
-        .sidebar-nav .nav-links::-webkit-scrollbar-thumb {
-            background: var(--border-color) !important;
-            border-radius: 3px !important;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb:hover,
-        .sidebar-nav::-webkit-scrollbar-thumb:hover,
-        .sidebar-nav .nav-links::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary) !important;
+        /* Remove scrollbar arrows at bottom */
+        .sidebar:after, .sidebar:before {
+            display: none !important;
         }
 
         /* Inline cart popup styles to ensure they're applied */
@@ -239,14 +213,6 @@
                 <a href="/customers" class="nav-link" title="Customers">
                     <i class="fas fa-user-friends"></i>
                     <span class="nav-text">Customers</span>
-                </a>
-                <a href="/expenses" class="nav-link" title="Expenses">
-                    <i class="fas fa-receipt"></i>
-                    <span class="nav-text">Expenses</span>
-                </a>
-                <a href="/info" class="nav-link" title="Info">
-                    <i class="fas fa-info-circle"></i>
-                    <span class="nav-text">Info</span>
                 </a>
                 {% if user and user.role in ['admin', 'top_user'] %}
                 <a href="/insights" class="nav-link" title="Insights">

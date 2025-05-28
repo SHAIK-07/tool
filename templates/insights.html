@@ -319,7 +319,7 @@
     </div>
 
     <style>
-        .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid, .expense-stats-grid {
+        .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, auto);
@@ -328,94 +328,17 @@
         }
 
         @media (min-width: 992px) {
-            .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid, .expense-stats-grid {
+            .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid {
                 grid-template-columns: repeat(4, 1fr);
                 grid-template-rows: repeat(1, auto);
             }
         }
 
         @media (max-width: 768px) {
-            .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid, .expense-stats-grid {
+            .inventory-stats-grid, .kpi-stats-grid, .customer-stats-grid, .enquiry-stats-grid {
                 grid-template-columns: 1fr;
                 grid-template-rows: repeat(4, auto);
             }
-        }
-
-        /* Expense breakdown styles */
-        .expense-breakdown, .top-vendors {
-            background-color: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px var(--shadow-color);
-        }
-
-        .expense-breakdown h4, .top-vendors h4 {
-            margin-bottom: 15px;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .breakdown-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .breakdown-item {
-            background: var(--bg-primary);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #4e73df;
-            transition: transform 0.2s ease;
-        }
-
-        .breakdown-item:hover {
-            transform: translateY(-2px);
-        }
-
-        .breakdown-label {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 5px;
-        }
-
-        .breakdown-amount {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #4e73df;
-            margin-bottom: 3px;
-        }
-
-        .breakdown-count {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .vendor-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .vendor-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-primary);
-            padding: 12px 15px;
-            border-radius: 8px;
-            border-left: 4px solid #36b9cc;
-        }
-
-        .vendor-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .vendor-amount {
-            font-weight: 700;
-            color: #36b9cc;
         }
     </style>
 
@@ -543,75 +466,6 @@
             background-color: #dddddd;
         }
     </style>
-
-    <!-- Expense Insights Section -->
-    <div class="insights-section">
-        <div class="section-header">
-            <h3>Expense Analytics</h3>
-            <p>Company expenditure tracking and analysis</p>
-        </div>
-
-        <div class="expense-stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🧾</div>
-                <div class="stat-number">{{ expense_stats.total_expenses }}</div>
-                <div class="stat-label">Total Expenses</div>
-                <div class="stat-description">Total number of expense records</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">💸</div>
-                <div class="stat-number">₹{{ expense_stats.total_amount|round(2) }}</div>
-                <div class="stat-label">Total Amount</div>
-                <div class="stat-description">Total amount spent on all expenses</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-number">₹{{ expense_stats.total_gst|round(2) }}</div>
-                <div class="stat-label">Total GST Paid</div>
-                <div class="stat-description">Total GST amount paid on expenses</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">🏢</div>
-                <div class="stat-number">{{ expense_stats.top_vendors|length }}</div>
-                <div class="stat-label">Active Vendors</div>
-                <div class="stat-description">Number of vendors we work with</div>
-            </div>
-        </div>
-
-        <!-- Expense Breakdown by Type -->
-        {% if expense_stats.expenses_by_type %}
-        <div class="expense-breakdown">
-            <h4>Expense Breakdown by Type</h4>
-            <div class="breakdown-grid">
-                {% for expense_type in expense_stats.expenses_by_type %}
-                <div class="breakdown-item">
-                    <div class="breakdown-label">{{ expense_type.type }}</div>
-                    <div class="breakdown-amount">₹{{ expense_type.amount|round(2) }}</div>
-                    <div class="breakdown-count">{{ expense_type.count }} transactions</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Top Vendors -->
-        {% if expense_stats.top_vendors %}
-        <div class="top-vendors">
-            <h4>Top Vendors by Amount</h4>
-            <div class="vendor-list">
-                {% for vendor in expense_stats.top_vendors %}
-                <div class="vendor-item">
-                    <div class="vendor-name">{{ vendor.vendor }}</div>
-                    <div class="vendor-amount">₹{{ vendor.amount|round(2) }}</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
 
     <!-- Customer Insights Section -->
     <div class="insights-section">
