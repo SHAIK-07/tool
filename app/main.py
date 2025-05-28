@@ -35,6 +35,7 @@ from app.api import db_management  # Import database management routes
 from app.api import quotations  # Import quotations routes
 from app.api import enquiries  # Import enquiries routes
 from app.api import customers  # Import customers routes
+from app.api import expenses  # Import expenses routes
 from app.db import crud, database, models
 from app.db.migrate import run_migrations
 from app.core.auth import get_current_user_from_cookie
@@ -61,6 +62,10 @@ create_enquiries_table()
 # Create the customers table
 from app.db.create_customers_table import create_customers_table
 create_customers_table()
+
+# Create the expenses table
+from app.db.create_expenses_table import create_expenses_table
+create_expenses_table()
 
 # Ensure the top user account exists
 try:
@@ -169,6 +174,7 @@ app.include_router(sales.router, prefix="/api", tags=["Sales"])
 app.include_router(quotations.router, tags=["Quotations"])
 app.include_router(enquiries.router, tags=["Enquiries"])
 app.include_router(customers.router, tags=["Customers"])
+app.include_router(expenses.router, tags=["Expenses"])
 
 @app.delete("/api/services/delete/{service_id}")
 async def delete_service_api(service_id: int, db: Session = Depends(database.get_db)):
@@ -1129,6 +1135,20 @@ async def insights_page(request: Request, db: Session = Depends(database.get_db)
         "closed_count": closed_count
     }
 
+    # Get expense statistics using the existing function
+    try:
+        expense_stats = crud.get_expense_stats(db)
+    except Exception as e:
+        print(f"Error getting expense stats: {e}")
+        # Fallback to empty stats if there's an error
+        expense_stats = {
+            "total_expenses": 0,
+            "total_amount": 0.0,
+            "total_gst": 0.0,
+            "expenses_by_type": [],
+            "top_vendors": []
+        }
+
     return templates.TemplateResponse(
         "insights.html",
         {
@@ -1160,9 +1180,23 @@ async def insights_page(request: Request, db: Session = Depends(database.get_db)
             "enquiry_trend_labels": enquiry_trend_labels,
             "enquiry_trend_data": enquiry_trend_data,
             "conversion_rate_labels": conversion_rate_labels,
-            "conversion_rate_data": conversion_rate_data
+            "conversion_rate_data": conversion_rate_data,
+            # Expense statistics
+            "expense_stats": expense_stats
         }
     )
+
+
+@app.get("/info", response_class=HTMLResponse)
+async def info_page(request: Request, db: Session = Depends(database.get_db)):
+    # Get current user from cookie
+    user = await get_current_user_from_cookie(request, db=db)
+
+    # Redirect to login if not authenticated
+    if not user:
+        return RedirectResponse(url="/login?next=/info", status_code=303)
+
+    return templates.TemplateResponse("info.html", {"request": request, "user": user})
 
 
 @app.post("/api/checkout")
