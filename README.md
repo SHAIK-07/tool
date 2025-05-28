@@ -55,22 +55,35 @@ The Sunmax Renewables Management System is a comprehensive business management a
 - Track quotation status
 - Generate PDF quotations
 
+### Expenses Management
+- Track business expenses and vendor payments
+- Record different types of expenses (product purchases, salaries, utilities, etc.)
+- Monitor payment status and methods
+- Generate expense reports and analytics
+- Manage vendor information and GST details
+
 ### User Management
 - Role-based access control
 - Secure authentication
 - User activity tracking
 - Password management
 
-### Reporting
-- Sales reports
+### Reporting & Analytics
+- Sales reports and insights
 - Inventory reports
 - Customer reports
-- Financial summaries
+- Expense tracking and analysis
+- Financial summaries and performance metrics
 
 ### Document Storage
 - Store and manage important documents
 - Organize files by category
 - Secure access to sensitive files
+
+### Information & Documentation
+- Built-in user guide and help system
+- Step-by-step instructions for each feature
+- Best practices and tips for efficient usage
 
 ## System Requirements
 
@@ -125,7 +138,7 @@ For easy deployment, you can use Docker:
 
 1. Pull the Docker image:
    ```
-   docker pull yourusername/sunmax-renewables:latest
+   docker pull shaik07/sunmax-renewables:latest
    ```
 
 2. Run the container:
@@ -135,7 +148,7 @@ For easy deployment, you can use Docker:
      -v ~/sunmax-data/invoices:/app/invoices \
      -v ~/sunmax-data/exports:/app/exports \
      --name sunmax-renewables \
-     yourusername/sunmax-renewables:latest
+     shaik07/sunmax-renewables:latest
    ```
 
 3. Access the application at http://localhost:8080
@@ -147,8 +160,8 @@ For detailed Docker instructions, including how to build and push the image, see
 ### First-time Setup
 
 1. Log in with the default admin credentials:
-   - Username: admin@example.com
-   - Password: admin123
+   - Username: contactsunmax@gmail.com
+   - Password: Sunmax@123
 
 2. Change the default password immediately after first login
 
@@ -174,10 +187,17 @@ For detailed Docker instructions, including how to build and push the image, see
    - Track customer interactions
    - Manage payment records
 
-4. **Reporting**
+4. **Expense Management**
+   - Record business expenses and vendor payments
+   - Track different expense categories
+   - Monitor payment status and methods
+   - Generate expense reports
+
+5. **Reporting & Analytics**
    - Generate daily, weekly, or monthly reports
    - Track sales performance
    - Monitor inventory levels
+   - Analyze expense patterns and trends
 
 ## Project Structure
 
@@ -185,6 +205,14 @@ For detailed Docker instructions, including how to build and push the image, see
 sunmax-renewables/
 ├── app/
 │   ├── api/                 # API endpoints
+│   │   ├── auth.py          # Authentication endpoints
+│   │   ├── customers.py     # Customer management
+│   │   ├── enquiries.py     # Enquiry management
+│   │   ├── expenses.py      # Expense tracking
+│   │   ├── inventory.py     # Inventory management
+│   │   ├── invoices.py      # Invoice operations
+│   │   ├── quotations.py    # Quotation management
+│   │   └── services.py      # Service management
 │   ├── core/                # Core functionality
 │   ├── db/                  # Database models and operations
 │   ├── schemas/             # Pydantic schemas
@@ -198,7 +226,10 @@ sunmax-renewables/
 ├── templates/               # HTML templates
 ├── quotations/              # Stored quotation files
 ├── invoices/                # Generated invoice PDFs
+├── exports/                 # Exported data files
+├── documents/               # Document storage
 ├── requirements.txt         # Python dependencies
+├── Dockerfile               # Docker configuration
 └── README.md                # This file
 ```
 
@@ -234,6 +265,18 @@ The enquiry module helps track potential customer leads and their requirements. 
 - Upload and store quotation files (PDF/Excel)
 - Convert enquiries to sales
 - Search and filter enquiries
+
+### Expenses Module
+
+The expenses module helps track all business expenditures and vendor payments. Key features include:
+
+- Record various types of expenses (product purchases, salaries, utilities, rent, etc.)
+- Track vendor information including GST details and contact information
+- Monitor payment status (Paid, Pending, Partially Paid)
+- Support multiple payment methods (Cash, Bank Transfer, UPI, Card, Cheque)
+- Generate expense reports and analytics
+- Export expense data for accounting purposes
+- Search and filter expenses by type, vendor, date, or status
 
 ### Customer Module
 
@@ -276,6 +319,8 @@ The application uses SQLite as its database engine. The main database file is lo
 - `customers`: Stores customer information
 - `enquiries`: Records customer enquiries
 - `quotations`: Stores quotation information
+- `expenses`: Records business expenses and vendor payments
+- `expense_payments`: Tracks payments made for expenses
 - `users`: Manages user accounts and permissions
 - `services`: Tracks service offerings
 
@@ -288,8 +333,10 @@ The application provides a RESTful API for all operations. Some key endpoints in
 - `/api/customers`: Customer management
 - `/api/enquiries`: Enquiry tracking
 - `/api/quotations`: Quotation management
+- `/api/expenses`: Expense tracking and management
 - `/api/users`: User administration
 - `/api/documents`: Document storage
+- `/api/auth`: Authentication and authorization
 
 ## Authentication
 
@@ -352,6 +399,25 @@ Since these directories contain important business data but are not stored in Gi
 2. Store backups securely in an off-site location
 3. Test backup restoration periodically
 
+## Latest Updates & Features
+
+### Recent Additions (2024)
+
+- **Expenses Management System**: Complete expense tracking with vendor management, payment status monitoring, and detailed analytics
+- **Built-in Documentation**: Interactive help system with step-by-step guides for all features
+- **Enhanced Analytics**: Improved insights dashboard with expense tracking and performance metrics
+- **Docker Support**: Full containerization with simplified deployment using Docker Hub
+- **Improved UI/UX**: Modern interface with better navigation and user experience
+- **Enhanced Security**: Updated authentication system with improved session management
+
+### Upcoming Features
+
+- Advanced reporting with custom date ranges
+- Email notifications for important events
+- Mobile-responsive design improvements
+- API documentation with Swagger/OpenAPI
+- Automated backup scheduling
+
 ## Contributing
 
 1. Fork the repository
@@ -367,12 +433,15 @@ Please follow the coding standards and include appropriate tests for new feature
 
 This demonstration video provides a walkthrough of the main features of the Sunmax Renewables Management System, including:
 
-- User interface navigation
+- User interface navigation and dashboard overview
 - Creating and managing enquiries
 - Uploading and downloading quotation files
-- Managing inventory items
-- Generating invoices and reports
+- Managing inventory items and services
+- Generating invoices and tracking payments
+- Expense management and vendor tracking
 - Document storage functionality
 - User management and permissions
+- Built-in help and documentation system
+- Analytics and reporting features
 
 
